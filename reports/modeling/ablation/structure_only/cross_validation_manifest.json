@@ -1,0 +1,29 @@
+{
+  "generated_at_utc": "2026-10-13T19:32:43.840602+00:00",
+  "protocol": "StratifiedGroupKFold on external training split; test split untouched",
+  "ablation": "structure_only",
+  "use_text": false,
+  "use_structural": true,
+  "use_repository": false,
+  "feature_pipeline": "Ablation 'structure_only': text=False, structural=True, repo=False",
+  "model": "LogisticRegression",
+  "intensity_solver": "saga",
+  "intensity_max_iter": 5000,
+  "intensity_tolerance": 0.001,
+  "class_weight_comparison": [
+    "none",
+    "balanced"
+  ],
+  "n_splits": 3,
+  "random_seed": 20261009,
+  "rows_used": 160000,
+  "external_test_rows_used": 0,
+  "converged_fits": 12,
+  "total_fits": 12,
+  "cache_key": "a0ff2b8db9eaccfad73242c64b84f5ade2ca5cec363bdf85c6f9945b5ba3cf3d",
+  "cache_directory": "reports/modeling/ablation/structure_only/cache/a0ff2b8db9eaccfad73242c64b84f5ade2ca5cec363bdf85c6f9945b5ba3cf3d",
+  "group_column": "representative_repo_id",
+  "results_file": "reports/modeling/ablation/structure_only/cross_validation_folds.csv",
+  "summary_file": "reports/modeling/ablation/structure_only/cross_validation_summary.csv",
+  "runtime_seconds": 136.86
+}

@@ -1,0 +1,18 @@
+{
+  "generated_at_utc": "2026-10-13T04:58:52.593281+00:00",
+  "protocol": "StratifiedGroupKFold on external training split; test split untouched",
+  "feature_pipeline": "TF-IDF content plus structured numeric and repository categorical",
+  "model": "LogisticRegression",
+  "class_weight_comparison": [
+    "none",
+    "balanced"
+  ],
+  "n_splits": 3,
+  "random_seed": 20261009,
+  "rows_used": 160000,
+  "external_test_rows_used": 0,
+  "group_column": "representative_repo_id",
+  "results_file": "reports/modeling/cross_validation_folds.csv",
+  "summary_file": "reports/modeling/cross_validation_summary.csv",
+  "runtime_seconds": 11714.28
+}

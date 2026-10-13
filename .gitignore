@@ -1,0 +1,28 @@
+.DS_Store
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Dados e modelos podem ser grandes ou ter licencas proprias.
+data/raw/*
+data/interim/*
+data/processed/*
+models/*
+
+# Preserve os diretorios no Git.
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!models/.gitkeep
+
+# Resultados reproduziveis gerados pelo pipeline.
+reports/figures/*
+reports/tables/*
+!reports/figures/.gitkeep
+!reports/tables/.gitkeep
+reports/modeling/**/cache/
+*.npz
+work/

@@ -1,0 +1,43 @@
+project:
+  name: skillreuse
+  random_seed: 20261009
+
+data:
+  version: "gitskills-sample@fff3df93beeee51a5444450891751f143e38da3e"
+  snapshot: "2026-07"
+  database: data/raw/gitskills-sample/agent_skills_sample.db
+  reuse_threshold: 2
+  reuse_intensity_boundaries: [2, 3, 5, 10]
+  development_sample_size: 10000
+  final_modeling_sample_size: 200000
+  test_size: 0.20
+  group_column: representative_repo_id
+  full_dataset:
+    repository: mvaccargiu/gitskills
+    revision: ebab17454a7c236f8f26b183567f1a126f42e3f8
+    artifacts: data/raw/gitskills-full/artifacts/*.parquet
+    repos: data/raw/gitskills-full/repos/*.parquet
+
+features:
+  text: true
+  structural: true
+  repository: false
+  tfidf:
+    ngram_range: [1, 2]
+    min_df: 5
+    max_df: 0.95
+    max_features: 50000
+
+evaluation:
+  primary_metric: average_precision
+  cross_validation_folds: 5
+  split_strategy: stratified_group_kfold
+  outer_split_restarts: 12
+
+modeling:
+  algorithm: logistic_regression
+  class_weight_comparison: [null, balanced]
+  tfidf_max_features: 50000
+  tfidf_min_df: 5
+  max_iterations: 1000
+  external_test_used_during_development: false

@@ -1,0 +1,25 @@
+{
+  "generated_at_utc": "2026-10-13T18:08:02.219874+00:00",
+  "protocol": "StratifiedGroupKFold on external training split; test split untouched",
+  "feature_pipeline": "TF-IDF content plus structured numeric and repository categorical",
+  "model": "LogisticRegression",
+  "intensity_solver": "saga",
+  "intensity_max_iter": 5000,
+  "intensity_tolerance": 0.001,
+  "class_weight_comparison": [
+    "none",
+    "balanced"
+  ],
+  "n_splits": 3,
+  "random_seed": 20261009,
+  "rows_used": 160000,
+  "external_test_rows_used": 0,
+  "converged_fits": 12,
+  "total_fits": 12,
+  "cache_key": "17733b4071407e56c080a8b21ff8c2eb8877ba7ecf2a9cfe66ce3787a21efc52",
+  "cache_directory": "reports/modeling/convergence_refit/cache/17733b4071407e56c080a8b21ff8c2eb8877ba7ecf2a9cfe66ce3787a21efc52",
+  "group_column": "representative_repo_id",
+  "results_file": "reports/modeling/convergence_refit/cross_validation_folds.csv",
+  "summary_file": "reports/modeling/convergence_refit/cross_validation_summary.csv",
+  "runtime_seconds": 3110.69
+}

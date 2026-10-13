@@ -1,0 +1,55 @@
+[project]
+name = "skillreuse"
+version = "0.1.0"
+description = "Caracterizacao e classificacao da reutilizacao de agent skills no GitHub."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "duckdb>=1.4.0",
+    "ipykernel>=6.30.0",
+    "jupyterlab>=4.4.0",
+    "matplotlib>=3.10.0",
+    "numpy>=2.2.0",
+    "pandas>=2.3.0",
+    "polars>=1.34.0",
+    "pyarrow>=20.0.0",
+    "pyyaml>=6.0.0",
+    "scikit-learn>=1.7.0",
+    "scipy>=1.15.0",
+    "seaborn>=0.13.0",
+    "tqdm>=4.67.0",
+]
+
+[project.scripts]
+skillreuse-check = "gitskills_reuse.cli:main"
+skillreuse-build-sample = "gitskills_reuse.data.sample:main"
+skillreuse-build-features = "gitskills_reuse.features.build:main"
+skillreuse-download-full = "gitskills_reuse.data.download_full:main"
+skillreuse-build-full = "gitskills_reuse.data.full:main"
+skillreuse-build-final-features = "gitskills_reuse.features.final:main"
+skillreuse-analyze-data = "gitskills_reuse.analysis.eda:main"
+skillreuse-train = "gitskills_reuse.modeling.train:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "ruff>=0.12.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gitskills_reuse"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
