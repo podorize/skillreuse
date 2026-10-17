@@ -61,6 +61,12 @@ ABLATION_CONFIGS = {
         "use_repository": True,
         "description": "Apenas contexto e metadados do repositório representativo",
     },
+    "structure_and_repo": {
+        "use_text": False,
+        "use_structural": True,
+        "use_repository": True,
+        "description": "Estrutura Markdown + Contexto do Repositório (sem texto TF-IDF)",
+    },
 }
 
 
@@ -215,6 +221,7 @@ def run_cross_validation(
     groups = frame["representative_repo_id"].to_numpy()
     splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=random_seed)
     records: list[dict[str, object]] = []
+    importance_records: list[dict[str, object]] = []
     if cache_identity is None:
         identifiers = pd.util.hash_pandas_object(
             frame[["content_hash", "representative_repo_id", "split_stratum"]], index=False
@@ -316,6 +323,21 @@ def run_cross_validation(
                 }
             )
 
+            if hasattr(transformer, "get_feature_names_out"):
+                feature_names = transformer.get_feature_names_out()
+                if len(feature_names) == train_matrix.shape[1]:
+                    for fname, coef in zip(feature_names, binary_model.coef_[0]):
+                        importance_records.append(
+                            {
+                                "ablation": ablation_name,
+                                "task": "binary_reuse",
+                                "fold": fold,
+                                "class_weight": class_weight or "none",
+                                "feature": fname,
+                                "coefficient": float(coef),
+                            }
+                        )
+
             positive_train_mask = y_binary[train_idx] == 1
             positive_valid_mask = y_binary[valid_idx] == 1
             intensity_train_idx = train_idx[positive_train_mask]
@@ -359,6 +381,22 @@ def run_cross_validation(
                 }
             )
 
+            if hasattr(transformer, "get_feature_names_out"):
+                feature_names = transformer.get_feature_names_out()
+                if len(feature_names) == train_matrix.shape[1]:
+                    for class_idx in range(len(intensity_model.coef_)):
+                        for fname, coef in zip(feature_names, intensity_model.coef_[class_idx]):
+                            importance_records.append(
+                                {
+                                    "ablation": ablation_name,
+                                    "task": f"conditional_intensity_class_{class_idx}",
+                                    "fold": fold,
+                                    "class_weight": class_weight or "none",
+                                    "feature": fname,
+                                    "coefficient": float(coef),
+                                }
+                            )
+
         pd.DataFrame(records).to_csv(output_dir / "cross_validation_folds.partial.csv", index=False)
 
     fold_results = pd.DataFrame(records)
@@ -378,6 +416,16 @@ def run_cross_validation(
         for column in summary.columns
     ]
     summary.to_csv(output_dir / "cross_validation_summary.csv", index=False)
+
+    if importance_records:
+        imp_df = pd.DataFrame(importance_records)
+        imp_summary = (
+            imp_df.groupby(["ablation", "task", "class_weight", "feature"], as_index=False)["coefficient"]
+            .agg(mean="mean", std="std")
+        )
+        imp_summary["odds_ratio"] = np.exp(imp_summary["mean"])
+        imp_summary.sort_values(by=["task", "class_weight", "mean"], ascending=[True, True, False], inplace=True)
+        imp_summary.to_csv(output_dir / "feature_importances.csv", index=False)
     manifest = {
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "protocol": "StratifiedGroupKFold on external training split; test split untouched",
@@ -463,8 +511,8 @@ def main() -> None:
         "--ablation",
         type=str,
         default="all",
-        choices=["all", "text_only", "structure_only", "repo_only", "suite", "fast_ablation"],
-        help="Configuracao de ablacao a executar: all, text_only, structure_only, repo_only, suite, fast_ablation",
+        choices=["all", "text_only", "structure_only", "repo_only", "structure_and_repo", "suite", "fast_ablation"],
+        help="Configuracao de ablacao a executar: all, text_only, structure_only, repo_only, structure_and_repo, suite, fast_ablation",
     )
     args = parser.parse_args()
 
