@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-18T00:23:26.669805+00:00",
+  "generated_at_utc": "2026-10-18T19:27:44.290056+00:00",
   "protocol": "StratifiedGroupKFold on external training split; test split untouched",
   "ablation": "hybrid_screened",
   "top_k_text": 100,

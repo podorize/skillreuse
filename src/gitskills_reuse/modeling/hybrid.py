@@ -40,6 +40,7 @@ from gitskills_reuse.modeling.train import (
     DEFAULT_OUTPUT,
     DEFAULT_SAMPLE,
     DEFAULT_TARGETS,
+    _intensity_metrics,
     compile_ablation_summary,
     load_modeling_frame,
 )
@@ -211,7 +212,71 @@ def run_hybrid_evaluation(
                     flush=True,
                 )
 
-        # 2. HistGradientBoosting + SHAP
+        # 2. Avaliacao da Intensidade Condicional (Escala de Difusao: 0, 1, 2, 3)
+        pos_tr_mask = y_binary[train_idx] == 1
+        pos_val_mask = y_binary[valid_idx] == 1
+        int_tr_idx = train_idx[pos_tr_mask]
+        int_val_idx = valid_idx[pos_val_mask]
+        y_int_train = frame.iloc[int_tr_idx]["reuse_intensity"].astype(int).to_numpy()
+        y_int_valid = frame.iloc[int_val_idx]["reuse_intensity"].astype(int).to_numpy()
+
+        X_int_train = X_train_sp[pos_tr_mask]
+        X_int_valid = X_valid_sp[pos_val_mask]
+
+        train_rates = np.bincount(y_int_train, minlength=4) / len(y_int_train)
+        valid_rates = np.bincount(y_int_valid, minlength=4) / len(y_int_valid)
+
+        for cw in ["balanced", "none"]:
+            cw_param = "balanced" if cw == "balanced" else None
+            lr_int = LogisticRegression(
+                max_iter=1000,
+                class_weight=cw_param,
+                random_state=random_seed,
+            )
+            lr_int.fit(X_int_train, y_int_train)
+            int_preds = lr_int.predict(X_int_valid)
+            int_metrics = _intensity_metrics(y_int_valid, int_preds)
+
+            fold_records.append(
+                {
+                    "ablation": "hybrid_screened",
+                    "task": "conditional_intensity",
+                    "fold": fold,
+                    "class_weight": cw,
+                    "train_rows": len(int_tr_idx),
+                    "validation_rows": len(int_val_idx),
+                    "train_min_class_rate": float(train_rates.min()),
+                    "validation_min_class_rate": float(valid_rates.min()),
+                    "train_intensity_class_rates": json.dumps(train_rates.tolist()),
+                    "validation_intensity_class_rates": json.dumps(valid_rates.tolist()),
+                    "iterations": int(np.max(lr_int.n_iter_)),
+                    "converged": bool(lr_int.n_iter_[0] < 1000),
+                    **int_metrics,
+                }
+            )
+
+            for class_idx in range(len(lr_int.coef_)):
+                coefs_c = lr_int.coef_[class_idx]
+                for fname, coef in zip(combined_feature_names, coefs_c, strict=False):
+                    importance_records.append(
+                        {
+                            "ablation": "hybrid_screened",
+                            "task": f"conditional_intensity_class_{class_idx}",
+                            "fold": fold,
+                            "class_weight": cw,
+                            "feature": fname,
+                            "coefficient": float(coef),
+                        }
+                    )
+
+            if cw == "balanced":
+                print(
+                    f"[Dobra {fold} - Intensidade] Macro F1: {int_metrics['macro_f1']:.4f} | "
+                    f"Class 3 F1: {int_metrics['class_3_f1']:.4f}",
+                    flush=True,
+                )
+
+        # 3. HistGradientBoosting + SHAP
         print(f"[Dobra {fold}] Treinando HistGradientBoostingClassifier...", flush=True)
         X_train_dense = X_train_sp.toarray().astype(np.float32)
         X_valid_dense = X_valid_sp.toarray().astype(np.float32)
@@ -395,7 +460,58 @@ def _generate_paper_plots(
         plt.savefig(figures_dir / "ablation_roc_auc_comparison.png")
         plt.close()
 
-    # 2. Grafico das Top-20 Features de SHAP do Modelo Hibrido
+        # 2. Grafico Comparativo de Intensidade Condicional (Macro F1)
+        int_df = df_all[
+            (df_all["task"] == "conditional_intensity") & (df_all["class_weight"] == "balanced")
+        ].copy()
+        if not int_df.empty:
+            fig, ax = plt.subplots(figsize=(10, 5), dpi=300)
+            int_df["display_name"] = int_df["ablation"].map(names_map).fillna(int_df["ablation"])
+            int_df.sort_values(by="macro_f1_mean", inplace=True)
+
+            y_pos = np.arange(len(int_df))
+            colors = [
+                "#94a3b8" if "Hybrid" not in name else "#2563eb"
+                for name in int_df["display_name"]
+            ]
+
+            ax.barh(
+                y_pos,
+                int_df["macro_f1_mean"],
+                xerr=int_df["macro_f1_std"],
+                align="center",
+                color=colors,
+                alpha=0.9,
+                capsize=5,
+            )
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(int_df["display_name"], fontsize=11, fontweight="medium")
+            ax.set_xlabel("Macro F1 Médio (3-Fold Grouped CV)", fontsize=12, fontweight="bold")
+            ax.set_title(
+                "Comparativo de Escala de Difusão de Skills (conditional_intensity)",
+                fontsize=13,
+                fontweight="bold",
+                pad=15,
+            )
+            ax.set_xlim(0.20, 0.45)
+
+            f1_means = int_df["macro_f1_mean"]
+            f1_stds = int_df["macro_f1_std"]
+            for i, (v, s) in enumerate(zip(f1_means, f1_stds, strict=False)):
+                ax.text(
+                    v + s + 0.005,
+                    i,
+                    f"{v:.3f} ± {s:.3f}",
+                    va="center",
+                    fontsize=10,
+                    fontweight="bold" if "Hybrid" in int_df["display_name"].iloc[i] else "normal",
+                )
+
+            plt.tight_layout()
+            plt.savefig(figures_dir / "ablation_intensity_macro_f1.png")
+            plt.close()
+
+    # 3. Grafico das Top-20 Features de SHAP do Modelo Hibrido
     fig, ax = plt.subplots(figsize=(10, 7), dpi=300)
     top_shap = shap_summary.head(20).copy()
     top_shap.sort_values(by="mean", ascending=True, inplace=True)
@@ -434,6 +550,42 @@ def _generate_paper_plots(
     plt.tight_layout()
     plt.savefig(figures_dir / "hybrid_shap_top20.png")
     plt.close()
+
+    # 4. Top Drivers de Difusao Massiva (Classe 3: 10+ Repositorios)
+    c3_imp = imp_summary[
+        (imp_summary["task"] == "conditional_intensity_class_3")
+        & (imp_summary["class_weight"] == "balanced")
+    ].copy()
+    if not c3_imp.empty:
+        fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
+        c3_top = c3_imp.sort_values(by="mean", ascending=False).head(15).copy()
+        c3_top.sort_values(by="mean", ascending=True, inplace=True)
+
+        c_colors = []
+        for f in c3_top["feature"]:
+            if f.startswith("text__"):
+                c_colors.append("#10b981")
+            elif f.startswith("repo_"):
+                c_colors.append("#f59e0b")
+            else:
+                c_colors.append("#3b82f6")
+
+        y_pos = np.arange(len(c3_top))
+        ax.barh(y_pos, c3_top["mean"], color=c_colors, alpha=0.9)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(c3_top["feature"], fontsize=10)
+        ax.set_xlabel("Coeficiente Beta Médio (Log-Odds)", fontsize=11, fontweight="bold")
+        ax.set_title(
+            "Top Drivers de Difusão Massiva (10+ Repositórios - Classe 3)",
+            fontsize=12,
+            fontweight="bold",
+            pad=12,
+        )
+        ax.legend(handles=legend_elements, loc="lower right", frameon=True)
+
+        plt.tight_layout()
+        plt.savefig(figures_dir / "intensity_class3_top_drivers.png")
+        plt.close()
 
 
 def main() -> None:
