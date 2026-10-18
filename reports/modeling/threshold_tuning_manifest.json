@@ -1,0 +1,11 @@
+{
+  "generated_at_utc": "2026-10-18T19:40:09.930266+00:00",
+  "protocol": "OutOfFold threshold tuning on 160k train instances; test set untouched",
+  "optimal_threshold_unweighted": 0.21,
+  "optimal_f1_unweighted": 0.3754063428367007,
+  "optimal_threshold_balanced": 0.56,
+  "optimal_f1_balanced": 0.37322684467755396,
+  "brier_score_unweighted": 0.13229339002707474,
+  "brier_score_balanced": 0.21511805582851556,
+  "frozen_decision_rule": "predict 1 if P(reused=1|x) >= 0.21 on unweighted calibrated model"
+}
