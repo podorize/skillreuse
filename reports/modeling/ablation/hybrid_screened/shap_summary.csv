@@ -1,0 +1,369 @@
+feature,mean,std
+text_average_sentence_words,0.09654425333227142,0.024403251171186004
+location_class_canonical,0.09480144441467493,0.013858684225341852
+location_class_other,0.08345178788636343,0.059070221456502
+composition_truncated,0.08205990382860161,0.062088289155891756
+repo_stars,0.07280535301573977,0.030651304564626784
+text__patterns,0.0727781614982357,
+text__best practices,0.05052621720881786,
+text__follows best,0.045739727013168745,
+markdown_max_heading_depth,0.04406776092738701,0.03832996488744484
+markdown_heading_count,0.03612197503143727,0.026976244350789606
+frontmatter_description_char_count,0.03131299973012142,0.02421228776890998
+text__comprehensive,0.030371626499548516,
+repo_forks,0.026074801716272106,0.024085879517908502
+commit_count,0.02489485436019095,0.0014608305121793337
+text__appropriate,0.022257448633865442,0.03147678572183502
+frontmatter_name_char_count,0.020139895516801242,0.0325664420574138
+text_average_word_length,0.019769215031672217,0.021958314921545027
+text__und,0.01898277448659277,
+repo_language_HTML,0.018728323906443637,0.02092652964372341
+markdown_inline_code_count,0.017768613057731353,0.015359635189864917
+text_nonempty_line_count,0.01681140685112104,0.00851172448762397
+repo_language_,0.01585257641564956,0.0106327577541255
+text__limitations,0.012593266915502534,
+markdown_fenced_code_blocks,0.012121968873703785,0.01145821519292484
+text__feedback output,0.011444686300943871,
+text__objective,0.010472375415868256,
+text__example,0.00893170764664562,
+has_references,0.008921655500084983,0.00828242760358791
+text__understanding of,0.008473951180378313,0.011983976686178508
+text__methods,0.008473057539729585,0.011982712887453189
+text__practices,0.008004493439763767,
+sibling_bytes,0.007617469153542909,0.004462918128870497
+text__wenn,0.0074079588865380835,
+text__version tags,0.006391103422048595,
+frontmatter_valid,0.005057532343193647,0.006563423489215892
+repo_language_Shell,0.005009409625281164,0.005538729868804702
+text_sentence_count,0.004917668210418631,0.0055461596895801735
+repo_license_Apache-2.0,0.004399284740915582,0.006588389155427084
+text__jeremy,0.004355093399505638,
+filename_skill.md,0.004140698171068414,0.0063069580613722784
+repo_license_MIT,0.004139187965568225,0.006891733896815514
+text__techniques,0.003814877499816004,0.00396616949029514
+text__theoretical,0.003788401076655568,0.005357608182315139
+markdown_url_count,0.003627363226552669,0.002788687396733634
+repo_license_,0.003081661853009255,0.002465517786775251
+text_lexical_diversity,0.002067349182971277,0.0035807538218922586
+text_line_count,0.0020070172779428895,0.0019156267499758582
+location_class_skills-dir,0.0017182389646352486,0.002976077186292794
+history_fetched,0.0016034210443616238,0.0027772067147594833
+text__role objective,0.0015857465452460702,
+markdown_link_count,0.001529453937112379,0.002649091926914895
+repo_language_Stata,0.0012462459345073218,0.0017452307747977177
+text__literature,0.0012388013579074611,0.0017519296814389382
+text__through independent,0.0009530817398295696,0.0013478611225171229
+text__methodologies,0.0009508909768966919,0.0013447629158655032
+text__expertise,0.0008927542460487603,0.001262545162628324
+repo_language_JavaScript,0.0008478929038244195,0.001468593588801006
+filename_SKILL.md,0.0008303424488526123,0.0014381953090938865
+repo_language_Go,0.0008204174421614162,0.0014210046932392737
+text__cross disciplinary,0.0007912377416808577,0.0011189791453465284
+text__problems,0.0007193871004855292,
+markdown_ordered_list_items,0.0007098469767072125,0.0012138372270569875
+text__mit author,0.0007000381272857374,
+text__edit bash,0.0005092296639201905,
+text_char_count,0.0005008983193097128,0.0006553143032034514
+text__identify key,0.00018534541883229137,
+text_unique_word_count,0.00014581075187457534,0.00021436621275326443
+text_word_count,0.000140850818634952,0.00024396077416340609
+text__step analysis,0.000127183215980703,
+markdown_unordered_list_items,8.879847469572767e-05,0.00015380346980761964
+repo_language_Python,8.60579602494034e-05,0.0001490567595477095
+text__author jeremy,4.777951950565754e-05,
+repo_license_GPL-3.0,4.645090291494118e-05,8.045532390612738e-05
+repo_language_TypeScript,2.348261056465874e-05,4.067307459234262e-05
+body_chars,1.5412773145282436e-05,2.6695706173162346e-05
+repo_language_Kotlin,0.0,0.0
+text__me with,0.0,
+text__nur,0.0,
+text__normen,0.0,
+text__nicht,0.0,
+repo_language_AL,0.0,
+text__methods version,0.0,0.0
+text__methods recommendations,0.0,0.0
+text__methods practical,0.0,0.0
+text__methods complexity,0.0,0.0
+text__methods assumptions,0.0,0.0
+repo_language_Apex,0.0,0.0
+text__methodology may,0.0,0.0
+text__methodology follow,0.0,0.0
+text__methodology,0.0,0.0
+text__methodologies or,0.0,0.0
+text__methodologies cross,0.0,0.0
+repo_is_fork,0.0,0.0
+text__objective what,0.0,
+text__oder,0.0,
+text__practices validation,0.0,0.0
+text__problems stay,0.0,0.0
+text__problems quality,0.0,0.0
+missingindicator_repo_stars,0.0,0.0
+text__problem scale,0.0,0.0
+text__problem parameters,0.0,0.0
+text__predictions documentation,0.0,0.0
+text__practices established,0.0,0.0
+text__operational rules,0.0,
+missingindicator_sibling_bytes,0.0,0.0
+text__patterns do,0.0,
+missingindicator_sibling_count,0.0,0.0
+text__or theoretical,0.0,
+text__or techniques,0.0,
+text__or best,0.0,
+repo_language_Astro,0.0,0.0
+text__md commit,0.0,
+text__fur,0.0,
+text__manuscript,0.0,
+text__ist,0.0,
+text__investigation limitations,0.0,0.0
+text__intentsolutions io,0.0,
+text__intentsolutions,0.0,
+text__information complexity,0.0,0.0
+text__industry best,0.0,
+text__independent methods,0.0,0.0
+text__includes tasks,0.0,0.0
+text__in standardized,0.0,
+text__impact specific,0.0,
+text__im,0.0,
+repo_language_Blade,0.0,0.0
+text__handling compare,0.0,0.0
+text__guidelines input,0.0,0.0
+text__grep version,0.0,
+text__iteration refine,0.0,0.0
+repo_language_Bicep,0.0,0.0
+text__jeremy intentsolutions,0.0,
+repo_language_Batchfile,0.0,0.0
+text__maintain reproducibility,0.0,0.0
+text__longshore jeremy,0.0,
+text__longshore,0.0,
+text__literature and,0.0,0.0
+repo_language_AutoHotkey,0.0,
+text__limitations usage,0.0,0.0
+text__limit applicability,0.0,0.0
+text__jeremy longshore,0.0,
+text__level understanding,0.0,
+text__level expertise,0.0,0.0
+text__learned rules,0.0,
+text__known benchmarks,0.0,0.0
+text__keine,0.0,
+text__journal of,0.0,
+text__processing document,0.0,
+text__proficiency effective,0.0,0.0
+text__prompt role,0.0,
+text__provides automated,0.0,
+text__validation through,0.0,
+text__usage guidelines,0.0,0.0
+text__updated 2025,0.0,
+markdown_table_row_count,0.0,0.0
+text__understanding,0.0,
+missingindicator_commit_count,0.0,0.0
+text__triggers,0.0,
+text__trigger with,0.0,
+text__tool proficiency,0.0,0.0
+missingindicator_composition_truncated,0.0,0.0
+text__this deliverable,0.0,
+text__therapist,0.0,
+text__theoretical predictions,0.0,0.0
+text__theoretical expectations,0.0,0.0
+missingindicator_has_references,0.0,0.0
+text__venue,0.0,
+text__version license,0.0,
+markdown_shell_prompt_count,0.0,0.0
+has_scripts,0.0,0.0
+composition_fetched,0.0,0.0
+filename_SKILL.MD,0.0,0.0
+filename_Skill.md,0.0,0.0
+filename_infrequent_sklearn,0.0,0.0
+frontmatter_description_missing,0.0,0.0
+frontmatter_name_missing,0.0,0.0
+markdown_blockquote_count,0.0,0.0
+text__welche,0.0,
+text__world problems,0.0,0.0
+text__workflow steps,0.0,
+text__with theoretical,0.0,0.0
+text__with phrases,0.0,
+text__wird,0.0,
+markdown_checkbox_count,0.0,0.0
+text__the contribution,0.0,
+text__techniques key,0.0,0.0
+missingindicator_has_scripts,0.0,0.0
+text__relevant learned,0.0,
+text__review any,0.0,
+text__results with,0.0,0.0
+text__requires appropriate,0.0,0.0
+text__requirements clearly,0.0,
+text__reproducibility through,0.0,0.0
+text__relevant literature,0.0,0.0
+text__refine approach,0.0,0.0
+text__rules constraints,0.0,
+text__references evidence,0.0,
+text__quantification visualizations,0.0,0.0
+text__quality validation,0.0,
+text__psychology,0.0,
+text__prufen,0.0,
+text__provides step,0.0,
+missingindicator_repo_is_fork,0.0,0.0
+text__scale problems,0.0,0.0
+text__task board,0.0,
+text__standardized formats,0.0,0.0
+text__subdiscipline,0.0,0.0
+text__style preferences,0.0,
+text__structured process,0.0,
+text__step guidance,0.0,
+missingindicator_repo_forks,0.0,0.0
+text__standards tool,0.0,0.0
+text__specific actionable,0.0,
+text__scientific skills,0.0,
+text__source map,0.0,
+text__skills version,0.0,
+text__skills consider,0.0,0.0
+text__skill leverages,0.0,0.0
+text__skill category,0.0,
+text__selected framework,0.0,
+text__gericht,0.0,
+text__fristen,0.0,
+repo_language_Lean,0.0,0.0
+repo_language_Verilog,0.0,0.0
+repo_license_CC0-1.0,0.0,0.0
+repo_license_CC-BY-SA-4.0,0.0,0.0
+repo_license_CC-BY-4.0,0.0,0.0
+repo_license_BlueOak-1.0.0,0.0,0.0
+repo_license_BSD-3-Clause,0.0,0.0
+repo_license_BSD-2-Clause,0.0,0.0
+repo_language_Haskell,0.0,0.0
+repo_license_AGPL-3.0,0.0,0.0
+repo_license_0BSD,0.0,0.0
+repo_language_Java,0.0,0.0
+repo_language_infrequent_sklearn,0.0,0.0
+repo_language___MISSING__,0.0,0.0
+repo_language_Zig,0.0,0.0
+repo_language_Wolfram Language,0.0,
+repo_language_Vue,0.0,0.0
+repo_license_EUPL-1.2,0.0,0.0
+repo_license_GPL-2.0,0.0,0.0
+repo_language_HCL,0.0,0.0
+repo_license_Unlicense,0.0,0.0
+repo_language_GDScript,0.0,0.0
+repo_language_Go Template,0.0,0.0
+repo_metadata_fetched,0.0,0.0
+repo_license_infrequent_sklearn,0.0,0.0
+repo_license___MISSING__,0.0,0.0
+repo_license_WTFPL,0.0,0.0
+repo_license_UPL-1.0,0.0,0.0
+repo_license_ISC,0.0,0.0
+repo_license_NOASSERTION,0.0,0.0
+repo_license_MPL-2.0,0.0,0.0
+repo_license_MIT-0,0.0,0.0
+repo_language_Groovy,0.0,
+repo_license_LGPL-3.0,0.0,0.0
+repo_license_LGPL-2.1,0.0,0.0
+repo_language_Vim Script,0.0,0.0
+repo_language_Typst,0.0,0.0
+text__frist,0.0,
+repo_language_TypeSpec,0.0,
+repo_language_Pascal,0.0,0.0
+repo_language_PLpgSQL,0.0,0.0
+repo_language_PHP,0.0,0.0
+repo_language_OCaml,0.0,0.0
+repo_language_Nushell,0.0,0.0
+repo_language_Nunjucks,0.0,
+repo_language_Nix,0.0,0.0
+repo_language_MoonBit,0.0,0.0
+repo_language_Monkey C,0.0,0.0
+repo_language_Mermaid,0.0,0.0
+repo_language_Markdown,0.0,0.0
+repo_language_Makefile,0.0,0.0
+repo_language_MDX,0.0,0.0
+repo_language_Lua,0.0,0.0
+repo_language_Liquid,0.0,0.0
+repo_language_Perl,0.0,
+repo_language_PowerShell,0.0,0.0
+repo_language_Just,0.0,0.0
+repo_language_Solidity,0.0,0.0
+repo_language_Jinja,0.0,0.0
+repo_language_TeX,0.0,0.0
+repo_language_TSQL,0.0,0.0
+repo_language_Swift,0.0,0.0
+repo_language_Svelte,0.0,0.0
+repo_language_Julia,0.0,0.0
+repo_language_Jupyter Notebook,0.0,0.0
+repo_language_QML,0.0,0.0
+repo_language_Scala,0.0,0.0
+repo_language_SCSS,0.0,0.0
+repo_language_Rust,0.0,0.0
+repo_language_Ruby,0.0,0.0
+repo_language_Rich Text Format,0.0,0.0
+repo_language_R,0.0,0.0
+sibling_count,0.0,0.0
+text__actionable recommendation,0.0,
+text__activating,0.0,
+text__als,0.0,
+text__documentation consider,0.0,0.0
+text__disciplinary approaches,0.0,0.0
+text__dimensionality domain,0.0,0.0
+text__dimensionality,0.0,
+text__die,0.0,
+text__desk reject,0.0,
+text__des,0.0,
+text__der,0.0,
+text__den,0.0,
+text__decisions iteration,0.0,0.0
+repo_language_Clojure,0.0,0.0
+text__contexts description,0.0,0.0
+text__constraints methodology,0.0,0.0
+text__constraints may,0.0,
+text__const,0.0,
+text__documentation provide,0.0,0.0
+repo_language_Cairo,0.0,
+text__educational contexts,0.0,0.0
+text__expected impact,0.0,
+text__formats appropriate,0.0,0.0
+repo_language_C,0.0,0.0
+text__files references,0.0,
+repo_language_C#,0.0,0.0
+text__expertise deep,0.0,0.0
+repo_language_C++,0.0,0.0
+text__expectations maintain,0.0,0.0
+text__eine,0.0,
+text__examples input,0.0,
+text__examples example,0.0,
+text__example input,0.0,
+repo_language_CSS,0.0,0.0
+text__evidence md,0.0,
+text__established,0.0,0.0
+text__consider computational,0.0,0.0
+text__consider combining,0.0,0.0
+repo_language_Dart,0.0,0.0
+text__applicable best,0.0,0.0
+text__assurance validation,0.0,0.0
+text__assumptions,0.0,0.0
+text__appropriate input,0.0,0.0
+repo_language_F#,0.0,0.0
+text__applications outputs,0.0,0.0
+text__application ability,0.0,0.0
+text__applicability related,0.0,0.0
+repo_language_Emacs Lisp,0.0,0.0
+text__and priorities,0.0,
+text__and methods,0.0,0.0
+text__and dimensionality,0.0,
+text__and benchmarks,0.0,
+text__analysis numerical,0.0,0.0
+text__analysis complementary,0.0,0.0
+text__aus,0.0,
+text__await,0.0,
+text__computational,0.0,
+text__combining this,0.0,0.0
+text__comprehensive explanations,0.0,0.0
+repo_language_Dockerfile,0.0,0.0
+text__complexity increases,0.0,
+text__completeness results,0.0,0.0
+text__community trigger,0.0,0.0
+text__communication style,0.0,
+text__clearly specify,0.0,0.0
+text__bei,0.0,
+text__check knowledge,0.0,
+text__cautions,0.0,
+text__cause solution,0.0,
+text__camera ready,0.0,
+text__board md,0.0,
+repo_language_Elixir,0.0,0.0
+text__consider,0.0,

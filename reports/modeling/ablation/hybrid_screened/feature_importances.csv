@@ -1,0 +1,737 @@
+ablation,task,class_weight,feature,mean,std,odds_ratio
+hybrid_screened,binary_reuse,balanced,text__objective,6.928717070797004,,1021.1830333417312
+hybrid_screened,binary_reuse,balanced,text__patterns,6.07090717465136,,433.07337661549604
+hybrid_screened,binary_reuse,balanced,text__version tags,5.719412277170223,,304.72577602230376
+hybrid_screened,binary_reuse,balanced,text__example,4.804458463003845,,122.05337670213314
+hybrid_screened,binary_reuse,balanced,text__prompt role,4.674138556807113,,107.14023210345103
+hybrid_screened,binary_reuse,balanced,text__practices,4.615000485663563,,100.98787757860146
+hybrid_screened,binary_reuse,balanced,text__best practices,4.481996745071826,,88.41103083602972
+hybrid_screened,binary_reuse,balanced,text__role objective,4.198340358210258,,66.57574740911608
+hybrid_screened,binary_reuse,balanced,text__operational rules,3.991577227014894,,54.14021346516875
+hybrid_screened,binary_reuse,balanced,text__md commit,3.9619922329458253,,52.56193733262698
+hybrid_screened,binary_reuse,balanced,text__rules constraints,3.8586213771390105,,47.399959635977424
+hybrid_screened,binary_reuse,balanced,text__triggers,3.5914873636459634,,36.288009273061256
+hybrid_screened,binary_reuse,balanced,text__jeremy,3.5444880233447047,,34.621955171122984
+hybrid_screened,binary_reuse,balanced,text__appropriate,3.352853907330358,1.4098605236415958,28.58419398909705
+hybrid_screened,binary_reuse,balanced,text__edit bash,3.351834682254076,,28.555075103667935
+hybrid_screened,binary_reuse,balanced,repo_language_Stata,3.1459507747335906,2.00183640644881,23.24176265234857
+hybrid_screened,binary_reuse,balanced,text__scientific skills,3.0560062031428235,,21.242549096726744
+hybrid_screened,binary_reuse,balanced,text__comprehensive,2.9977060057499862,,20.039513625750065
+hybrid_screened,binary_reuse,balanced,text__patterns do,2.3463459455728475,,10.447324799327411
+hybrid_screened,binary_reuse,balanced,text__understanding,2.3320769885655137,,10.299310884351687
+hybrid_screened,binary_reuse,balanced,text__mit author,2.3115558693721474,,10.090111343831234
+hybrid_screened,binary_reuse,balanced,text__communication style,2.3067313581621356,,10.041548728179333
+hybrid_screened,binary_reuse,balanced,repo_language_Cairo,2.305848206062782,,10.032684428178007
+hybrid_screened,binary_reuse,balanced,text__style preferences,2.2762487079898714,,9.740073930147643
+hybrid_screened,binary_reuse,balanced,repo_language_AutoHotkey,2.1359507477255364,,8.465090848056303
+hybrid_screened,binary_reuse,balanced,text__skills version,2.1316316432570113,,8.428608079506787
+hybrid_screened,binary_reuse,balanced,text__example input,2.102851596387852,,8.189489766796642
+hybrid_screened,binary_reuse,balanced,text__author jeremy,2.050008131775125,,7.767964273388592
+hybrid_screened,binary_reuse,balanced,text__intentsolutions,2.0461471639297244,,7.738030237465637
+hybrid_screened,binary_reuse,balanced,text__intentsolutions io,2.0461471639297244,,7.738030237465637
+hybrid_screened,binary_reuse,balanced,text__longshore jeremy,2.045489090429202,,7.73293971997116
+hybrid_screened,binary_reuse,balanced,text__jeremy intentsolutions,2.0430065950469833,,7.713766541335748
+hybrid_screened,binary_reuse,balanced,text__jeremy longshore,2.0369564272711203,,7.667237854687108
+hybrid_screened,binary_reuse,balanced,text__longshore,2.0369564272711203,,7.667237854687108
+hybrid_screened,binary_reuse,balanced,text__venue,1.967489538988135,,7.15269736198446
+hybrid_screened,binary_reuse,balanced,text__version license,1.966897862685452,,7.148466532219395
+hybrid_screened,binary_reuse,balanced,text__limitations,1.9357737276707376,,6.929403452947059
+hybrid_screened,binary_reuse,balanced,repo_language_Svelte,1.9102076766758553,0.7779741053089478,6.754491403203819
+hybrid_screened,binary_reuse,balanced,text__manuscript,1.8472628137849083,,6.342435315034564
+hybrid_screened,binary_reuse,balanced,text__await,1.8328876214312326,,6.251913778462307
+hybrid_screened,binary_reuse,balanced,text__expected impact,1.7929428408859147,,6.007104432710247
+hybrid_screened,binary_reuse,balanced,text__identify key,1.779601938957357,,5.927496443500672
+hybrid_screened,binary_reuse,balanced,text__trigger with,1.7577525624586734,,5.799388972644526
+hybrid_screened,binary_reuse,balanced,text__this deliverable,1.7151281117198387,,5.557387433219622
+hybrid_screened,binary_reuse,balanced,text__step analysis,1.696913999581855,,5.45708082628701
+hybrid_screened,binary_reuse,balanced,text__specific actionable,1.6824287570127954,,5.37860344096756
+hybrid_screened,binary_reuse,balanced,text__methods,1.645462725599983,0.9483851802588862,5.183407847617698
+hybrid_screened,binary_reuse,balanced,text__actionable recommendation,1.6395394855210415,,5.15279602858655
+hybrid_screened,binary_reuse,balanced,text__therapist,1.6269983154695273,,5.088577466996102
+hybrid_screened,binary_reuse,balanced,text__journal of,1.6218769564967235,,5.062583653765482
+hybrid_screened,binary_reuse,balanced,text__with phrases,1.596983473384831,,4.938113982512075
+hybrid_screened,binary_reuse,balanced,text__quality validation,1.570430458289145,,4.808717700719447
+hybrid_screened,binary_reuse,balanced,text__const,1.4717395355466767,,4.35680737436652
+hybrid_screened,binary_reuse,balanced,text__consider,1.4179694250934818,,4.128728230688836
+hybrid_screened,binary_reuse,balanced,text__relevant learned,1.4154361740084878,,4.118282362009123
+hybrid_screened,binary_reuse,balanced,text__learned rules,1.4078757251363967,,4.087263704012319
+hybrid_screened,binary_reuse,balanced,text__selected framework,1.404676195851587,,4.074207282436386
+hybrid_screened,binary_reuse,balanced,text__review any,1.3835200237995238,,3.9889180303875826
+hybrid_screened,binary_reuse,balanced,text__impact specific,1.3677702761464536,,3.9265857255153813
+hybrid_screened,binary_reuse,balanced,text__and priorities,1.3406495290392022,,3.8215248908037585
+hybrid_screened,binary_reuse,balanced,text__and benchmarks,1.3048735856983222,,3.687222946527887
+hybrid_screened,binary_reuse,balanced,text__check knowledge,1.3000668712160592,,3.669542046153779
+hybrid_screened,binary_reuse,balanced,text__structured process,1.287029920015968,,3.6220128963522504
+hybrid_screened,binary_reuse,balanced,text__understanding of,1.2752133729484454,0.027868622286631912,3.579465089644439
+hybrid_screened,binary_reuse,balanced,text__task board,1.2398153479067475,,3.4549754374112918
+hybrid_screened,binary_reuse,balanced,text__objective what,1.2347610441609662,,3.437556998238498
+hybrid_screened,binary_reuse,balanced,repo_license_infrequent_sklearn,1.2194294307688083,0.7333609015212669,3.3852556597636236
+hybrid_screened,binary_reuse,balanced,repo_language_HTML,1.215567661238495,0.45308669308396526,3.372207792747586
+hybrid_screened,binary_reuse,balanced,text__activating,1.198798045486538,,3.3161286905330396
+hybrid_screened,binary_reuse,balanced,text__me with,1.1808516556190893,,3.257146989528246
+hybrid_screened,binary_reuse,balanced,repo_language_QML,1.1610295232782057,0.032449400518655816,3.1932190777943035
+hybrid_screened,binary_reuse,balanced,repo_license_LGPL-3.0,1.1525495021248484,0.3637965098269354,3.166255002017523
+hybrid_screened,binary_reuse,balanced,text__board md,1.123313036153568,,3.0750250149041385
+hybrid_screened,binary_reuse,balanced,text__source map,1.1205288820604147,,3.066475578419225
+hybrid_screened,binary_reuse,balanced,text__examples example,1.1169707008302985,,3.0555838913630287
+hybrid_screened,binary_reuse,balanced,text__the contribution,1.104001186987714,,3.016210333649402
+hybrid_screened,binary_reuse,balanced,text__cause solution,1.097742922661492,,2.9973930353475664
+hybrid_screened,binary_reuse,balanced,text__problems,1.0928127913658545,,2.98265186195728
+hybrid_screened,binary_reuse,balanced,text__follows best,1.0402906129703442,,2.830039340995455
+hybrid_screened,binary_reuse,balanced,text__camera ready,1.0144679058454513,,2.757895546794251
+hybrid_screened,binary_reuse,balanced,text__psychology,0.9866752494816458,,2.6823016470786247
+hybrid_screened,binary_reuse,balanced,text__or best,0.9608033471033327,,2.613795415196341
+hybrid_screened,binary_reuse,balanced,text__desk reject,0.9605070590445584,,2.6130210935435336
+hybrid_screened,binary_reuse,balanced,text__grep version,0.9384464526379802,,2.556007453620468
+hybrid_screened,binary_reuse,balanced,text__industry best,0.9143079242018918,,2.4950478919806742
+hybrid_screened,binary_reuse,balanced,repo_language_MoonBit,0.8810918555260172,0.3492736218624869,2.4135334981827254
+hybrid_screened,binary_reuse,balanced,repo_license_AGPL-3.0,0.8731278951941782,0.5496207977419253,2.394388549139392
+hybrid_screened,binary_reuse,balanced,text__examples input,0.8466335213597082,,2.3317837237259065
+hybrid_screened,binary_reuse,balanced,repo_license_MIT-0,0.7732582950747329,0.9388441268463589,2.166814886558947
+hybrid_screened,binary_reuse,balanced,text__usage guidelines,0.7684845744098728,0.23927197429946684,2.1564957674504712
+hybrid_screened,binary_reuse,balanced,repo_language_Jupyter Notebook,0.7034155329076777,0.40868154868933804,2.020642505578897
+hybrid_screened,binary_reuse,balanced,text__step guidance,0.6999867774019721,,2.0137260806039365
+hybrid_screened,binary_reuse,balanced,repo_language_Vue,0.6978565662332016,0.2601146305142525,2.0094409845163708
+hybrid_screened,binary_reuse,balanced,repo_license_Unlicense,0.6930535110365271,0.5447188210759425,1.9998126697268692
+hybrid_screened,binary_reuse,balanced,text__literature,0.6915245991196585,0.9174737759781701,1.9967574684665725
+hybrid_screened,binary_reuse,balanced,text__techniques,0.6552065833452387,0.5041268916040444,1.9255402608398366
+hybrid_screened,binary_reuse,balanced,repo_license_NOASSERTION,0.6395568712323559,0.043804451866060676,1.8956406802419807
+hybrid_screened,binary_reuse,balanced,location_class_canonical,0.6392531702079235,0.0678493851041141,1.8950650596381433
+hybrid_screened,binary_reuse,balanced,text__files references,0.6356838201007692,,1.888312966425393
+hybrid_screened,binary_reuse,balanced,text__workflow steps,0.6327038601837125,,1.8826942454142144
+hybrid_screened,binary_reuse,balanced,repo_language_C#,0.6258382367740386,0.19893007089185985,1.869812646433123
+hybrid_screened,binary_reuse,balanced,repo_license_,0.6114349029240533,0.3249198998154136,1.8430741347586217
+hybrid_screened,binary_reuse,balanced,repo_license_MIT,0.6024480883427722,0.09379050442840703,1.8265849727466004
+hybrid_screened,binary_reuse,balanced,text__provides automated,0.5576474628747343,,1.7465588189362733
+hybrid_screened,binary_reuse,balanced,text__provides step,0.5424065799588323,,1.7201415431332205
+hybrid_screened,binary_reuse,balanced,text__references evidence,0.5411679525336323,,1.7180122476168114
+hybrid_screened,binary_reuse,balanced,text__evidence md,0.5115614663964061,,1.6678935223817024
+hybrid_screened,binary_reuse,balanced,repo_language_TSQL,0.506884292648676,0.3790286090606343,1.6601107095567567
+hybrid_screened,binary_reuse,balanced,filename_SKILL.md,0.4876996900094321,0.2603372252752956,1.6285657019776354
+hybrid_screened,binary_reuse,balanced,text__cautions,0.4813552785939107,,1.6182661180936997
+hybrid_screened,binary_reuse,balanced,repo_language_Dart,0.47312834917121965,0.09506930887772581,1.6050073711226571
+hybrid_screened,binary_reuse,balanced,text__skill category,0.44816944218472393,,1.5654439254211177
+hybrid_screened,binary_reuse,balanced,text__feedback output,0.4432384117510064,,1.557743674471145
+hybrid_screened,binary_reuse,balanced,repo_license_GPL-3.0,0.42157805582790636,0.21240443411690474,1.5243651919586878
+hybrid_screened,binary_reuse,balanced,repo_license_Apache-2.0,0.41730260372305533,0.21053581840875218,1.517861754065406
+hybrid_screened,binary_reuse,balanced,repo_language_Scala,0.4165444288254861,0.3657872402057763,1.5167113855308716
+hybrid_screened,binary_reuse,balanced,repo_language_PHP,0.3975200794721537,0.16037449080936914,1.4881296745251809
+hybrid_screened,binary_reuse,balanced,text_word_count,0.3943149793138185,0.3683629949947459,1.4833677052405008
+hybrid_screened,binary_reuse,balanced,repo_language_Haskell,0.3920331826759488,0.35955269815044455,1.4799868205105715
+hybrid_screened,binary_reuse,balanced,repo_language_Apex,0.3562229320412551,0.2369935135757855,1.427925843206443
+hybrid_screened,binary_reuse,balanced,repo_language_HCL,0.35552811265782985,0.16741528774548395,1.4269340372553905
+hybrid_screened,binary_reuse,balanced,repo_license_ISC,0.3459123443521122,0.564251544789531,1.4132787285254511
+hybrid_screened,binary_reuse,balanced,text__expertise,0.3245826838581034,0.8501335944925257,1.3834531881509213
+hybrid_screened,binary_reuse,balanced,filename_Skill.md,0.32210196941821384,0.5171711746156747,1.3800254891791537
+hybrid_screened,binary_reuse,balanced,composition_truncated,0.32153142168173854,0.08479946377445392,1.3792383433335176
+hybrid_screened,binary_reuse,balanced,repo_language_Python,0.29758837135317895,0.05623392613315231,1.3466073716103977
+hybrid_screened,binary_reuse,balanced,repo_language_OCaml,0.2975414739887616,0.27048208769948406,1.3465442207545801
+hybrid_screened,binary_reuse,balanced,repo_language_Typst,0.2957646552471435,0.6074330614703256,1.3441537800655363
+hybrid_screened,binary_reuse,balanced,repo_language_Zig,0.2428933352473932,0.48619004811646266,1.2749326264923169
+hybrid_screened,binary_reuse,balanced,repo_language_TypeScript,0.21298966083805596,0.12286981079181393,1.2373718577894413
+hybrid_screened,binary_reuse,balanced,repo_language_Swift,0.2082044537622336,0.31973173992774256,1.2314649214484281
+hybrid_screened,binary_reuse,balanced,text__updated 2025,0.2079555844495274,,1.2311584857526074
+hybrid_screened,binary_reuse,balanced,repo_language_JavaScript,0.2069023534114773,0.09662308919800171,1.2298624740423385
+hybrid_screened,binary_reuse,balanced,text__dimensionality,0.19003374315567587,,1.2092904022431101
+hybrid_screened,binary_reuse,balanced,text_average_word_length,0.17503751765875997,0.0499027438519671,1.1912909102198066
+hybrid_screened,binary_reuse,balanced,repo_license_BSD-3-Clause,0.17416758605528737,0.1443305750078069,1.1902550192505512
+hybrid_screened,binary_reuse,balanced,repo_stars,0.16018483842514003,0.14345803093115647,1.1737278009409666
+hybrid_screened,binary_reuse,balanced,text__methodologies,0.13615528021296333,0.2501854520143879,1.1458598091363115
+hybrid_screened,binary_reuse,balanced,text_line_count,0.1353084435364871,0.05632950713815194,1.1448898637744531
+hybrid_screened,binary_reuse,balanced,has_references,0.11217965413110031,0.056647574284101096,1.1187138241525705
+hybrid_screened,binary_reuse,balanced,repo_language_Solidity,0.10531041807362614,0.462503463659269,1.1110554485229587
+hybrid_screened,binary_reuse,balanced,repo_language_infrequent_sklearn,0.10063412371375992,0.4762328666696561,1.1058719554112653
+hybrid_screened,binary_reuse,balanced,text__established,0.10050403369370808,0.6599350529070533,1.1057281018635694
+hybrid_screened,binary_reuse,balanced,text__or techniques,0.09883927996071094,,1.1038888682386054
+hybrid_screened,binary_reuse,balanced,text_char_count,0.09479069081088143,1.1499316474332124,1.0994287105093612
+hybrid_screened,binary_reuse,balanced,repo_language_C,0.08930691030358008,0.3666516826157347,1.0934161855284517
+hybrid_screened,binary_reuse,balanced,markdown_table_row_count,0.08895556065515293,0.012118432284658013,1.0930320816174202
+hybrid_screened,binary_reuse,balanced,markdown_link_count,0.07602187163933148,0.01954696664188136,1.0789861730956307
+hybrid_screened,binary_reuse,balanced,repo_language_Batchfile,0.07528316817594688,0.4511074279615564,1.0781894165922465
+hybrid_screened,binary_reuse,balanced,repo_language_Blade,0.07218379497804535,0.3774383799312016,1.074852878471542
+hybrid_screened,binary_reuse,balanced,markdown_max_heading_depth,0.061333024895631076,0.026683781301808616,1.0632529449344132
+hybrid_screened,binary_reuse,balanced,markdown_fenced_code_blocks,0.06014381795510515,0.018176224068877186,1.0619892686879695
+hybrid_screened,binary_reuse,balanced,markdown_ordered_list_items,0.043587327154759124,0.018210833305821888,1.0445512080142478
+hybrid_screened,binary_reuse,balanced,markdown_unordered_list_items,0.04224822376584123,0.024993510969074602,1.0431533820773038
+hybrid_screened,binary_reuse,balanced,text_average_sentence_words,0.03903314017632752,0.010896930042226471,1.0398049423983076
+hybrid_screened,binary_reuse,balanced,text__or theoretical,0.03620611460623883,,1.0368695384242863
+hybrid_screened,binary_reuse,balanced,history_fetched,0.03283110425729006,0.0046742215402578195,1.0333759916959355
+hybrid_screened,binary_reuse,balanced,has_scripts,0.03224118530458798,0.022888325078958317,1.0327665633874952
+hybrid_screened,binary_reuse,balanced,markdown_checkbox_count,0.027929291801590258,0.012549421868695291,1.0283229709860755
+hybrid_screened,binary_reuse,balanced,markdown_heading_count,0.02516392950464193,0.042797457442171845,1.0254832137015775
+hybrid_screened,binary_reuse,balanced,text__in standardized,0.01342274257321971,,1.0135132320011326
+hybrid_screened,binary_reuse,balanced,repo_language_C++,0.00915762766769628,0.37461041041511683,1.009199687029902
+hybrid_screened,binary_reuse,balanced,text__theoretical,0.00802353552822424,0.5485576654571218,1.00805581035106
+hybrid_screened,binary_reuse,balanced,markdown_blockquote_count,0.007350701445375824,0.0006810004736951688,1.0073777841695832
+hybrid_screened,binary_reuse,balanced,missingindicator_repo_forks,0.0029333322568888824,0.004705675333538317,1.0029376386856528
+hybrid_screened,binary_reuse,balanced,missingindicator_repo_is_fork,0.0029333322568888824,0.004705675333538317,1.0029376386856528
+hybrid_screened,binary_reuse,balanced,missingindicator_repo_stars,0.0029333322568888824,0.004705675333538317,1.0029376386856528
+hybrid_screened,binary_reuse,balanced,repo_language___MISSING__,5.491656995444555e-05,8.91837515207283e-05,1.0000549180778968
+hybrid_screened,binary_reuse,balanced,repo_license___MISSING__,5.491656995444555e-05,8.91837515207283e-05,1.0000549180778968
+hybrid_screened,binary_reuse,balanced,repo_is_fork,0.0,0.0,1.0
+hybrid_screened,binary_reuse,balanced,markdown_shell_prompt_count,-0.0011246352855089348,0.017666957214807585,0.9988759968797465
+hybrid_screened,binary_reuse,balanced,repo_metadata_fetched,-0.001323746960553462,0.0005872871624804258,0.9986771288059806
+hybrid_screened,binary_reuse,balanced,missingindicator_composition_truncated,-0.004544435503328228,0.005559714563481465,0.9954658748195817
+hybrid_screened,binary_reuse,balanced,missingindicator_has_references,-0.004544435503328228,0.005559714563481465,0.9954658748195817
+hybrid_screened,binary_reuse,balanced,missingindicator_has_scripts,-0.004544435503328228,0.005559714563481465,0.9954658748195817
+hybrid_screened,binary_reuse,balanced,missingindicator_sibling_bytes,-0.004544435503328228,0.005559714563481465,0.9954658748195817
+hybrid_screened,binary_reuse,balanced,missingindicator_sibling_count,-0.004544435503328228,0.005559714563481465,0.9954658748195817
+hybrid_screened,binary_reuse,balanced,text__skill leverages,-0.006044561621956358,0.11054333770011146,0.9939736699881183
+hybrid_screened,binary_reuse,balanced,text__constraints may,-0.006769543015841002,,0.9932533187235489
+hybrid_screened,binary_reuse,balanced,text__processing document,-0.008231156709623664,,0.9918026265055744
+hybrid_screened,binary_reuse,balanced,repo_language_GDScript,-0.008510372438025327,0.38225438654678834,0.991525738270358
+hybrid_screened,binary_reuse,balanced,text__results with,-0.009989593584494673,0.11905333314822057,0.9900601366727172
+hybrid_screened,binary_reuse,balanced,text__and dimensionality,-0.010779887557202049,,0.9892780072108942
+hybrid_screened,binary_reuse,balanced,filename_infrequent_sklearn,-0.01652493923913259,0.0061411809578204085,0.9836108485786177
+hybrid_screened,binary_reuse,balanced,sibling_count,-0.01687574933952214,0.008396867353845977,0.983265848476382
+hybrid_screened,binary_reuse,balanced,repo_language_Dockerfile,-0.018350522274546404,0.8492502073493665,0.9818168233692508
+hybrid_screened,binary_reuse,balanced,repo_language_Lean,-0.022883492472286753,0.5587273262344848,0.9773763488421284
+hybrid_screened,binary_reuse,balanced,repo_forks,-0.02347195107797777,0.07184928316144774,0.9768013725101308
+hybrid_screened,binary_reuse,balanced,text__cross disciplinary,-0.029478002662151566,0.13476592743478064,0.9709522357706474
+hybrid_screened,binary_reuse,balanced,repo_language_TypeSpec,-0.030692199896517548,,0.9697740236869506
+hybrid_screened,binary_reuse,balanced,missingindicator_commit_count,-0.03591610963219963,0.005136852333182275,0.9647212209066066
+hybrid_screened,binary_reuse,balanced,filename_SKILL.MD,-0.03597148420725826,0.02546379644738041,0.9646678013580049
+hybrid_screened,binary_reuse,balanced,repo_language_Bicep,-0.03869956255596034,0.3513336063091805,0.9620396984806607
+hybrid_screened,binary_reuse,balanced,text__practices validation,-0.03935022586852242,0.10735373916666825,0.9614139381453544
+hybrid_screened,binary_reuse,balanced,text_nonempty_line_count,-0.0402514230957715,0.06875837523163868,0.9605479048620689
+hybrid_screened,binary_reuse,balanced,repo_language_Kotlin,-0.041172372105289824,0.21269746700436248,0.9596636964384221
+hybrid_screened,binary_reuse,balanced,repo_language_Markdown,-0.042849440827889086,0.9914076115882426,0.9580556232704182
+hybrid_screened,binary_reuse,balanced,text__assurance validation,-0.04539923861990901,0.1076282045064165,0.9556158868966028
+hybrid_screened,binary_reuse,balanced,composition_fetched,-0.046081946056993554,0.019487913275111953,0.9549637034741901
+hybrid_screened,binary_reuse,balanced,location_class_skills-dir,-0.04647834951968529,0.07424555593757798,0.9545852275749226
+hybrid_screened,binary_reuse,balanced,text__problem scale,-0.050514270809452366,0.12161081763544104,0.9507403607409877
+hybrid_screened,binary_reuse,balanced,text__skills consider,-0.05060436884574928,0.10106119896876978,0.9506547047602324
+hybrid_screened,binary_reuse,balanced,text__tool proficiency,-0.05110112553032174,0.0940681063943683,0.9501825779567041
+hybrid_screened,binary_reuse,balanced,text__combining this,-0.05309119513148166,0.09579144512109569,0.9482935287858713
+hybrid_screened,binary_reuse,balanced,sibling_bytes,-0.05315056274707083,0.005168234435382562,0.9482372325312923
+hybrid_screened,binary_reuse,balanced,repo_language_Julia,-0.05317749780635117,0.49239885162535646,0.948211692049191
+hybrid_screened,binary_reuse,balanced,text__clearly specify,-0.05327784218064244,0.12314102203319863,0.9481165491138657
+hybrid_screened,binary_reuse,balanced,text__appropriate input,-0.054142406670584925,0.10582486313636003,0.9472971954562506
+hybrid_screened,binary_reuse,balanced,text__world problems,-0.05432934759119655,0.09190235154089534,0.9471201233979616
+hybrid_screened,binary_reuse,balanced,text__documentation consider,-0.05450330517500805,0.07002453573287348,0.9469553789994002
+hybrid_screened,binary_reuse,balanced,text__documentation provide,-0.054827347104148626,0.10413009490201021,0.9466485754628687
+hybrid_screened,binary_reuse,balanced,text__applicable best,-0.05693085699686093,0.1202539657794768,0.9446593836952151
+hybrid_screened,binary_reuse,balanced,text__expertise deep,-0.059380372625113656,0.1040317938339017,0.9423482574969363
+hybrid_screened,binary_reuse,balanced,text__relevant literature,-0.06047022808249384,0.09120610241530538,0.941321793556016
+hybrid_screened,binary_reuse,balanced,text__application ability,-0.0612842804521646,0.09708048350494863,0.9405558201328887
+hybrid_screened,binary_reuse,balanced,text__handling compare,-0.06292265830981006,0.07797888336146698,0.9390160959727101
+hybrid_screened,binary_reuse,balanced,text__reproducibility through,-0.06303078089237471,0.08426804031509928,0.9389145726159264
+hybrid_screened,binary_reuse,balanced,text__requires appropriate,-0.0633109524896156,0.10024911528108477,0.9386515522675799
+hybrid_screened,binary_reuse,balanced,text__independent methods,-0.06417088913068722,0.09759118372813662,0.9378447183673239
+hybrid_screened,binary_reuse,balanced,text__educational contexts,-0.06422658982631646,0.10050550141062527,0.9377924812189548
+hybrid_screened,binary_reuse,balanced,text__analysis complementary,-0.06500258846538468,0.07936578344958017,0.9370650378138506
+hybrid_screened,binary_reuse,balanced,text__methods assumptions,-0.0651923024343054,0.10744158446625551,0.9368872803484604
+hybrid_screened,binary_reuse,balanced,text__contexts description,-0.06531791265398658,0.1026226576027223,0.9367696051221196
+hybrid_screened,binary_reuse,balanced,text__methods version,-0.06560661314475516,0.08128248509744317,0.9364991983125511
+hybrid_screened,binary_reuse,balanced,text__methodologies or,-0.06621789278486041,0.08341005131024146,0.9359269103514575
+hybrid_screened,binary_reuse,balanced,text__investigation limitations,-0.06698700385634872,0.10244092896167808,0.9352073553469326
+hybrid_screened,binary_reuse,balanced,text__standards tool,-0.06732826173835735,0.10359304946463187,0.9348882629151084
+hybrid_screened,binary_reuse,balanced,text__subdiscipline,-0.06749729039391998,0.09954055204537446,0.9347302533633739
+hybrid_screened,binary_reuse,balanced,text__completeness results,-0.06782253981498229,0.08867151333849066,0.9344262823254997
+hybrid_screened,binary_reuse,balanced,text__refine approach,-0.06835884257653785,0.09422605704265388,0.9339252812859472
+hybrid_screened,binary_reuse,balanced,text__consider combining,-0.06838647010458596,0.09145861578985394,0.9338994795954637
+hybrid_screened,binary_reuse,balanced,text__comprehensive explanations,-0.06850257573817789,0.08985662895949273,0.9337910548991549
+hybrid_screened,binary_reuse,balanced,text__guidelines input,-0.06874334643536684,0.09600299994062816,0.9335662524398465
+hybrid_screened,binary_reuse,balanced,text__problem parameters,-0.06882552092195664,0.09496370085977476,0.9334895402642897
+hybrid_screened,binary_reuse,balanced,text__methods recommendations,-0.06924858668419985,0.09494785656553874,0.9330946963287562
+hybrid_screened,binary_reuse,balanced,text__known benchmarks,-0.06936713010258423,0.10375207440598457,0.9329840906496942
+hybrid_screened,binary_reuse,balanced,text__level expertise,-0.06938473513444449,0.09007478831632211,0.9329676655796356
+hybrid_screened,binary_reuse,balanced,text__expectations maintain,-0.06947704983122481,0.10280322215339499,0.9328815429277362
+hybrid_screened,binary_reuse,balanced,repo_language_Rust,-0.06982667096097196,0.06694923997934889,0.9325554448374906
+hybrid_screened,binary_reuse,balanced,text__applicability related,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__applications outputs,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__dimensionality domain,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__methodologies cross,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__methodology may,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__methods practical,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__predictions documentation,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__quantification visualizations,-0.07020321748591513,0.09571379325308213,0.9322043604293754
+hybrid_screened,binary_reuse,balanced,text__techniques key,-0.07027088773990656,0.07390450734702585,0.9321412800578897
+hybrid_screened,binary_reuse,balanced,text__theoretical expectations,-0.07038600345433944,0.09746053576619217,0.9320339821244411
+hybrid_screened,binary_reuse,balanced,text__limit applicability,-0.07044102830023315,0.09605010853196966,0.9319826985091564
+hybrid_screened,binary_reuse,balanced,text__community trigger,-0.0704620606851534,0.09607985281597294,0.9319630968964374
+hybrid_screened,binary_reuse,balanced,text__maintain reproducibility,-0.07082546159825015,0.09659377931585313,0.9316244821862266
+hybrid_screened,binary_reuse,balanced,text__methods complexity,-0.07085262750614923,0.09530791640489375,0.9315991741051072
+hybrid_screened,binary_reuse,balanced,text__problems stay,-0.07088531711507619,0.09569665034675354,0.9315687209901818
+hybrid_screened,binary_reuse,balanced,text__methodology follow,-0.0709449512879871,0.10280234047519053,0.9315131693164015
+hybrid_screened,binary_reuse,balanced,text__scale problems,-0.07096840487953422,0.1011133452272783,0.9314913222432047
+hybrid_screened,binary_reuse,balanced,text__disciplinary approaches,-0.07109936827948807,0.09568969884026057,0.9313693389604634
+hybrid_screened,binary_reuse,balanced,text__analysis numerical,-0.07148784752620321,0.10328908814735688,0.9310075915714764
+hybrid_screened,binary_reuse,balanced,text__proficiency effective,-0.07158692697244194,0.09552512261240637,0.9309153524244368
+hybrid_screened,binary_reuse,balanced,text__iteration refine,-0.07195119893142528,0.08972780602083508,0.9305763078213314
+hybrid_screened,binary_reuse,balanced,text__decisions iteration,-0.0722571514402032,0.09543259896812076,0.9302916392151018
+hybrid_screened,binary_reuse,balanced,text__formats appropriate,-0.07266766297856533,0.09800582639261518,0.9299098221386819
+hybrid_screened,binary_reuse,balanced,text__problems quality,-0.07292190228311748,0.09186899234106101,0.9296734325632391
+hybrid_screened,binary_reuse,balanced,text__with theoretical,-0.0730578467577285,0.09610750473466399,0.9295470571871012
+hybrid_screened,binary_reuse,balanced,text__constraints methodology,-0.0732003038888093,0.09552467810994554,0.9294146460118117
+hybrid_screened,binary_reuse,balanced,text__information complexity,-0.07332228794186378,0.09516163050735872,0.9293012791609375
+hybrid_screened,binary_reuse,balanced,text__practices established,-0.07337567739340912,0.0937974095551097,0.9292516655997549
+hybrid_screened,binary_reuse,balanced,text__limitations usage,-0.07405262021376133,0.09450668048763688,0.9286228282239141
+hybrid_screened,binary_reuse,balanced,text__through independent,-0.07409003578988894,0.08498551337429565,0.928588083915784
+hybrid_screened,binary_reuse,balanced,text__standardized formats,-0.07483208849345811,0.0896961368880979,0.9278992782142859
+hybrid_screened,binary_reuse,balanced,text__consider computational,-0.07500888413432952,0.0934639051202539,0.9277352441674093
+hybrid_screened,binary_reuse,balanced,text__level understanding,-0.07607267654383323,,0.9267488512083276
+hybrid_screened,binary_reuse,balanced,frontmatter_valid,-0.07913558279181936,0.1036287550619872,0.9239146490251655
+hybrid_screened,binary_reuse,balanced,text__theoretical predictions,-0.07930265103810737,0.10227863374648408,0.9237603051183749
+hybrid_screened,binary_reuse,balanced,frontmatter_name_char_count,-0.08012725645972496,0.057839959900391834,0.9229988813427317
+hybrid_screened,binary_reuse,balanced,text__includes tasks,-0.08042387456474638,0.09418927883120251,0.922725143763379
+hybrid_screened,binary_reuse,balanced,frontmatter_description_char_count,-0.08755926795396439,0.05778772176901273,0.9161645708421361
+hybrid_screened,binary_reuse,balanced,text__computational,-0.08941068864161415,,0.914469934029281
+hybrid_screened,binary_reuse,balanced,text__literature and,-0.09226889787753262,0.20279014676234774,0.9118599193787044
+hybrid_screened,binary_reuse,balanced,repo_language_Go,-0.0993870907532124,0.19348085804245774,0.9053921712456328
+hybrid_screened,binary_reuse,balanced,repo_language_Wolfram Language,-0.11421420645333433,,0.8920668489391205
+hybrid_screened,binary_reuse,balanced,markdown_url_count,-0.11471863133924982,0.04071464994693429,0.8916169816922714
+hybrid_screened,binary_reuse,balanced,text__validation through,-0.12218824293402901,,0.8849817612584994
+hybrid_screened,binary_reuse,balanced,text__requirements clearly,-0.12929685000816413,,0.8787130808404641
+hybrid_screened,binary_reuse,balanced,text__complexity increases,-0.13836870690270037,,0.870777570848602
+hybrid_screened,binary_reuse,balanced,text_sentence_count,-0.14646111737645154,0.07669304736614041,0.8637593169101858
+hybrid_screened,binary_reuse,balanced,frontmatter_name_missing,-0.15030419691331037,0.23103633790055553,0.8604461915344642
+hybrid_screened,binary_reuse,balanced,text__and methods,-0.15247056347813834,0.27071871915478796,0.8585841673160242
+hybrid_screened,binary_reuse,balanced,repo_language_Java,-0.1584690554853081,0.3914438258170229,0.8534493729589827
+hybrid_screened,binary_reuse,balanced,text_lexical_diversity,-0.17206876669992435,0.04939972346526836,0.8419212750301108
+hybrid_screened,binary_reuse,balanced,repo_language_Verilog,-0.17669708168600332,0.3650173428437157,0.8380336018038326
+hybrid_screened,binary_reuse,balanced,text_unique_word_count,-0.18876158857167416,0.0355422640216311,0.8279838839857097
+hybrid_screened,binary_reuse,balanced,repo_language_Just,-0.18898830266115607,0.21014079810810438,0.8277961896506252
+hybrid_screened,binary_reuse,balanced,markdown_inline_code_count,-0.1980421628861334,0.04645001405700443,0.820335264706305
+hybrid_screened,binary_reuse,balanced,repo_language_Ruby,-0.2047457253016379,0.057931852163097944,0.8148544869500635
+hybrid_screened,binary_reuse,balanced,frontmatter_description_missing,-0.20613265894774646,0.15276527059332862,0.8137251212041416
+hybrid_screened,binary_reuse,balanced,repo_language_Perl,-0.20837102417825618,,0.811905744160436
+hybrid_screened,binary_reuse,balanced,repo_language_,-0.21714932332151393,0.5132735758357803,0.8048097834618967
+hybrid_screened,binary_reuse,balanced,repo_language_Lua,-0.22785430491187908,0.10598967842530481,0.7962402596797442
+hybrid_screened,binary_reuse,balanced,repo_language_CSS,-0.23871402582148002,0.3623709653485343,0.7876400948977774
+hybrid_screened,binary_reuse,balanced,repo_language_Shell,-0.2392899804738077,0.13967320479028672,0.7871865805351516
+hybrid_screened,binary_reuse,balanced,repo_license_WTFPL,-0.24208342342182587,0.2924048797292757,0.784990688210883
+hybrid_screened,binary_reuse,balanced,repo_language_Astro,-0.2578700990553838,0.39917546232960216,0.7726955994761516
+hybrid_screened,binary_reuse,balanced,body_chars,-0.2605642500960148,1.401919944900106,0.7706166425921583
+hybrid_screened,binary_reuse,balanced,repo_language_Elixir,-0.30543039492533625,0.3608523784694137,0.7368061884944394
+hybrid_screened,binary_reuse,balanced,repo_language_MDX,-0.31433239868500085,0.4939340789018555,0.7302762449477421
+hybrid_screened,binary_reuse,balanced,repo_language_PowerShell,-0.3203404058848156,0.19533733760313138,0.7259018937351278
+hybrid_screened,binary_reuse,balanced,repo_language_Makefile,-0.3486305416261379,0.7960624342700084,0.7056537918176282
+hybrid_screened,binary_reuse,balanced,repo_license_LGPL-2.1,-0.37310323925900324,0.03144491434289743,0.688594139225505
+hybrid_screened,binary_reuse,balanced,repo_license_0BSD,-0.37533040717238103,0.3519817503345791,0.6870622309949348
+hybrid_screened,binary_reuse,balanced,text__methodology,-0.3948353656887088,0.14933225785877885,0.6737909592285267
+hybrid_screened,binary_reuse,balanced,repo_language_Groovy,-0.4000843887071615,,0.6702634809803294
+hybrid_screened,binary_reuse,balanced,text__assumptions,-0.40345667084887277,0.8919309740963531,0.6680069703469075
+hybrid_screened,binary_reuse,balanced,repo_language_PLpgSQL,-0.4191348383218567,0.6763570629079516,0.6576155175165629
+hybrid_screened,binary_reuse,balanced,repo_language_Nunjucks,-0.42532207601618355,,0.653559255467049
+hybrid_screened,binary_reuse,balanced,repo_license_CC-BY-SA-4.0,-0.4383711360200803,0.33512709830457127,0.6450863236533063
+hybrid_screened,binary_reuse,balanced,repo_license_BlueOak-1.0.0,-0.44912698524797534,0.016194044137469298,0.6381850534608353
+hybrid_screened,binary_reuse,balanced,repo_license_CC-BY-4.0,-0.46401269599071976,0.35501057805677816,0.6287555717415204
+hybrid_screened,binary_reuse,balanced,repo_license_MPL-2.0,-0.5098534882857032,0.6685792927280775,0.6005835648942839
+hybrid_screened,binary_reuse,balanced,repo_language_AL,-0.512389482706724,,0.5990624179496795
+hybrid_screened,binary_reuse,balanced,commit_count,-0.5202915867838612,0.17960949954684996,0.5943472189071324
+hybrid_screened,binary_reuse,balanced,repo_language_TeX,-0.5270897953677761,0.10579454454540915,0.5903204255407373
+hybrid_screened,binary_reuse,balanced,repo_language_SCSS,-0.5633300405029171,0.2903176913417096,0.5693100781350832
+hybrid_screened,binary_reuse,balanced,location_class_other,-0.5940985676493179,0.1168115327511778,0.5520599863699116
+hybrid_screened,binary_reuse,balanced,repo_language_Nix,-0.6131954649340501,0.1416574213191563,0.5416173815498385
+hybrid_screened,binary_reuse,balanced,repo_language_Clojure,-0.6192983760544709,0.39946553088702064,0.5383220047330388
+hybrid_screened,binary_reuse,balanced,repo_language_R,-0.6206989425098713,0.9984771470486986,0.5375685767271611
+hybrid_screened,binary_reuse,balanced,repo_language_Rich Text Format,-0.6634081108684562,0.12026969428481699,0.5150928461050354
+hybrid_screened,binary_reuse,balanced,repo_language_Monkey C,-0.7032693553839283,0.10893859641941779,0.49496444098688835
+hybrid_screened,binary_reuse,balanced,repo_language_Jinja,-0.7073115730300041,0.5064118866949433,0.4929677252878487
+hybrid_screened,binary_reuse,balanced,repo_language_Nushell,-0.7178971059526504,0.2135473536817254,0.4877769213853725
+hybrid_screened,binary_reuse,balanced,filename_skill.md,-0.7641372960213669,0.6945955397283449,0.46573554962205155
+hybrid_screened,binary_reuse,balanced,repo_language_Liquid,-0.7897817282640051,0.235546725264374,0.45394386758564287
+hybrid_screened,binary_reuse,balanced,repo_language_F#,-0.8125882780588686,0.08911101226515224,0.44370813865893177
+hybrid_screened,binary_reuse,balanced,repo_language_Emacs Lisp,-0.8421764983442425,0.2776534939448603,0.43077192798588015
+hybrid_screened,binary_reuse,balanced,repo_license_BSD-2-Clause,-0.8807899501384462,0.3460460030208186,0.4144553832456721
+hybrid_screened,binary_reuse,balanced,repo_license_GPL-2.0,-0.9640012094194838,0.47979357575650483,0.3813639122649647
+hybrid_screened,binary_reuse,balanced,repo_license_EUPL-1.2,-0.979555811182598,0.5546143652559421,0.3754778448751741
+hybrid_screened,binary_reuse,balanced,repo_language_Mermaid,-0.9937376804914807,0.30949305954172723,0.3701904483528608
+hybrid_screened,binary_reuse,balanced,repo_language_Go Template,-0.9957473333321487,0.592759028068729,0.36944724111114546
+hybrid_screened,binary_reuse,balanced,repo_language_Pascal,-1.0134842591857347,0.01757796289582395,0.36295215450138696
+hybrid_screened,binary_reuse,balanced,repo_license_CC0-1.0,-1.0686197521593603,0.45934501797941696,0.34348228106460615
+hybrid_screened,binary_reuse,balanced,text__ist,-1.4406694221639906,,0.23676920706409987
+hybrid_screened,binary_reuse,balanced,text__im,-1.5292231984415854,,0.21670393790779796
+hybrid_screened,binary_reuse,balanced,text__als,-1.5522818246951566,,0.2117642132968307
+hybrid_screened,binary_reuse,balanced,text__bei,-1.6399596244642072,,0.19398787449714622
+hybrid_screened,binary_reuse,balanced,text__gericht,-1.6488338449187745,,0.19227399923434954
+hybrid_screened,binary_reuse,balanced,repo_language_Vim Script,-1.6499981494521003,0.5723609256722937,0.19205026401863798
+hybrid_screened,binary_reuse,balanced,text__aus,-1.705211600647321,,0.1817339270899149
+hybrid_screened,binary_reuse,balanced,text__den,-1.711459807416126,,0.1806019560139049
+hybrid_screened,binary_reuse,balanced,text__nicht,-1.735626335246971,,0.17628974921663773
+hybrid_screened,binary_reuse,balanced,text__keine,-1.8003964790466824,,0.16523336366638172
+hybrid_screened,binary_reuse,balanced,text__normen,-1.8376768306645288,,0.15918681479128685
+hybrid_screened,binary_reuse,balanced,text__fur,-1.877540147319278,,0.15296591696819048
+hybrid_screened,binary_reuse,balanced,text__nur,-1.9242082176865325,,0.14599130443869932
+hybrid_screened,binary_reuse,balanced,text__wird,-1.9986971184949924,,0.13551172398985467
+hybrid_screened,binary_reuse,balanced,text__die,-2.0312936519813234,,0.13116572854129205
+hybrid_screened,binary_reuse,balanced,repo_license_UPL-1.0,-2.181639590085135,0.801285654898203,0.11285634072686286
+hybrid_screened,binary_reuse,balanced,text__welche,-2.25928006318393,,0.10442563755990432
+hybrid_screened,binary_reuse,balanced,text__eine,-2.3011765645498903,,0.10014095208862507
+hybrid_screened,binary_reuse,balanced,text__fristen,-2.356849929785604,,0.09471812248453058
+hybrid_screened,binary_reuse,balanced,text__frist,-2.4195721122175025,,0.08895967407449681
+hybrid_screened,binary_reuse,balanced,text__prufen,-2.4434123367310403,,0.08686393616262762
+hybrid_screened,binary_reuse,balanced,text__wenn,-2.5427676381996647,,0.07864842790274146
+hybrid_screened,binary_reuse,balanced,text__der,-2.5645218555226443,,0.07695596871775917
+hybrid_screened,binary_reuse,balanced,text__des,-2.7687744760827453,,0.06273884560320699
+hybrid_screened,binary_reuse,balanced,text__oder,-3.0452351268818303,,0.04758512213067569
+hybrid_screened,binary_reuse,balanced,text__und,-5.2473853682881035,,0.005261256679641941
+hybrid_screened,binary_reuse,none,text__objective,6.396114123682472,,599.5108805530709
+hybrid_screened,binary_reuse,none,text__version tags,5.821083813523332,,337.33746648270676
+hybrid_screened,binary_reuse,none,text__patterns,5.723173133055403,,305.8739634808703
+hybrid_screened,binary_reuse,none,text__prompt role,4.73852180339586,,114.26517039335332
+hybrid_screened,binary_reuse,none,text__role objective,4.394763093294251,,81.02543302036156
+hybrid_screened,binary_reuse,none,text__practices,4.227121934281511,,68.51974379224856
+hybrid_screened,binary_reuse,none,text__operational rules,4.182009630486882,,65.49734650764148
+hybrid_screened,binary_reuse,none,text__example,4.142507893970249,,62.960521931818306
+hybrid_screened,binary_reuse,none,text__best practices,4.095044580334337,,60.04201579092575
+hybrid_screened,binary_reuse,none,text__rules constraints,4.065301439521618,,58.282474516113474
+hybrid_screened,binary_reuse,none,text__triggers,3.993981427240548,,54.270533974124206
+hybrid_screened,binary_reuse,none,text__jeremy,3.719665914191977,,41.25061056273417
+hybrid_screened,binary_reuse,none,repo_language_Stata,3.199296884626571,2.1327647129981018,24.515287060646195
+hybrid_screened,binary_reuse,none,text__comprehensive,2.906793427174264,,18.29803042807911
+hybrid_screened,binary_reuse,none,text__appropriate,2.787380489320829,0.923793879323648,16.238427306653
+hybrid_screened,binary_reuse,none,text__edit bash,2.7617538835182778,,15.827578347618877
+hybrid_screened,binary_reuse,none,text__md commit,2.722144602720573,,15.212912939894865
+hybrid_screened,binary_reuse,none,text__scientific skills,2.4707514770731143,,11.831334488412868
+hybrid_screened,binary_reuse,none,text__style preferences,2.3699209281205267,,10.696546454638789
+hybrid_screened,binary_reuse,none,text__patterns do,2.3486795040679374,,10.471732710431901
+hybrid_screened,binary_reuse,none,text__communication style,2.3195959071654446,,10.1715632196857
+hybrid_screened,binary_reuse,none,text__mit author,2.297879962352614,,9.953059211455834
+hybrid_screened,binary_reuse,none,text__example input,2.2032324575797526,,9.054233673771815
+hybrid_screened,binary_reuse,none,text__author jeremy,2.169681975359985,,8.755499133469666
+hybrid_screened,binary_reuse,none,text__longshore jeremy,2.1636958691817534,,8.703244343413202
+hybrid_screened,binary_reuse,none,text__jeremy intentsolutions,2.163665935698525,,8.702983828893686
+hybrid_screened,binary_reuse,none,text__intentsolutions,2.1597284687616285,,8.668783493346112
+hybrid_screened,binary_reuse,none,text__intentsolutions io,2.1597284687616285,,8.668783493346112
+hybrid_screened,binary_reuse,none,text__jeremy longshore,2.1566290403107784,,8.641956814314465
+hybrid_screened,binary_reuse,none,text__longshore,2.1566290403107784,,8.641956814314465
+hybrid_screened,binary_reuse,none,text__manuscript,2.1161428887457485,,8.299065256367761
+hybrid_screened,binary_reuse,none,text__version license,2.0831011745647623,,8.029330700141514
+hybrid_screened,binary_reuse,none,text__therapist,1.9969794875678648,,7.366771036219707
+hybrid_screened,binary_reuse,none,repo_language_Cairo,1.9707693057326836,,7.176195053335988
+hybrid_screened,binary_reuse,none,text__skills version,1.945911831492862,,7.000011777072748
+hybrid_screened,binary_reuse,none,text__expected impact,1.9230446298686408,,6.841757409649856
+hybrid_screened,binary_reuse,none,text__this deliverable,1.9163687808983,,6.796234989956835
+hybrid_screened,binary_reuse,none,text__venue,1.9072019988232543,,6.734220057815672
+hybrid_screened,binary_reuse,none,text__understanding,1.8775822699761786,,6.53767939528668
+hybrid_screened,binary_reuse,none,text__specific actionable,1.8708365162073914,,6.49372623513929
+hybrid_screened,binary_reuse,none,text__actionable recommendation,1.8413380889321072,,6.304969228618579
+hybrid_screened,binary_reuse,none,text__journal of,1.7671862167174255,,5.854357271434769
+hybrid_screened,binary_reuse,none,text__await,1.766704340672948,,5.851536876504803
+hybrid_screened,binary_reuse,none,text__limitations,1.7661402686509637,,5.848237119005094
+hybrid_screened,binary_reuse,none,text__trigger with,1.7660425702911058,,5.8476657837402195
+hybrid_screened,binary_reuse,none,text__identify key,1.7467893522911135,,5.736156302357935
+hybrid_screened,binary_reuse,none,text__with phrases,1.6497436461837163,,5.205645169109493
+hybrid_screened,binary_reuse,none,repo_language_AutoHotkey,1.6035266200105307,,4.970530724447755
+hybrid_screened,binary_reuse,none,text__relevant learned,1.5737959658349068,,4.824928740313312
+hybrid_screened,binary_reuse,none,text__quality validation,1.5487364740064353,,4.705520876889836
+hybrid_screened,binary_reuse,none,text__selected framework,1.5479209600538961,,4.701685023269432
+hybrid_screened,binary_reuse,none,text__methods,1.537346742564552,0.6611133663468418,4.6522303164898355
+hybrid_screened,binary_reuse,none,text__learned rules,1.536322167367356,,4.6474661977116485
+hybrid_screened,binary_reuse,none,text__impact specific,1.5318397882537154,,4.626681110416929
+hybrid_screened,binary_reuse,none,repo_language_Svelte,1.5161296662552621,0.5339245027817403,4.5545633583294585
+hybrid_screened,binary_reuse,none,text__and priorities,1.4970454247761453,,4.468467125084182
+hybrid_screened,binary_reuse,none,text__review any,1.4919675350660966,,4.445834254093675
+hybrid_screened,binary_reuse,none,text__check knowledge,1.4884958422432033,,4.430426444288732
+hybrid_screened,binary_reuse,none,text__and benchmarks,1.4682909073911008,,4.341808243864169
+hybrid_screened,binary_reuse,none,text__structured process,1.4544448052926535,,4.2821054032631976
+hybrid_screened,binary_reuse,none,text__step analysis,1.445666133296129,,4.244678723105124
+hybrid_screened,binary_reuse,none,text__objective what,1.4014976691127925,,4.061277864785156
+hybrid_screened,binary_reuse,none,text__task board,1.3966559465258863,,4.041661810083483
+hybrid_screened,binary_reuse,none,text__board md,1.319084855640823,,3.7399971733628585
+hybrid_screened,binary_reuse,none,text__consider,1.3053980208025389,,3.6891571628192494
+hybrid_screened,binary_reuse,none,text__source map,1.283368863762504,,3.6087767473150745
+hybrid_screened,binary_reuse,none,repo_language_QML,1.26888414106048,0.008668732184903794,3.556881369249226
+hybrid_screened,binary_reuse,none,text__const,1.265589365113078,,3.5451815268297726
+hybrid_screened,binary_reuse,none,text__activating,1.2629028908294893,,3.535670269421848
+hybrid_screened,binary_reuse,none,text__the contribution,1.2256113886044588,,3.40624798750308
+hybrid_screened,binary_reuse,none,repo_language_HTML,1.1845584506012885,0.4689234293172629,3.2692429704557915
+hybrid_screened,binary_reuse,none,text__examples example,1.1656409253570654,,3.2079782990851737
+hybrid_screened,binary_reuse,none,text__psychology,1.1277277247993858,,3.088630302380461
+hybrid_screened,binary_reuse,none,text__understanding of,1.120637337340835,0.05080020769843656,3.0668081719234195
+hybrid_screened,binary_reuse,none,text__desk reject,1.0999175319631496,,3.003918286487417
+hybrid_screened,binary_reuse,none,text__camera ready,1.0713028229023123,,2.919180198439407
+hybrid_screened,binary_reuse,none,text__me with,1.0502335955601787,,2.8583187306495152
+hybrid_screened,binary_reuse,none,text__industry best,1.0469990007991619,,2.8490881644765103
+hybrid_screened,binary_reuse,none,text__problems,1.0426339592954303,,2.8366788796159472
+hybrid_screened,binary_reuse,none,text__grep version,1.0180885830433521,,2.7678990951962263
+hybrid_screened,binary_reuse,none,text__examples input,1.0123557754111465,,2.7520766589634915
+hybrid_screened,binary_reuse,none,repo_license_infrequent_sklearn,0.9983832283148608,0.644240866167438,2.713890538180008
+hybrid_screened,binary_reuse,none,text__cause solution,0.9534356522136588,,2.5946085364008225
+hybrid_screened,binary_reuse,none,text__follows best,0.918252869048677,,2.5049101585632947
+hybrid_screened,binary_reuse,none,text__or best,0.8884515235107134,,2.431361828222073
+hybrid_screened,binary_reuse,none,repo_license_LGPL-3.0,0.8333795197164467,0.2548939926944753,2.3010821671010944
+hybrid_screened,binary_reuse,none,text__files references,0.7975116306964706,,2.220009845305098
+hybrid_screened,binary_reuse,none,repo_license_AGPL-3.0,0.7907016699071242,0.39394836212235745,2.204943025759416
+hybrid_screened,binary_reuse,none,text__workflow steps,0.7795201134924434,,2.1804256575379846
+hybrid_screened,binary_reuse,none,text__evidence md,0.7569368102893722,,2.1317362964075484
+hybrid_screened,binary_reuse,none,text__references evidence,0.7538117846592923,,2.1250849640497056
+hybrid_screened,binary_reuse,none,text__literature,0.7343176802627174,0.6836356196538581,2.084059512328132
+hybrid_screened,binary_reuse,none,text__cautions,0.7168769245015013,,2.048027069258935
+hybrid_screened,binary_reuse,none,repo_language_Vue,0.7127059511769215,0.3094163383864239,2.0395025930248964
+hybrid_screened,binary_reuse,none,location_class_canonical,0.6964593936166064,0.08697229190491595,2.006635408991184
+hybrid_screened,binary_reuse,none,text__techniques,0.6943701249810421,0.1611635905458868,2.0024473850451128
+hybrid_screened,binary_reuse,none,text__usage guidelines,0.6932269298746616,0.13171827381755194,2.000159504989555
+hybrid_screened,binary_reuse,none,repo_language_Jupyter Notebook,0.6754674095337533,0.3319653226471442,1.964951198283636
+hybrid_screened,binary_reuse,none,text__step guidance,0.6666681144931872,,1.9477368610377168
+hybrid_screened,binary_reuse,none,repo_license_MIT-0,0.6601811588278351,0.6980559802804897,1.9351428708638647
+hybrid_screened,binary_reuse,none,repo_language_MoonBit,0.6601587449250755,0.3364257552211011,1.935099497245819
+hybrid_screened,binary_reuse,none,repo_license_Unlicense,0.6135292028470147,0.5022482717428375,1.8469381295467326
+hybrid_screened,binary_reuse,none,text__provides automated,0.5681277130146442,,1.7649594454067836
+hybrid_screened,binary_reuse,none,repo_language_C#,0.5457297488961651,0.1592107089544212,1.7258673727573408
+hybrid_screened,binary_reuse,none,filename_SKILL.md,0.5355054243906234,0.2696444999398056,1.708311446365404
+hybrid_screened,binary_reuse,none,text__provides step,0.5289730714535534,,1.6971885220576963
+hybrid_screened,binary_reuse,none,repo_language_TSQL,0.527906464444016,0.37428236521123887,1.6953792539441153
+hybrid_screened,binary_reuse,none,text__skill category,0.5012160064871212,,1.650727345913797
+hybrid_screened,binary_reuse,none,repo_license_NOASSERTION,0.49080791205804636,0.03927164852243532,1.6336355207797864
+hybrid_screened,binary_reuse,none,repo_license_MIT,0.4731210825550365,0.06684531346870687,1.6049957081924953
+hybrid_screened,binary_reuse,none,text__feedback output,0.43095582912377384,,1.5387275815102146
+hybrid_screened,binary_reuse,none,repo_license_,0.4283609491189333,0.3185829119375459,1.5347399440339642
+hybrid_screened,binary_reuse,none,repo_license_GPL-3.0,0.4246908721826322,0.13469281141476325,1.5291176537917872
+hybrid_screened,binary_reuse,none,repo_language_HCL,0.4046052210321911,0.07523512241831869,1.4987107237814605
+hybrid_screened,binary_reuse,none,text__expertise,0.4034747705670703,0.5643771719355705,1.4970174628008326
+hybrid_screened,binary_reuse,none,repo_language_Dart,0.38907477498726245,0.08385226291976176,1.4756148862921827
+hybrid_screened,binary_reuse,none,composition_truncated,0.36395960941676514,0.07427974689374585,1.4390160902850546
+hybrid_screened,binary_reuse,none,text__updated 2025,0.3616992942183802,,1.435767133561843
+hybrid_screened,binary_reuse,none,repo_language_PHP,0.3441601699092071,0.16160934826077206,1.4108045858543974
+hybrid_screened,binary_reuse,none,repo_language_Haskell,0.31818223230177045,0.29734194534446456,1.3746267397990934
+hybrid_screened,binary_reuse,none,text__theoretical,0.3040950107547352,0.462070403973796,1.3553978273427902
+hybrid_screened,binary_reuse,none,text__methodologies,0.3040461617848009,0.1746434349423264,1.355331619172187
+hybrid_screened,binary_reuse,none,text_word_count,0.2958015613687613,0.32723166323995295,1.344203388483838
+hybrid_screened,binary_reuse,none,repo_language_Solidity,0.2714313292469768,0.284819509801494,1.3118407836688482
+hybrid_screened,binary_reuse,none,text__dimensionality,0.26804670652083173,,1.307408203077376
+hybrid_screened,binary_reuse,none,filename_Skill.md,0.2577735755801038,0.45157375827344476,1.2940457818846705
+hybrid_screened,binary_reuse,none,repo_language_Python,0.25161100831094885,0.016303092455793394,1.2860956594468904
+hybrid_screened,binary_reuse,none,repo_language_Apex,0.23569897657294636,0.23689144799272113,1.2657932193982884
+hybrid_screened,binary_reuse,none,repo_language_Typst,0.2314672303597607,0.44794989169969857,1.2604480214726344
+hybrid_screened,binary_reuse,none,text_line_count,0.20731925517539407,0.03399642721290047,1.2303753127713994
+hybrid_screened,binary_reuse,none,repo_license_Apache-2.0,0.20271954171259,0.28815279388059595,1.2247289346967687
+hybrid_screened,binary_reuse,none,text__results with,0.1938209536617892,0.03652640418373849,1.2138789229218743
+hybrid_screened,binary_reuse,none,repo_language_Blade,0.18641612620233616,0.3145025622985152,1.2049235563328071
+hybrid_screened,binary_reuse,none,text_average_word_length,0.18069671501524046,0.05668808761490469,1.1980517730744225
+hybrid_screened,binary_reuse,none,text__established,0.17710785401192627,0.4787066512273533,1.1937598379719918
+hybrid_screened,binary_reuse,none,repo_language_Zig,0.17515593818213182,0.4271380980338699,1.1914319918661993
+hybrid_screened,binary_reuse,none,repo_language_JavaScript,0.17278774311219144,0.13697781650151658,1.1886137868436355
+hybrid_screened,binary_reuse,none,repo_language_Swift,0.1708148055399444,0.2791464194076163,1.1862710378533592
+hybrid_screened,binary_reuse,none,repo_language_Scala,0.1694121665560421,0.1885775253089356,1.1846082942373062
+hybrid_screened,binary_reuse,none,text__or techniques,0.16446901656446603,,1.178767046733007
+hybrid_screened,binary_reuse,none,repo_language_TypeScript,0.1437461742708012,0.09150163353456606,1.154591006423928
+hybrid_screened,binary_reuse,none,text_char_count,0.13655480283430813,0.9427022650012185,1.146317697513243
+hybrid_screened,binary_reuse,none,has_references,0.12840601063118592,0.05610959991764865,1.137014548989072
+hybrid_screened,binary_reuse,none,repo_language_OCaml,0.125738672279197,0.13089100048514218,1.1339857876371662
+hybrid_screened,binary_reuse,none,text__or theoretical,0.12136326409964629,,1.129034975756118
+hybrid_screened,binary_reuse,none,text__literature and,0.11981989776854014,0.10080482540619444,1.1272938051655472
+hybrid_screened,binary_reuse,none,repo_language_Batchfile,0.1192968584698312,0.33599364717577235,1.1267043403743184
+hybrid_screened,binary_reuse,none,repo_stars,0.114021365850924,0.07954335679936743,1.1207760709627894
+hybrid_screened,binary_reuse,none,text__skill leverages,0.10709321442680357,0.047687002589749575,1.1130380008431808
+hybrid_screened,binary_reuse,none,text__and methods,0.10237427082243246,0.15437022457876473,1.1077980106207121
+hybrid_screened,binary_reuse,none,text__cross disciplinary,0.10008977934213012,0.08454560251480159,1.1052701440477684
+hybrid_screened,binary_reuse,none,repo_license_ISC,0.09914034938870063,0.5175584405100413,1.1042212654635406
+hybrid_screened,binary_reuse,none,text__in standardized,0.0960066167704243,,1.1007663474880944
+hybrid_screened,binary_reuse,none,text__practices validation,0.08334409745440331,0.04697059281698259,1.0869157491509773
+hybrid_screened,binary_reuse,none,text__constraints may,0.08190727103098343,,1.08535516129798
+hybrid_screened,binary_reuse,none,text__processing document,0.08170545921152916,,1.0851361458988158
+hybrid_screened,binary_reuse,none,text__and dimensionality,0.08007881596139597,,1.0833724513514194
+hybrid_screened,binary_reuse,none,text__assurance validation,0.07594116720840802,0.05209518815643274,1.0788990976442916
+hybrid_screened,binary_reuse,none,markdown_max_heading_depth,0.07396072973732558,0.024641109024072908,1.0767645198404083
+hybrid_screened,binary_reuse,none,text__skills consider,0.07289661145276047,0.042812502550704006,1.0756193244464174
+hybrid_screened,binary_reuse,none,text__computational,0.07259660197803916,,1.075296676858977
+hybrid_screened,binary_reuse,none,text__problem scale,0.07219326317332114,0.05771349462586633,1.074863055436667
+hybrid_screened,binary_reuse,none,text__tool proficiency,0.07176131017196108,0.03575072446043389,1.0743988653751826
+hybrid_screened,binary_reuse,none,text__clearly specify,0.07099219489594642,0.06332195679995924,1.0735728464878804
+hybrid_screened,binary_reuse,none,text__documentation provide,0.07008351347581533,0.043957316741053805,1.072597753880482
+hybrid_screened,binary_reuse,none,text__combining this,0.06879383003985035,0.03972126530263563,1.0712153339575001
+hybrid_screened,binary_reuse,none,text__appropriate input,0.06777089118923477,0.04692964592897385,1.07012010644591
+hybrid_screened,binary_reuse,none,text__applicable best,0.06774179487488154,0.056995234371303626,1.0700889703478722
+hybrid_screened,binary_reuse,none,text__world problems,0.06722721396598338,0.031853206017104375,1.0695384646449189
+hybrid_screened,binary_reuse,none,text__expertise deep,0.06492991771355311,0.04409116284976062,1.0670842380603902
+hybrid_screened,binary_reuse,none,text__relevant literature,0.0647323217955788,0.03869458136972518,1.0668734074011397
+hybrid_screened,binary_reuse,none,text__application ability,0.06410856855039733,0.039941228677674814,1.0662081491511406
+hybrid_screened,binary_reuse,none,text__educational contexts,0.0636806922940065,0.04491357044024277,1.065752041585506
+hybrid_screened,binary_reuse,none,text__documentation consider,0.0633372046547053,0.023895256529745723,1.0653860317961792
+hybrid_screened,binary_reuse,none,text__reproducibility through,0.06292417385304991,0.028144268320614715,1.0649460854113524
+hybrid_screened,binary_reuse,none,text__requires appropriate,0.06200475505022403,0.045078019043473666,1.0639674039344478
+hybrid_screened,binary_reuse,none,text__handling compare,0.06167554786209481,0.02810973973200492,1.063617195865807
+hybrid_screened,binary_reuse,none,text__independent methods,0.06156277121384367,0.0415787669077068,1.063497251447027
+hybrid_screened,binary_reuse,none,text__analysis complementary,0.06133899368521559,0.025869885638053366,1.0632592912864567
+hybrid_screened,binary_reuse,none,text__methods version,0.06133682638237389,0.02726452526664974,1.0632569868840702
+hybrid_screened,binary_reuse,none,text__investigation limitations,0.06062053483349038,0.04504069138445008,1.0624956575894953
+hybrid_screened,binary_reuse,none,text__refine approach,0.0602609394492122,0.03752981657904302,1.0621136577420176
+hybrid_screened,binary_reuse,none,text__comprehensive explanations,0.059774080263023915,0.03450801694382101,1.061596683807936
+hybrid_screened,binary_reuse,none,text__standards tool,0.059675000159406744,0.04622085966434136,1.0614915059091092
+hybrid_screened,binary_reuse,none,text__methods assumptions,0.05950242108891626,0.04674084152373218,1.0613083304982616
+hybrid_screened,binary_reuse,none,text__contexts description,0.05921293236903047,0.043017164896157575,1.061001138174763
+hybrid_screened,binary_reuse,none,text__techniques key,0.059086780380233836,0.017284179273724568,1.06086729921327
+hybrid_screened,binary_reuse,none,text__subdiscipline,0.05901485523583353,0.04273704152799449,1.060790998923572
+hybrid_screened,binary_reuse,none,repo_language_Markdown,0.058850698562883164,0.7748696122612692,1.0606168772944977
+hybrid_screened,binary_reuse,none,text__consider combining,0.058625254074985304,0.03733909522989115,1.0603777940167565
+hybrid_screened,binary_reuse,none,text__completeness results,0.058378210895878246,0.03377905305686806,1.060115867270408
+hybrid_screened,binary_reuse,none,text__problem parameters,0.05835213715122632,0.03964689682676741,1.060088226440335
+hybrid_screened,binary_reuse,none,text__guidelines input,0.05829278278481155,0.039218715896878,1.060025307442588
+hybrid_screened,binary_reuse,none,text__methods recommendations,0.057642492622513974,0.039293026062450574,1.0593362074951138
+hybrid_screened,binary_reuse,none,text__analysis numerical,0.05746932520006938,0.048179216885926204,1.059152780856777
+hybrid_screened,binary_reuse,none,text__methodology follow,0.05735908546426204,0.046782540428496125,1.0590360265696348
+hybrid_screened,binary_reuse,none,text__theoretical expectations,0.05731555852877518,0.04154353266529964,1.0589899309800352
+hybrid_screened,binary_reuse,none,text__level expertise,0.057088239885129635,0.03505278674204325,1.0587492301842163
+hybrid_screened,binary_reuse,none,text__expectations maintain,0.05685227839495687,0.04523191803825869,1.0584994356102517
+hybrid_screened,binary_reuse,none,text__iteration refine,0.056729194039104314,0.03364229895873293,1.058369158906726
+hybrid_screened,binary_reuse,none,text__known benchmarks,0.05670104630896416,0.0445592944011427,1.0583393686365186
+hybrid_screened,binary_reuse,none,text__methodologies or,0.05667408284005746,0.032891400656834754,1.0583108325205777
+hybrid_screened,binary_reuse,none,text__applicability related,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__applications outputs,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__dimensionality domain,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__methodologies cross,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__methodology may,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__methods practical,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__predictions documentation,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__quantification visualizations,0.05659270141237358,0.039311598740703585,1.0582247091785615
+hybrid_screened,binary_reuse,none,text__limit applicability,0.05649670205936932,0.039447362327701255,1.058123125167225
+hybrid_screened,binary_reuse,none,text__community trigger,0.056488488532189435,0.039458978009233966,1.0581144342798683
+hybrid_screened,binary_reuse,none,text__methods complexity,0.0563116934339786,0.039117427070057574,1.0579273813700474
+hybrid_screened,binary_reuse,none,text__problems stay,0.05622801371851707,0.03935381571415052,1.0578388580116518
+hybrid_screened,binary_reuse,none,text__maintain reproducibility,0.056136778293874666,0.039956371398284174,1.057742350036778
+hybrid_screened,binary_reuse,none,markdown_link_count,0.0560741571586966,0.016639767328439227,1.0576761150839682
+hybrid_screened,binary_reuse,none,text__disciplinary approaches,0.05602286033806871,0.03945300286613255,1.057621861053552
+hybrid_screened,binary_reuse,none,text__proficiency effective,0.05578391417123815,0.039311826425904396,1.0573691765540956
+hybrid_screened,binary_reuse,none,markdown_table_row_count,0.05561055338294574,0.007889204742056203,1.0571858860882808
+hybrid_screened,binary_reuse,none,text__with theoretical,0.055441843363633156,0.04350270549493282,1.0570075432815542
+hybrid_screened,binary_reuse,none,text__decisions iteration,0.055382014251931906,0.039229488442812696,1.0569443053509315
+hybrid_screened,binary_reuse,none,text__formats appropriate,0.055215946310046726,0.04195425830078765,1.0567687953591496
+hybrid_screened,binary_reuse,none,text__problems quality,0.054890584137230226,0.03690444140544631,1.0564250186967206
+hybrid_screened,binary_reuse,none,text__limitations usage,0.054788480109581324,0.03814956217154713,1.0563171589539533
+hybrid_screened,binary_reuse,none,text__standardized formats,0.05473776556661812,0.03198318834957938,1.0562635896703951
+hybrid_screened,binary_reuse,none,text__scale problems,0.05459434638436372,0.04077427812033423,1.0561121120727757
+hybrid_screened,binary_reuse,none,text__constraints methodology,0.0539672145489134,0.03922288534726672,1.05544999818354
+hybrid_screened,binary_reuse,none,text__practices established,0.05392413557994039,0.03760740892994321,1.0554045314651523
+hybrid_screened,binary_reuse,none,text__information complexity,0.05391582637358708,0.03894581034902514,1.0553957619275482
+hybrid_screened,binary_reuse,none,text__consider computational,0.053341220410939125,0.03753483673884758,1.0547894994274958
+hybrid_screened,binary_reuse,none,text__through independent,0.052329642790254594,0.033554015797500794,1.053723037470808
+hybrid_screened,binary_reuse,none,text__level understanding,0.05116298613563905,,1.0524944213029894
+hybrid_screened,binary_reuse,none,text__theoretical predictions,0.04974181070382806,0.04231619706145419,1.0509997044683153
+hybrid_screened,binary_reuse,none,text__includes tasks,0.047791854231437475,0.039145725864061294,1.0489522976179695
+hybrid_screened,binary_reuse,none,markdown_fenced_code_blocks,0.047397171551412265,0.025205381591975714,1.0485383760031464
+hybrid_screened,binary_reuse,none,markdown_ordered_list_items,0.04623910226806662,0.018284970779574597,1.047324798756384
+hybrid_screened,binary_reuse,none,repo_language_C,0.04545193111013082,0.4432397230834646,1.046500699278036
+hybrid_screened,binary_reuse,none,text__validation through,0.04410723260415425,,1.0450944170759064
+hybrid_screened,binary_reuse,none,text__requirements clearly,0.03915702396899741,,1.0399337653575824
+hybrid_screened,binary_reuse,none,history_fetched,0.03639600739562751,0.00556472661781066,1.037066451168733
+hybrid_screened,binary_reuse,none,text_average_sentence_words,0.034740313028434576,0.009549806563906863,1.0353508067704396
+hybrid_screened,binary_reuse,none,has_scripts,0.029688268166696185,0.033010420407007884,1.030133358535413
+hybrid_screened,binary_reuse,none,text__complexity increases,0.02883827742263284,,1.0292581267376657
+hybrid_screened,binary_reuse,none,markdown_checkbox_count,0.02848347335708358,0.013686001613155502,1.028893006546694
+hybrid_screened,binary_reuse,none,markdown_unordered_list_items,0.020794454314485466,0.02130370966002656,1.0210121654222042
+hybrid_screened,binary_reuse,none,repo_language_GDScript,0.02075506174556377,0.4118499930822778,1.020971945922288
+hybrid_screened,binary_reuse,none,repo_language_Lean,0.01936605365513137,0.4055127256077944,1.019554792076224
+hybrid_screened,binary_reuse,none,markdown_blockquote_count,0.011652187979105099,0.008411188332359794,1.0117203391677114
+hybrid_screened,binary_reuse,none,markdown_heading_count,0.0062203096156967915,0.04150032533941507,1.006239695916975
+hybrid_screened,binary_reuse,none,missingindicator_repo_forks,0.003511182376058519,0.004451866739400708,1.0035173537977793
+hybrid_screened,binary_reuse,none,missingindicator_repo_is_fork,0.003511182376058519,0.004451866739400708,1.0035173537977793
+hybrid_screened,binary_reuse,none,missingindicator_repo_stars,0.003511182376058519,0.004451866739400708,1.0035173537977793
+hybrid_screened,binary_reuse,none,repo_language_Bicep,0.0027426553787260194,0.24338278979267883,1.0027464198987963
+hybrid_screened,binary_reuse,none,repo_language___MISSING__,6.478670601996138e-05,8.23454041000059e-05,1.0000647888047238
+hybrid_screened,binary_reuse,none,repo_license___MISSING__,6.478670601996138e-05,8.23454041000059e-05,1.0000647888047238
+hybrid_screened,binary_reuse,none,repo_is_fork,0.0,0.0,1.0
+hybrid_screened,binary_reuse,none,repo_metadata_fetched,-0.0024840523709453812,0.00048136954330307505,0.9975190303340835
+hybrid_screened,binary_reuse,none,filename_SKILL.MD,-0.0029131051604496714,0.13544002322537038,0.9970911338131973
+hybrid_screened,binary_reuse,none,markdown_shell_prompt_count,-0.003383387270444235,0.019691678756971295,0.9966223299346095
+hybrid_screened,binary_reuse,none,filename_infrequent_sklearn,-0.007206902508592944,0.0031923077398483646,0.9928190049384492
+hybrid_screened,binary_reuse,none,missingindicator_composition_truncated,-0.011933327727304386,0.005948933657729363,0.9881375920447463
+hybrid_screened,binary_reuse,none,missingindicator_has_references,-0.011933327727304386,0.005948933657729363,0.9881375920447463
+hybrid_screened,binary_reuse,none,missingindicator_has_scripts,-0.011933327727304386,0.005948933657729363,0.9881375920447463
+hybrid_screened,binary_reuse,none,missingindicator_sibling_bytes,-0.011933327727304386,0.005948933657729363,0.9881375920447463
+hybrid_screened,binary_reuse,none,missingindicator_sibling_count,-0.011933327727304386,0.005948933657729363,0.9881375920447463
+hybrid_screened,binary_reuse,none,repo_license_BSD-3-Clause,-0.017568418130920426,0.03273657338587514,0.9825850067356292
+hybrid_screened,binary_reuse,none,repo_forks,-0.03147088078112564,0.04594209565883481,0.9690191731243096
+hybrid_screened,binary_reuse,none,sibling_count,-0.036600101986714456,0.02696703754540544,0.9640615845860856
+hybrid_screened,binary_reuse,none,missingindicator_commit_count,-0.04218584690201268,0.006488073716554344,0.9586915941525415
+hybrid_screened,binary_reuse,none,sibling_bytes,-0.04253188416190104,0.019330885321543444,0.9583599085313245
+hybrid_screened,binary_reuse,none,location_class_skills-dir,-0.052148185891625565,0.10575612311181713,0.9491882001209798
+hybrid_screened,binary_reuse,none,frontmatter_name_char_count,-0.06045261823219369,0.05952747603437421,0.9413383702378407
+hybrid_screened,binary_reuse,none,repo_language_Wolfram Language,-0.06402278852418032,,0.9379836240246755
+hybrid_screened,binary_reuse,none,repo_language_TypeSpec,-0.06673455051281171,,0.9354434813748389
+hybrid_screened,binary_reuse,none,repo_language_Dockerfile,-0.07049570280853151,0.5715496376983501,0.9319317442063363
+hybrid_screened,binary_reuse,none,repo_language_infrequent_sklearn,-0.07245161307561405,0.4538056474946304,0.9301107507700325
+hybrid_screened,binary_reuse,none,composition_fetched,-0.0821694611222606,0.016970002030384426,0.9211158521436901
+hybrid_screened,binary_reuse,none,frontmatter_valid,-0.08673535194613592,0.09948294766722211,0.9169197245467522
+hybrid_screened,binary_reuse,none,frontmatter_description_char_count,-0.08992794727099084,0.056718360771481104,0.9139970388796912
+hybrid_screened,binary_reuse,none,markdown_url_count,-0.09661003591900703,0.031426626387077494,0.9079099893930465
+hybrid_screened,binary_reuse,none,text_nonempty_line_count,-0.10199371953999675,0.04779992140570012,0.9030352231276675
+hybrid_screened,binary_reuse,none,repo_language_Rust,-0.10597590597603686,0.049803411898489615,0.8994463190960178
+hybrid_screened,binary_reuse,none,text_unique_word_count,-0.1098537135877048,0.0552052461880013,0.8959651932439571
+hybrid_screened,binary_reuse,none,text__assumptions,-0.1189523508875154,0.6485873133172457,0.8878501050235855
+hybrid_screened,binary_reuse,none,repo_language_Verilog,-0.12640962087321167,0.2979355187168976,0.8812537928926937
+hybrid_screened,binary_reuse,none,repo_language_C++,-0.13340416000238883,0.2832437293968253,0.8751113356269787
+hybrid_screened,binary_reuse,none,repo_language_Go,-0.1436397766359611,0.11450693398290271,0.8661997172426119
+hybrid_screened,binary_reuse,none,text_sentence_count,-0.1465590100872188,0.07371627923330452,0.8636747653077632
+hybrid_screened,binary_reuse,none,frontmatter_name_missing,-0.14880582401363374,0.2291263435183956,0.861736427175154
+hybrid_screened,binary_reuse,none,repo_language_Perl,-0.15010523863386385,,0.8606174014595396
+hybrid_screened,binary_reuse,none,text__methodology,-0.16882832364495726,0.06192638561407898,0.8446538980420897
+hybrid_screened,binary_reuse,none,repo_language_Lua,-0.18288865975713983,0.09837794609981493,0.8328608815077561
+hybrid_screened,binary_reuse,none,repo_language_Julia,-0.1860741360248541,0.3427696382235406,0.8302120440796572
+hybrid_screened,binary_reuse,none,repo_language_Just,-0.1872639953545474,0.1645170887699445,0.8292247959930346
+hybrid_screened,binary_reuse,none,repo_language_Elixir,-0.1894311932973074,0.3148570854321276,0.8274296476445898
+hybrid_screened,binary_reuse,none,repo_license_WTFPL,-0.19011880061889588,0.2117518036097124,0.826860896521897
+hybrid_screened,binary_reuse,none,repo_language_Kotlin,-0.19787376629512188,0.1276742832651121,0.8204734180003136
+hybrid_screened,binary_reuse,none,markdown_inline_code_count,-0.19912894678537682,0.05154649677927898,0.8194442218218717
+hybrid_screened,binary_reuse,none,text_lexical_diversity,-0.20447873659381166,0.056231334023569404,0.8150720729418095
+hybrid_screened,binary_reuse,none,repo_language_Ruby,-0.20753491420613956,0.197418739486361,0.8125848705221455
+hybrid_screened,binary_reuse,none,repo_language_Makefile,-0.22175402800145297,0.6284462628851499,0.8011123913180587
+hybrid_screened,binary_reuse,none,repo_license_BlueOak-1.0.0,-0.22862301382173755,0.006394477780840321,0.795628417891986
+hybrid_screened,binary_reuse,none,frontmatter_description_missing,-0.22987997287134354,0.14956796811656436,0.7946289738137213
+hybrid_screened,binary_reuse,none,repo_license_LGPL-2.1,-0.23157125514526644,0.016119422313273946,0.79328616776808
+hybrid_screened,binary_reuse,none,repo_language_Groovy,-0.2370189291036958,,0.788976353261055
+hybrid_screened,binary_reuse,none,repo_language_Astro,-0.24048925819979325,0.42209985457637533,0.7862430910689543
+hybrid_screened,binary_reuse,none,repo_license_0BSD,-0.26486122113583327,0.18445311213139784,0.7673124293345467
+hybrid_screened,binary_reuse,none,repo_language_Shell,-0.2675745575416522,0.08743746808992378,0.7652332745841296
+hybrid_screened,binary_reuse,none,repo_language_Java,-0.28133329415022407,0.22913848583277896,0.7547767308842381
+hybrid_screened,binary_reuse,none,repo_language_CSS,-0.29512134715460686,0.3067384107694067,0.7444412461576967
+hybrid_screened,binary_reuse,none,repo_language_PowerShell,-0.30090718187926896,0.29406516791167125,0.7401464685628277
+hybrid_screened,binary_reuse,none,repo_language_Nunjucks,-0.3022118854679526,,0.7391814264929636
+hybrid_screened,binary_reuse,none,body_chars,-0.3036295793002066,1.1928878271853927,0.7381342360168391
+hybrid_screened,binary_reuse,none,repo_language_TeX,-0.30713204509078085,0.2830958007564512,0.7355534682699586
+hybrid_screened,binary_reuse,none,repo_license_CC-BY-4.0,-0.3370436286990619,0.27169721694541005,0.7138776936682262
+hybrid_screened,binary_reuse,none,repo_license_CC-BY-SA-4.0,-0.38307344589171805,0.20227421534322781,0.6817628247685239
+hybrid_screened,binary_reuse,none,repo_language_AL,-0.4046533133299514,,0.6672080829151837
+hybrid_screened,binary_reuse,none,repo_language_PLpgSQL,-0.4185464054285837,0.49178240804446743,0.6580025939912925
+hybrid_screened,binary_reuse,none,repo_language_SCSS,-0.4544630580842249,0.20338653120840955,0.6347887211297442
+hybrid_screened,binary_reuse,none,repo_language_Rich Text Format,-0.48935390327627637,0.1070333325222262,0.6130223379857881
+hybrid_screened,binary_reuse,none,repo_language_Nushell,-0.4909115024500494,0.12848721012003095,0.6120682381440959
+hybrid_screened,binary_reuse,none,repo_language_,-0.49438717843444335,0.6116070178114593,0.6099445799796814
+hybrid_screened,binary_reuse,none,repo_language_Clojure,-0.5168663908434468,0.35099931258525974,0.5963864650035583
+hybrid_screened,binary_reuse,none,repo_license_MPL-2.0,-0.5365021235128545,0.4478861549718986,0.5847902029473809
+hybrid_screened,binary_reuse,none,repo_language_Monkey C,-0.54768884546496,0.06945796608364992,0.5782847726090246
+hybrid_screened,binary_reuse,none,repo_language_Liquid,-0.5755256951170842,0.1605471208626225,0.5624091353446935
+hybrid_screened,binary_reuse,none,repo_language_F#,-0.583369286341555,0.10361852494030215,0.5580150830885222
+hybrid_screened,binary_reuse,none,repo_language_Jinja,-0.5943015075793054,0.3498718283731435,0.5519479627223489
+hybrid_screened,binary_reuse,none,repo_language_Emacs Lisp,-0.6341088602391253,0.24255941095507824,0.5304079453832791
+hybrid_screened,binary_reuse,none,location_class_other,-0.6467952600959818,0.15662458973754032,0.5237214813580474
+hybrid_screened,binary_reuse,none,repo_language_MDX,-0.6559323493369277,0.7078201160865066,0.5189579868233477
+hybrid_screened,binary_reuse,none,repo_license_BSD-2-Clause,-0.6787771408830076,0.31889888347737344,0.5072368925215568
+hybrid_screened,binary_reuse,none,repo_language_Nix,-0.6809208365295905,0.19477599979805788,0.5061506956569789
+hybrid_screened,binary_reuse,none,commit_count,-0.6965004069223504,0.21993050999062047,0.49832619471118045
+hybrid_screened,binary_reuse,none,repo_language_Mermaid,-0.7059500540420268,0.12848102476735768,0.4936393673292305
+hybrid_screened,binary_reuse,none,repo_language_Pascal,-0.7160809629295621,0.05722130234443651,0.4886635989609
+hybrid_screened,binary_reuse,none,repo_language_Go Template,-0.734044508030256,0.46735649656260064,0.47996384154595195
+hybrid_screened,binary_reuse,none,repo_license_CC0-1.0,-0.78498332186597,0.24204959504953907,0.45612730907459687
+hybrid_screened,binary_reuse,none,filename_skill.md,-0.7880453455089462,0.675087703542012,0.4547327726114103
+hybrid_screened,binary_reuse,none,repo_license_EUPL-1.2,-0.8204590068870732,0.47934550629478456,0.440229539732881
+hybrid_screened,binary_reuse,none,repo_license_GPL-2.0,-0.9337707117170129,0.4154537425560033,0.39306876348567016
+hybrid_screened,binary_reuse,none,repo_language_R,-0.9384160906088842,1.0704755248952047,0.39124704471167704
+hybrid_screened,binary_reuse,none,repo_license_UPL-1.0,-1.1454154905793517,0.45830039591373223,0.31809172621453174
+hybrid_screened,binary_reuse,none,repo_language_Vim Script,-1.1969949444748065,0.32555311676320303,0.3021006785520142
+hybrid_screened,binary_reuse,none,text__gericht,-1.4990294629305245,,0.22334682136203468
+hybrid_screened,binary_reuse,none,text__als,-1.5898137711642026,,0.20396359209988585
+hybrid_screened,binary_reuse,none,text__normen,-1.591221259494047,,0.20367671765786552
+hybrid_screened,binary_reuse,none,text__im,-1.6114572131563811,,0.19959654733876134
+hybrid_screened,binary_reuse,none,text__den,-1.6129082920523155,,0.19930712703784642
+hybrid_screened,binary_reuse,none,text__ist,-1.6149052696922144,,0.19890951230768
+hybrid_screened,binary_reuse,none,text__bei,-1.665423575903874,,0.18911053834759398
+hybrid_screened,binary_reuse,none,text__aus,-1.6807269154547437,,0.1862385471445067
+hybrid_screened,binary_reuse,none,text__nicht,-1.6910202507667484,,0.184331363808763
+hybrid_screened,binary_reuse,none,text__wird,-1.696536814086176,,0.18331728784741635
+hybrid_screened,binary_reuse,none,text__keine,-1.8058514531819143,,0.16433447388057182
+hybrid_screened,binary_reuse,none,text__fur,-1.8708160503699314,,0.15399794044835283
+hybrid_screened,binary_reuse,none,text__nur,-1.9023351214564557,,0.14921976579675456
+hybrid_screened,binary_reuse,none,text__welche,-2.040310627001552,,0.12998832672237948
+hybrid_screened,binary_reuse,none,text__fristen,-2.0648214704988206,,0.1268409333952968
+hybrid_screened,binary_reuse,none,text__frist,-2.1225697926092346,,0.11972356811483045
+hybrid_screened,binary_reuse,none,text__eine,-2.1419430434244835,,0.11742645650699952
+hybrid_screened,binary_reuse,none,text__die,-2.147508042843811,,0.11677479327925726
+hybrid_screened,binary_reuse,none,text__prufen,-2.2438681910745153,,0.10604749798093477
+hybrid_screened,binary_reuse,none,text__wenn,-2.346077526115334,,0.09574397988943885
+hybrid_screened,binary_reuse,none,text__des,-2.360801976376276,,0.09434453076368449
+hybrid_screened,binary_reuse,none,text__der,-2.421045617505799,,0.08882868805230104
+hybrid_screened,binary_reuse,none,text__oder,-3.0738092870068856,,0.046244659729109565
+hybrid_screened,binary_reuse,none,text__und,-4.950161479343899,,0.007082265197172709
