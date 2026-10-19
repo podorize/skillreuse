@@ -33,9 +33,9 @@ Agent skills, software reuse, mining software repositories, shortcut learning, p
 \end{IEEEkeywords}
 
 \section{Introduction}
-Autonomous coding agents (e.g., Google Antigravity, Claude Code, GitHub Copilot Workspace) are shifting software development from hardcoded scripts to prompt-driven tool execution. Central to this paradigm is the \emph{agent skill}---typically structured as a folder containing a \texttt{SKILL.md} markdown file with YAML frontmatter metadata, procedural instructions, and optional bundled scripts. When an agent determines that a developer's prompt matches a skill description, it dynamically executes the instructions.
+Autonomous coding agents (e.g., Google Antigravity, Claude Code, GitHub Copilot Workspace) are shifting software development from hardcoded scripts to prompt-driven tool execution \cite{yao2023react,schick2023toolformer,jimenez2024swebench}. Central to this paradigm is the \emph{agent skill}---typically structured as a folder containing a \texttt{SKILL.md} markdown file with YAML frontmatter metadata, procedural instructions, and optional bundled scripts \cite{qin2023toolllm}. When an agent determines that a developer's prompt matches a skill description, it dynamically executes the instructions.
 
-However, as highlighted in the MSR 2027 Mining Challenge \cite{gitskills2027}, agent skills differ fundamentally from traditional source code: their content is written primarily in natural language, their execution is probabilistic, and they lack a centralized package manager (e.g., npm, PyPI). Consequently, skills spread through ad-hoc directory copying across repositories. Over 50\% of observed instances are verbatim duplicates, while the vast majority of original skills remain unshared singletons. 
+However, as highlighted in the MSR 2027 Mining Challenge \cite{gitskills2027}, agent skills differ fundamentally from traditional source code: their content is written primarily in natural language, their execution is probabilistic, and they lack a centralized package manager (e.g., npm, PyPI). Consequently, skills spread through ad-hoc directory copying across repositories, echoing classical empirical observations on open-source code duplication and ad-hoc reuse \cite{lopes2017dejavu,haefliger2008code,mockus2002two}. Over 50\% of observed instances are verbatim duplicates, while the vast majority of original skills remain unshared singletons. 
 
 This paper investigates the \textbf{GitSkills} community dataset (July 2026 release) \cite{gitskills2027}, addressing two core challenge directions: \textbf{Direction 3} (\emph{Reuse without a package manager}) and \textbf{Direction 4} (\emph{Software metrics for natural-language instructions}). We formulate two research questions:
 \begin{itemize}
@@ -58,7 +58,7 @@ We formulate a dual-target architecture:
 \end{enumerate}
 
 \subsection{Leakage-Free Grouped Partitioning}
-Skills from the same repository share identical contextual metrics (stars, forks, commits). Naive random $I.I.D.$ splits permit models to memorize repository clusters. We eliminate this group leakage using \texttt{StratifiedGroupKFold} grouped by \texttt{representative\_repo\_id}:
+Skills from the same repository share identical contextual metrics (stars, forks, commits). Naive random $I.I.D.$ splits permit models to memorize repository clusters, inducing severe group leakage \cite{saeb2017need,kaufman2012leakage,roberts2017cross}. We eliminate this leakage using \texttt{StratifiedGroupKFold} grouped by \texttt{representative\_repo\_id}:
 \begin{itemize}
     \item \textbf{Training Split}: 160,000 skills across 57,808 repositories.
     \item \textbf{External Test Split}: 40,000 skills across 14,568 repositories.
@@ -78,7 +78,7 @@ We engineer 143 tabular features spanning two domains: (1)~\emph{Structural and 
 \section{Experimental Methodology}
 
 \subsection{Unmasking Shortcut Learning in Tree Ensembles}
-Initial spot-checking across inductive learning biases revealed a critical methodological trap. Under random $I.I.D.$ splitting, Histogram Gradient Boosted Decision Trees (\texttt{HistGradientBoosting}) appeared to achieve $\mathbf{0.8514}$ ROC-AUC. However, analyzing split criteria unmasked a classic \emph{Clever Hans} artifact \cite{geirhos2020shortcut}:
+Initial spot-checking across inductive learning biases revealed a critical methodological trap. Under random $I.I.D.$ splitting, Histogram Gradient Boosted Decision Trees (\texttt{HistGradientBoosting}) appeared to achieve $\mathbf{0.8514}$ ROC-AUC. However, analyzing split criteria unmasked a classic \emph{Clever Hans} artifact \cite{geirhos2020shortcut,lapuschkin2019unmasking}:
 \begin{itemize}
     \item By recursively splitting on continuous variables (\texttt{sibling\_bytes}, \texttt{commit\_count}, \texttt{stars}), trees isolated unique continuous tuples corresponding to specific repositories present across both train and test folds.
     \item When re-evaluated under strict grouped splitting (\texttt{StratifiedGroupKFold}) on 100\% unseen repositories, tree performance suffered a \textbf{catastrophic collapse} to $\mathbf{0.48 \sim 0.62}$ ROC-AUC.
@@ -91,7 +91,7 @@ We evaluated 6 ablation configurations on the training split (Fig.~\ref{fig:abla
 Unsupervised high-dimensional text proved noisy ($\pm 0.1221$ std). However, screening the top 100 terms via supervised univariate $\chi^2$ computed strictly within each training fold eliminated noise, yielding the project's champion model.
 
 \subsection{Calibration \& Decision Threshold Tuning ($t^* = 0.21$)}
-The natural unweighted model achieves clean probability calibration (Brier score loss of $\mathbf{0.1323}$). Due to the $16.20\%$ positive prevalence, default classification ($t = 0.50$) misses $95.6\%$ of reused skills ($F_1 = 0.0794$). Sweeping 86 out-of-fold thresholds on the 160k training set identified $t^* = 0.21$ as the optimal operating threshold, elevating $F_1$ to $\mathbf{0.3754}$ ($+372\%$ relative gain) with $46.56\%$ recall. This threshold was frozen prior to test evaluation.
+The natural unweighted model achieves clean probability calibration, as quantified by Brier score loss \cite{brier1950verification} ($\mathbf{0.1323}$), confirming that predicted probabilities reflect empirical likelihoods \cite{niculescu2005predicting}. Due to the $16.20\%$ positive prevalence, default classification ($t = 0.50$) misses $95.6\%$ of reused skills ($F_1 = 0.0794$). Applying cost-sensitive decision theory \cite{elkan2001foundations} and class imbalance adjustments \cite{tantithamthavorn2020code}, sweeping 86 out-of-fold thresholds on the 160k training set identified $t^* = 0.21$ as the optimal operating threshold, elevating $F_1$ to $\mathbf{0.3754}$ ($+372\%$ relative gain) with $46.56\%$ recall. This threshold was frozen prior to test evaluation.
 
 \begin{figure}[t]
     \centering
@@ -103,7 +103,7 @@ The natural unweighted model achieves clean probability calibration (Brier score
 \section{Results and Knowledge Discovery}
 
 \subsection{The Three Pillars of Skill Reuse (RQ1)}
-Inspecting standardized Odds Ratios ($\text{OR} = e^\beta$) and game-theoretic SHAP values (Fig.~\ref{fig:shap_top20}) reveals the mechanisms governing skill adoption:
+Inspecting standardized Odds Ratios ($\text{OR} = e^\beta$) and game-theoretic SHAP values \cite{lundberg2017unified,molnar2020interpretable} (Fig.~\ref{fig:shap_top20}) reveals the mechanisms governing skill adoption:
 \begin{enumerate}
     \item \textbf{Pillar 1: Structural Canonicity}: Conforming to agent path standards is paramount. Canonical paths (\texttt{.gemini/antigravity/skills}) exhibit $\text{OR} = 1.87$ ($+87\%$ reuse odds), whereas non-canonical directories decrease odds by $-44\%$ ($\text{OR} = 0.56$). Exact uppercase naming (\texttt{SKILL.md}) yields $\text{OR} = 1.86$, while lowercase naming penalizes adoption by $-54\%$ ($\text{OR} = 0.46$).
     \item \textbf{Pillar 2: Propagator Ecosystems}: Modular component ecosystems drive adoption: Svelte ($\text{OR} = 6.75$), AutoHotkey ($\text{OR} = 8.47$), and Python. Repository prestige (stars/forks) facilitates organic indexing.
@@ -186,7 +186,7 @@ Our findings offer concrete guidelines for agent skill creators:
 \end{enumerate}
 
 \subsection{Threats to Validity}
-\textbf{Construct Validity}: Following GitSkills conventions, we define reuse via exact SHA-256 content hashes (Type-1 clones). Consequently, near-duplicate skills modified by developers (Type-2/Type-3 clones) are categorized as singletons, potentially underestimating semantic diffusion. Future work should incorporate syntactic tree-diffing and embedding similarity.
+\textbf{Construct Validity}: Following GitSkills conventions, we define reuse via exact SHA-256 content hashes (Type-1 clones \cite{roy2007survey}). Consequently, near-duplicate skills modified by developers (Type-2/Type-3 clones) are categorized as singletons, potentially underestimating semantic diffusion. Future work should incorporate syntactic tree-diffing and embedding similarity.
 \textbf{Internal Validity}: Confounding factors, such as superpropagator frameworks (e.g., Svelte, AutoHotkey) adopting standardized prompts by convention, could correlate with reuse. While grouped splits prevent repository memorization, observational SE mining cannot claim pure intervention causality.
 \textbf{External Validity}: Our dataset reflects the GitHub ecosystem as of July 2026. While capturing 72k repositories, agent skill formats continue to evolve rapidly.
 

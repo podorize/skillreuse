@@ -128,3 +128,28 @@ This paper presented an empirical study predicting the cross-repository reuse an
 
 ### Replication and Open Science
 The complete replication package, sparse matrices, scripts, and an interactive 1-click Google Colab notebook are available anonymously at: `https://anonymous.4open.science/r/skillreuse-anon`.
+
+---
+
+## References
+
+1. **G. Destefanis, D. Graziotin, M. Vaccargiu, and M. Ortu**, "GitSkills: A Dataset of Agent Skills on GitHub," in *Proc. 24th IEEE/ACM Int. Conf. Mining Software Repositories (MSR)*, 2027.
+2. **S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao**, "ReAct: Synergizing Reasoning and Acting in Language Models," in *Proc. Int. Conf. Learn. Representations (ICLR)*, 2023.
+3. **T. Schick, J. Dwivedi-Yu, R. Dessì, R. Raileanu, M. Lomeli, L. Zettlemoyer, N. Cancedda, and T. Scialom**, "Toolformer: Language models can teach themselves to use tools," *NeurIPS*, vol. 36, pp. 68539–68551, 2023.
+4. **Y. Qin et al.**, "ToolLLM: Facilitating large language models to master 16000+ real-world APIs," *arXiv:2307.16789*, 2023.
+5. **C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. Narasimhan**, "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?," in *Proc. Int. Conf. Learn. Representations (ICLR)*, 2024.
+6. **C. V. Lopes, P. Maj, P. Martins, V. Sajnani, J. Di Rocco, H. Summer, and P. Baldi**, "DéjàVu: A map of code duplicates on GitHub," *Proc. ACM Program. Lang. (OOPSLA)*, vol. 1, pp. 1–28, 2017.
+7. **S. Haefliger, G. Von Krogh, and S. Spaeth**, "Code reuse in open source software," *Management Science*, vol. 54, no. 1, pp. 180–193, 2008.
+8. **A. Mockus, R. T. Fielding, and J. D. Herbsleb**, "Two case studies of open source software development: Apache and Mozilla," *ACM TOSEM*, vol. 11, no. 3, pp. 309–346, 2002.
+9. **C. K. Roy and J. R. Cordy**, "A survey on software clone detection research," *Queen's School of Computing TR 2007-541*, 2007.
+10. **R. Geirhos et al.**, "Shortcut learning in deep neural networks," *Nature Machine Intelligence*, vol. 2, no. 11, pp. 665–673, 2020.
+11. **S. Lapuschkin et al.**, "Unmasking Clever Hans predictors and assessing what machines really learn," *Nature Communications*, vol. 10, no. 1, p. 1096, 2019.
+12. **S. Saeb, L. Lonini, A. Jayaraman, D. C. Mohr, and K. P. Kording**, "The need to separate related samples in cross-validation: Error estimation for models that predict cross-subject traits," *GigaScience*, vol. 6, no. 4, pp. 1–11, 2017.
+13. **D. R. Roberts et al.**, "Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure," *Ecography*, vol. 40, no. 8, pp. 913–929, 2017.
+14. **S. Kaufman, S. Rosset, C. Perlich, and O. Stitelman**, "Leakage in data mining: Formulation, detection, and avoidance," *ACM TKDD*, vol. 6, no. 4, pp. 1–21, 2012.
+15. **A. Niculescu-Mizil and R. Caruana**, "Predicting good probabilities with supervised learning," in *Proc. 22nd ICML*, pp. 625–632, 2005.
+16. **G. W. Brier**, "Verification of forecasts expressed in terms of probability," *Monthly Weather Review*, vol. 78, no. 1, pp. 1–3, 1950.
+17. **C. Elkan**, "The foundations of cost-sensitive learning," in *Proc. IJCAI*, vol. 17, pp. 973–978, 2001.
+18. **C. Tantithamthavorn, A. E. Hassan, and K. Matsumoto**, "The impact of class rebalancing techniques on software defect prediction," *IEEE TSE*, vol. 46, no. 11, pp. 1200–1214, 2020.
+19. **S. M. Lundberg and S.-I. Lee**, "A unified approach to interpreting model predictions," in *NeurIPS*, vol. 30, pp. 4765–4774, 2017.
+20. **C. Molnar**, *Interpretable Machine Learning: A Guide for Making Black Box Models Explainable*, Leanpub, 2020.
