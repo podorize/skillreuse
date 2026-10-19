@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "2026-10-19T03:56:34.696363+00:00",
+  "protocol": "Strict blind evaluation on untouched external test set of 40,000 instances (14,568 unseen repos)",
+  "train_rows": 160000,
+  "test_rows": 40000,
+  "train_repos": 57808,
+  "test_repos": 14568,
+  "repo_overlap": 0,
+  "frozen_decision_threshold": 0.21,
+  "champion_model": "hybrid_screened",
+  "champion_test_roc_auc": 0.6187882011280658,
+  "champion_test_pr_auc": 0.208269322096983,
+  "champion_test_f1": 0.28837209302325584,
+  "champion_test_intensity_macro_f1": 0.26770291237758037
+}
