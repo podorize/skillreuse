@@ -32,8 +32,17 @@
 \pagestyle{empty}
 \thispagestyle{empty}
 
-%% Title and Author formatting
-\newcommand{\authortag}[1]{$^{#1}$}
+%% Title, Author, Institute and Address formatting (Official SBC Standard)
+\newcounter{instn}
+\setcounter{instn}{1}
+\newcommand{\instnum}{\arabic{instn}}
+\newcommand{\inst}[1]{\ensuremath{^{#1}}}
+\newcommand{\authortag}[1]{\ensuremath{^{#1}}}
+\newcommand{\nextinstitute}{\\\mbox{}\\[-6pt]\addtocounter{instn}{1}\inst{\instnum}}
+\newcommand{\email}[1]{\\\mbox{}\\[-6pt]\fontsize{10pt}{12pt}\selectfont\texttt{#1}}
+
+\gdef\@address{}
+\newcommand{\address}[1]{\gdef\@address{#1}}
 
 \def\@maketitle{%
   \newpage
@@ -48,13 +57,14 @@
       \begin{tabular}[t]{c}%
         \@author
       \end{tabular}\par}%
+    \vskip 6pt
+    {\fontsize{12pt}{14pt}\selectfont
+      \begin{tabular}[t]{c}%
+        \@address
+      \end{tabular}\par}%
   \end{center}%
   \par
   \vskip 12pt}
-
-%% Address and Email formatting
-\newcommand{\address}[1]{\vspace{-4pt}\begin{center}\fontsize{12pt}{14pt}\selectfont #1\end{center}}
-\newcommand{\email}[1]{\vspace{-6pt}\begin{center}\fontsize{10pt}{12pt}\selectfont \texttt{#1}\end{center}\vspace{6pt}}
 
 %% Section formatting: 13pt bold, 12pt before, 6pt after
 \renewcommand{\section}{\@startsection{section}{1}{\z@}%
