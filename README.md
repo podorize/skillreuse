@@ -18,7 +18,21 @@ uv run skillreuse-check
 uv run pytest
 ```
 
-Para iniciar o JupyterLab:
+## 🚀 Reproducao Rapida do Artigo (< 2 minutos)
+
+Para reproduzir de forma ultrarrapida todos os modelos campeoes, tabelas do teste cego de 40.000 instancias ineditas e figuras em alta resolucao do artigo cientifico:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce_in_colab.ipynb)
+
+```bash
+# Executa a reproducao completa do artigo em ~1 minuto usando as matrizes pre-processadas:
+uv run python -m gitskills_reuse.reproduce
+
+# (Opcional) Para recomputar todo o pre-processamento e vetorizacao do zero:
+uv run python -m gitskills_reuse.reproduce --from-scratch
+```
+
+Para iniciar o JupyterLab localmente:
 
 ```bash
 uv run jupyter lab

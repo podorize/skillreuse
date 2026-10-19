@@ -25,4 +25,5 @@ reports/tables/*
 !reports/tables/.gitkeep
 reports/modeling/**/cache/
 *.npz
+cache_sparse.tar.gz
 work/
