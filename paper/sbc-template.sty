@@ -118,20 +118,14 @@
 \DeclareCaptionFont{sbcfont}{\fontsize{10pt}{12pt}\fontfamily{phv}\selectfont\bfseries}
 \captionsetup{font=sbcfont,skip=6pt}
 
-%% References formatting
-\newdimen\bibindent
-\setlength\bibindent{0.5cm}
+%% References formatting (Official SBC Standard - Author-Date Hanging Indent)
 \renewenvironment{thebibliography}[1]{%
   \section*{\refname}%
-  \list{\@biblabel{\@arabic\c@enumiv}}{%
-    \settowidth\labelwidth{\@biblabel{#1}}%
-    \leftmargin\labelwidth
-    \advance\leftmargin\labelsep
-    \advance\leftmargin\bibindent
-    \itemindent -\bibindent
-    \listparindent \itemindent
-    \parsep 0pt
-    \itemsep 6pt
+  \list{}{%
+    \setlength{\leftmargin}{1.27cm}%
+    \setlength{\itemindent}{-\leftmargin}%
+    \setlength{\itemsep}{6pt}%
+    \setlength{\parsep}{0pt}%
     \usecounter{enumiv}%
     \let\p@enumiv\@empty
     \renewcommand\theenumiv{\@arabic\c@enumiv}%
