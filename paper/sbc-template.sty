@@ -1,0 +1,140 @@
+%% sbc-template.sty
+%% LaTeX style file for SBC (Sociedade Brasileira de Computacao) conferences.
+%% Conforms to the official SBC paper formatting instructions.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{sbc-template}[2003/03/24 SBC Conference Paper Style]
+
+\RequirePackage{times}
+
+%% Page dimensions for A4 paper:
+%% Upper margin: 3.5 cm
+%% Bottom margin: 2.5 cm
+%% Left/Right margins: 3.0 cm
+\setlength{\paperheight}{297mm}
+\setlength{\paperwidth}{210mm}
+\setlength{\topmargin}{3.5cm}
+\addtolength{\topmargin}{-1in}
+\setlength{\headheight}{0pt}
+\setlength{\headsep}{0pt}
+\setlength{\textheight}{23.7cm}
+\setlength{\textwidth}{15.0cm}
+\setlength{\oddsidemargin}{3.0cm}
+\addtolength{\oddsidemargin}{-1in}
+\setlength{\evensidemargin}{3.0cm}
+\addtolength{\evensidemargin}{-1in}
+
+%% Paragraph formatting: 6pt space before, 1.27cm indent
+\setlength{\parindent}{1.27cm}
+\setlength{\parskip}{6pt}
+
+%% Suppress page numbering
+\pagestyle{empty}
+\thispagestyle{empty}
+
+%% Title and Author formatting
+\newcommand{\authortag}[1]{$^{#1}$}
+
+\def\@maketitle{%
+  \newpage
+  \null
+  \vskip 12pt
+  \begin{center}%
+    \let \footnote \thanks
+    {\fontsize{16pt}{20pt}\selectfont \bfseries \@title \par}%
+    \vskip 12pt
+    {\fontsize{12pt}{14pt}\selectfont \bfseries
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+  \end{center}%
+  \par
+  \vskip 12pt}
+
+%% Address and Email formatting
+\newcommand{\address}[1]{\vspace{-4pt}\begin{center}\fontsize{12pt}{14pt}\selectfont #1\end{center}}
+\newcommand{\email}[1]{\vspace{-6pt}\begin{center}\fontsize{10pt}{12pt}\selectfont \texttt{#1}\end{center}\vspace{6pt}}
+
+%% Section formatting: 13pt bold, 12pt before, 6pt after
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-12pt \@plus -3pt \@minus -2pt}%
+  {6pt \@plus 2pt}%
+  {\fontsize{13pt}{15pt}\selectfont\bfseries}}
+
+%% Subsection formatting: 12pt bold, 12pt before, 6pt after
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {-12pt \@plus -3pt \@minus -2pt}%
+  {6pt \@plus 2pt}%
+  {\fontsize{12pt}{14pt}\selectfont\bfseries}}
+
+%% Subsubsection formatting: 12pt italic, 12pt before, 6pt after
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{\z@}%
+  {-12pt \@plus -3pt \@minus -2pt}%
+  {6pt \@plus 2pt}%
+  {\fontsize{12pt}{14pt}\selectfont\itshape}}
+
+%% Abstract & Resumo environments: indented 0.8cm on both sides
+\renewenvironment{abstract}{%
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0.8cm}%
+    \setlength{\rightmargin}{0.8cm}%
+    \setlength{\listparindent}{0pt}%
+    \setlength{\itemindent}{0pt}%
+    \setlength{\parsep}{0pt}%
+    \setlength{\topsep}{6pt}%
+  }%
+  \item\relax\fontsize{12pt}{14pt}\selectfont \textbf{Abstract.}~%
+}{%
+  \end{list}\vspace{6pt}%
+}
+
+\newenvironment{resumo}{%
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0.8cm}%
+    \setlength{\rightmargin}{0.8cm}%
+    \setlength{\listparindent}{0pt}%
+    \setlength{\itemindent}{0pt}%
+    \setlength{\parsep}{0pt}%
+    \setlength{\topsep}{6pt}%
+  }%
+  \item\relax\fontsize{12pt}{14pt}\selectfont \textbf{Resumo.}~%
+}{%
+  \end{list}\vspace{6pt}%
+}
+
+%% Caption styling: Helvetica 10pt bold
+\RequirePackage{caption}
+\DeclareCaptionFont{sbcfont}{\fontsize{10pt}{12pt}\fontfamily{phv}\selectfont\bfseries}
+\captionsetup{font=sbcfont,skip=6pt}
+
+%% References formatting
+\newdimen\bibindent
+\setlength\bibindent{0.5cm}
+\renewenvironment{thebibliography}[1]{%
+  \section*{\refname}%
+  \list{\@biblabel{\@arabic\c@enumiv}}{%
+    \settowidth\labelwidth{\@biblabel{#1}}%
+    \leftmargin\labelwidth
+    \advance\leftmargin\labelsep
+    \advance\leftmargin\bibindent
+    \itemindent -\bibindent
+    \listparindent \itemindent
+    \parsep 0pt
+    \itemsep 6pt
+    \usecounter{enumiv}%
+    \let\p@enumiv\@empty
+    \renewcommand\theenumiv{\@arabic\c@enumiv}%
+  }%
+  \fontsize{12pt}{14pt}\selectfont
+  \sloppy
+  \clubpenalty4000
+  \@clubpenalty \clubpenalty
+  \widowpenalty4000%
+  \sfcode`\.\@m%
+}{%
+  \def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+  \endlist%
+}
+
+\endinput
