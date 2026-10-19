@@ -45,7 +45,7 @@ This paper investigates the \textbf{GitSkills} community dataset (July 2026 rele
     \item \textbf{RQ2 (Conditional Scale of Diffusion)}: \emph{Among reused skills, what properties distinguish small-scale sharing (2 repos) from massive viral diffusion ($10+$ repos)?}
 \end{itemize}
 
-By enforcing a grouped partition with exactly zero repository overlap, we evaluate learning paradigms, demonstrate the failure mode of tree ensembles due to shortcut learning, optimize decision thresholds, and extract actionable principles governing agent skill design.
+Rather than relying on descriptive statistics or bivariate tests that produce spuriously small $p$-values in massive samples ($N=200,000$) \cite{lin2013too}, we follow the empirical software analytics paradigm \cite{menzies2010defect,tantithamthavorn2020code} and formulate the problem through supervised predictive modeling. By enforcing a grouped partition with zero repository overlap, predictive modeling serves as an empirical acid test for generalizability \cite{shmueli2010explain,breiman2001statistical}, unmasking shortcut learning in tree ensembles, optimizing decision thresholds, and extracting actionable principles governing agent skill design.
 
 \section{Dataset and Problem Formulation}
 
@@ -69,6 +69,11 @@ Skills from the same repository share identical contextual metrics (stars, forks
 
 \subsection{Extracted Multimodal Metrics}
 We engineer 143 tabular features spanning two domains: (1)~\emph{Structural and Textometrics (46 features)}, including YAML validity (\texttt{frontmatter\_valid}), line/character counts, markdown heading depth, fenced code blocks, checklists, and path canonicity (\texttt{location\_class}); and (2)~\emph{Repository Context (97 features)}, including star count, forks, commit history, and primary programming language. Textual representations are captured via sublinear TF-IDF n-grams ($1$--$2$ words).
+
+\subsection{Methodological Rationale: Why Predictive Modeling?}
+To address Challenge Direction 4 (metrics for natural-language instructions), one could naively compute bivariate correlations across mined metrics. However, in large-scale software mining ($N=200,000$), classical null-hypothesis testing collapses because trivial effect sizes produce extreme $p$-values ($p < 10^{-15}$) due to vanishing standard errors \cite{lin2013too}. 
+
+Instead, we employ supervised predictive modeling under zero-leakage grouped cross-validation as an empirical acid test \cite{shmueli2010explain,breiman2001statistical}. This methodology offers three advantages: (1)~it controls for multivariate confounding between repository prestige and prompt content; (2)~it guarantees that identified metric relationships generalize out-of-distribution to 14,568 previously unseen repositories \cite{roberts2017cross}; and (3)~via model explainability (Odds Ratios and SHAP \cite{lundberg2017unified}), it translates predictive weights directly into actionable linters and retrieval priors (Challenge Direction 3).
 
 \begin{figure}[!htbp]
     \centering
