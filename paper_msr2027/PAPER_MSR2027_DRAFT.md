@@ -77,14 +77,14 @@ The natural unweighted model achieves clean probability calibration (Brier score
 Inspecting standardized Odds Ratios ($\text{OR} = e^\beta$) and game-theoretic SHAP values reveals the mechanisms governing skill adoption:
 1. **Pillar 1: Structural Canonicity**: Conforming to agent path standards is paramount. Canonical paths (`.gemini/antigravity/skills`) exhibit $\text{OR} = 1.87$ ($+87\%$ reuse odds), whereas non-canonical directories decrease odds by $-44\%$ ($\text{OR} = 0.56$). Exact uppercase naming (`SKILL.md`) yields $\text{OR} = 1.86$, while lowercase naming penalizes adoption by $-54\%$ ($\text{OR} = 0.46$).
 2. **Pillar 2: Propagator Ecosystems**: Modular component ecosystems drive adoption: Svelte ($\text{OR} = 6.75$), AutoHotkey ($\text{OR} = 8.47$), and Python. Repository prestige (stars/forks) facilitates organic indexing.
-3. **Pillar 3: Prompt Behavioral Contracts**: Remarkably, **task domain does not predict reuse**. Instead, terms formalizing prompt behavioral interfaces dominate:
+3. **Pillar 3: Prompt Behavioral Contracts**: Crucially, **task domain does not predict reuse**. Instead, vocabulary formalizing prompt behavioral contracts strongly marks reused skills:
    - `text__objective` ($\text{OR} = 1021.18, \beta = 6.93$)
    - `text__patterns` ($\text{OR} = 433.07, \beta = 6.07$)
    - `text__example` ($\text{OR} = 122.05, \beta = 4.80$)
    - `text__prompt role` ($\text{OR} = 107.14, \beta = 4.67$)
    - `text__rules constraints` ($\text{OR} = 47.40, \beta = 3.86$)
 
-Reusable skills act as formal interface contracts: declaring clear personas, bounded objectives, explicit constraints, and few-shot input/output examples.
+These large Odds Ratios reflect near-complete empirical separation under $L_2$ regularization: terms like "objective" and "rules constraints" appear almost exclusively in reused templates rather than ad-hoc singletons. Rather than establishing direct causality, these contractual headers serve as reliable discriminative signatures of modular engineering practices, establishing clear personas, bounded objectives, explicit constraints, and few-shot input/output examples.
 
 ### 4.2 Drivers of Massive Viral Diffusion (RQ2)
 Analyzing conditional intensity for Class 3 ($\ge 10$ repos) reveals the differentiators of ecosystem-wide diffusion:
@@ -94,8 +94,8 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos) reveals the differe
 
 ### 4.3 Blind External Evaluation (40,000 Test Instances)
 Evaluating the frozen pipeline on 40,000 instances from 14,568 unseen repositories confirms our findings:
-- **Generalization Stability**: In cross-validation, the hybrid model scored $0.6706 \pm 0.0633$. On 14,568 untouched external repositories, it achieved **0.6211** ROC-AUC, falling within the 1-standard-deviation window ($[0.6073, 0.7339]$).
-- **Threshold Impact**: The frozen threshold ($t^* = 0.21$) elevated test $F_1$ from $0.0727$ to **0.2967**, recovering **2,376 true positive reused skills** with $78.16\%$ specificity ($26,200$ true negatives).
+- **Generalization and Multimodal Value**: On 14,568 untouched external repositories, the hybrid model achieved **0.6211** ROC-AUC ($0.6706 \pm 0.0633$ CV). While text yields a modest quantitative gain over tabular repo metrics ($+0.0091$ ROC-AUC over `structure_and_repo`), modeling natural-language prompt tokens is qualitatively indispensable: it provides the only actionable semantic guidance (Pillar 3) for skill authors, whereas external repository stars and commit histories are beyond an author's direct control.
+- **Threshold Impact**: The frozen threshold ($t^* = 0.21$) elevated test $F_1$ from $0.0727$ to **0.2967** ($+308\%$ relative gain over $t=0.50$ baseline), recovering **2,376 true positive reused skills** with $78.16\%$ specificity ($26,200$ true negatives).
 - **Viral Recovery**: On conditional intensity, the model achieved Class 3 Recall of **49.52\%** ($F_1 = 0.3163$). The classifier successfully flags half of all massively diffused skills in completely foreign repositories.
 
 ---
@@ -106,6 +106,11 @@ Our findings offer concrete guidelines for agent skill creators:
 2. **Enforce Frontmatter Schemas**: Always provide valid delimited YAML declaring `name` and `description`.
 3. **Structure Contractual Prompt Headers**: Incorporate explicit markdown sections for `## Objective`, `## Role`, `## Rules & Constraints`, and `## Examples`.
 4. **Specify Negative Boundaries**: Explicitly declare `## Limitations` to restrict erroneous agent tool invocation.
+
+### Threats to Validity
+- **Construct Validity**: Following GitSkills conventions, we define reuse via exact SHA-256 content hashes (Type-1 clones). Consequently, near-duplicate skills modified by developers (Type-2/Type-3 clones) are categorized as singletons, potentially underestimating semantic diffusion. Future work should incorporate syntactic tree-diffing and embedding similarity.
+- **Internal Validity**: Confounding factors, such as superpropagator frameworks (e.g., Svelte, AutoHotkey) adopting standardized prompts by convention, could correlate with reuse. While grouped splits prevent repository memorization, observational SE mining cannot claim pure intervention causality.
+- **External Validity**: Our dataset reflects the GitHub ecosystem as of July 2026. While capturing 72k repositories, agent skill formats continue to evolve rapidly.
 
 ---
 
