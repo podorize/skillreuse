@@ -70,7 +70,7 @@ Skills from the same repository share identical contextual metrics (stars, forks
 \subsection{Extracted Multimodal Metrics}
 We engineer 143 tabular features spanning two domains: (1)~\emph{Structural and Textometrics (46 features)}, including YAML validity (\texttt{frontmatter\_valid}), line/character counts, markdown heading depth, fenced code blocks, checklists, and path canonicity (\texttt{location\_class}); and (2)~\emph{Repository Context (97 features)}, including star count, forks, commit history, and primary programming language. Textual representations are captured via sublinear TF-IDF n-grams ($1$--$2$ words).
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.88\columnwidth]{figures/ablation_roc_auc_comparison.png}
     \caption{Cross-validation ROC-AUC across multimodal ablation configurations (3-Fold StratifiedGroupKFold on 160k training instances).}
@@ -95,7 +95,7 @@ Unsupervised high-dimensional text proved noisy ($\pm 0.1221$ std). However, scr
 \subsection{Calibration \& Decision Threshold Tuning ($t^* = 0.21$)}
 The natural unweighted model achieves clean probability calibration, as quantified by Brier score loss \cite{brier1950verification} ($\mathbf{0.1323}$), confirming that predicted probabilities reflect empirical likelihoods \cite{niculescu2005predicting}. Due to the $16.20\%$ positive prevalence, default classification ($t = 0.50$) misses $95.6\%$ of reused skills ($F_1 = 0.0794$). Applying cost-sensitive decision theory \cite{elkan2001foundations} and class imbalance adjustments \cite{tantithamthavorn2020code}, sweeping 86 out-of-fold thresholds on the 160k training set identified $t^* = 0.21$ as the optimal operating threshold, elevating $F_1$ to $\mathbf{0.3754}$ ($+372\%$ relative gain) with $46.56\%$ recall. This threshold was frozen prior to test evaluation.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.92\columnwidth]{figures/hybrid_shap_top20.png}
     \caption{Top 20 feature attributions via game-theoretic SHAP on the champion hybrid model, highlighting the Three Pillars of Skill Reuse.}
@@ -128,7 +128,7 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class
     \item \textbf{Superpropagator Frameworks}: Astro ($\text{OR} = 3.65$), Jupyter ($\text{OR} = 3.01$), and Python ($\text{OR} = 2.27$).
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.85\columnwidth]{figures/intensity_class3_top_drivers.png}
     \caption{Key feature drivers for massive viral diffusion ($\ge 10$ repos, Class 3).}
@@ -155,7 +155,7 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
         \includegraphics[width=\textwidth]{figures/final_test_roc_pr_curves.png}

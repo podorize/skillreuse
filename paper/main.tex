@@ -8,6 +8,8 @@
 \usepackage{amsmath,amssymb}
 \usepackage{subcaption}
 
+\sloppy
+
 \title{Predicting Cross-Repository Reuse and Diffusion of AI Agent Skills: A Multimodal Empirical Study on GitHub}
 
 \author{Pedro Odorize\inst{1}}
@@ -130,7 +132,7 @@ In accordance with rigorous empirical machine learning methodology, we initially
     \item Zero-rule probabilistic heuristic: Dummy Stratified Classifier.
 \end{enumerate}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.75\textwidth]{figures/ablation_roc_auc_comparison.png}
     \caption{Cross-validation ROC-AUC across multimodal ablation configurations under 3-Fold StratifiedGroupKFold.}
@@ -186,7 +188,7 @@ Table~\ref{tab:ablation_cv} presents the cross-validation performance across the
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.75\textwidth]{figures/ablation_intensity_macro_f1.png}
     \caption{Conditional intensity Macro $F_1$ and per-class breakdown across ablation configurations.}
@@ -202,7 +204,7 @@ The ablation results reveal a critical dynamic regarding multimodal modeling:
 \subsection{Interpretability: The Three Pillars of Skill Reuse}
 To answer RQ1 and identify the underlying drivers of reuse, we analyzed standardized logistic regression coefficients, Odds Ratios ($\text{OR} = e^\beta$), and TreeExplainer SHAP attributions on the champion model.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.82\textwidth]{figures/hybrid_shap_top20.png}
     \caption{Top 20 feature attributions computed via game-theoretic SHAP on the champion hybrid model.}
@@ -237,7 +239,7 @@ Examining the supervised $\chi^2$ n-grams revealed an unexpected insight: \textb
 \end{itemize}
 These elevated Odds Ratios reflect near-complete empirical separation under $L_2$ regularization: contractual terms appear almost exclusively within modular reusable templates rather than ad-hoc singletons. Rather than establishing direct causal intervention, these terms serve as reliable discriminative signatures of mature software interface design: they explicitly define agent persona, concrete objectives, operational constraints, expected execution patterns, and few-shot input/output demonstrations.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \includegraphics[width=0.78\textwidth]{figures/intensity_class3_top_drivers.png}
     \caption{Key feature drivers for massive viral diffusion ($\ge 10$ repositories, Class 3).}
@@ -255,7 +257,7 @@ Analyzing the conditional intensity task for Class 3 ($\ge 10$ repositories) rev
 \subsection{Calibration and Decision Threshold Optimization}
 Figure~\ref{fig:calibration_threshold}(a) displays the calibration reliability diagram. The natural unweighted model achieves a Brier Score Loss of $\mathbf{0.1323}$, demonstrating near-ideal probability alignment along the diagonal. 
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{figures/calibration_reliability_diagram.png}
@@ -279,7 +281,7 @@ Operating at $t^* = 0.21$ jumps the cross-validation $F_1$-score to $\mathbf{0.3
 \subsection{Final Blind External Evaluation (40,000 Test Instances)}
 To ensure definitive scientific validity, the champion hybrid model, fitted preprocessing pipelines, and frozen threshold ($t^* = 0.21$) were evaluated exactly once on the untouched 40,000 test set from 14,568 unseen repositories.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
     \centering
     \begin{subfigure}[b]{0.52\textwidth}
         \includegraphics[width=\textwidth]{figures/final_test_roc_pr_curves.png}

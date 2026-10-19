@@ -119,11 +119,15 @@
 \captionsetup{font=sbcfont,skip=6pt}
 
 %% References formatting (Official SBC Standard - Author-Date Hanging Indent)
+\def\@lbibitem[#1]#2{\item[]\if@filesw {\let\protect\noexpand \immediate \write\@auxout{\string\bibcite{#2}{#1}}}\fi\ignorespaces}
+
+\newdimen\bibindent
+\setlength\bibindent{1.27cm}
 \renewenvironment{thebibliography}[1]{%
   \section*{\refname}%
   \list{}{%
-    \setlength{\leftmargin}{1.27cm}%
-    \setlength{\itemindent}{-\leftmargin}%
+    \setlength{\leftmargin}{\bibindent}%
+    \setlength{\itemindent}{-\bibindent}%
     \setlength{\itemsep}{6pt}%
     \setlength{\parsep}{0pt}%
     \usecounter{enumiv}%
