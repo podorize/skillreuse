@@ -119,7 +119,7 @@ In accordance with rigorous empirical machine learning methodology, we initially
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.75\textwidth]{paper/figures/ablation_roc_auc_comparison.png}
+    \includegraphics[width=0.75\textwidth]{figures/ablation_roc_auc_comparison.png}
     \caption{Cross-validation ROC-AUC across multimodal ablation configurations under 3-Fold StratifiedGroupKFold.}
     \label{fig:ablation_roc}
 \end{figure}
@@ -175,7 +175,7 @@ Table~\ref{tab:ablation_cv} presents the cross-validation performance across the
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.75\textwidth]{paper/figures/ablation_intensity_macro_f1.png}
+    \includegraphics[width=0.75\textwidth]{figures/ablation_intensity_macro_f1.png}
     \caption{Conditional intensity Macro $F_1$ and per-class breakdown across ablation configurations.}
     \label{fig:ablation_intensity}
 \end{figure}
@@ -191,7 +191,7 @@ To answer RQ1 and identify the underlying drivers of reuse, we analyzed standard
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.82\textwidth]{paper/figures/hybrid_shap_top20.png}
+    \includegraphics[width=0.82\textwidth]{figures/hybrid_shap_top20.png}
     \caption{Top 20 feature attributions computed via game-theoretic SHAP on the champion hybrid model.}
     \label{fig:shap_top20}
 \end{figure}
@@ -226,7 +226,7 @@ Highly reusable skills function as formal software interface contracts: they exp
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.78\textwidth]{paper/figures/intensity_class3_top_drivers.png}
+    \includegraphics[width=0.78\textwidth]{figures/intensity_class3_top_drivers.png}
     \caption{Key feature drivers for massive viral diffusion ($\ge 10$ repositories, Class 3).}
     \label{fig:class3_drivers}
 \end{figure}
@@ -245,12 +245,12 @@ Figure~\ref{fig:calibration_threshold}(a) displays the calibration reliability d
 \begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{paper/figures/calibration_reliability_diagram.png}
+        \includegraphics[width=\textwidth]{figures/calibration_reliability_diagram.png}
         \caption{Probability calibration reliability diagram.}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
-        \includegraphics[width=\textwidth]{paper/figures/threshold_tuning_curves.png}
+        \includegraphics[width=\textwidth]{figures/threshold_tuning_curves.png}
         \caption{Out-of-fold threshold tuning curves.}
     \end{subfigure}
     \caption{Probability calibration and decision threshold tuning ($t^* = 0.21$) on the training split.}
@@ -269,12 +269,12 @@ To ensure definitive scientific validity, the champion hybrid model, fitted prep
 \begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.52\textwidth}
-        \includegraphics[width=\textwidth]{paper/figures/final_test_roc_pr_curves.png}
+        \includegraphics[width=\textwidth]{figures/final_test_roc_pr_curves.png}
         \caption{ROC and PR curves on blind test set.}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.44\textwidth}
-        \includegraphics[width=\textwidth]{paper/figures/final_test_confusion_matrix.png}
+        \includegraphics[width=\textwidth]{figures/final_test_confusion_matrix.png}
         \caption{Test confusion matrix ($t^* = 0.21$).}
     \end{subfigure}
     \caption{Blind external evaluation on 40,000 instances from 14,568 unseen GitHub repositories.}

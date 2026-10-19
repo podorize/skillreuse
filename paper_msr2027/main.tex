@@ -70,7 +70,7 @@ We engineer 143 tabular features spanning two domains: (1)~\emph{Structural and 
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.88\columnwidth]{paper_msr2027/figures/ablation_roc_auc_comparison.png}
+    \includegraphics[width=0.88\columnwidth]{figures/ablation_roc_auc_comparison.png}
     \caption{Cross-validation ROC-AUC across multimodal ablation configurations (3-Fold StratifiedGroupKFold on 160k training instances).}
     \label{fig:ablation_cv}
 \end{figure}
@@ -95,7 +95,7 @@ The natural unweighted model achieves clean probability calibration (Brier score
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.92\columnwidth]{paper_msr2027/figures/hybrid_shap_top20.png}
+    \includegraphics[width=0.92\columnwidth]{figures/hybrid_shap_top20.png}
     \caption{Top 20 feature attributions via game-theoretic SHAP on the champion hybrid model, highlighting the Three Pillars of Skill Reuse.}
     \label{fig:shap_top20}
 \end{figure}
@@ -128,7 +128,7 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.85\columnwidth]{paper_msr2027/figures/intensity_class3_top_drivers.png}
+    \includegraphics[width=0.85\columnwidth]{figures/intensity_class3_top_drivers.png}
     \caption{Key feature drivers for massive viral diffusion ($\ge 10$ repos, Class 3).}
     \label{fig:class3_drivers}
 \end{figure}
@@ -145,7 +145,7 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class
 \texttt{structure\_only} & $0.50$ & $0.6035$ & $0.2210$ & $0.0154$ & $0.79\%$ \\
 \texttt{structure\_only} & $0.21^*$ & $0.6035$ & $0.2210$ & $0.2667$ & $29.97\%$ \\
 \texttt{structure\_and\_repo} & $0.50$ & $0.6120$ & $0.2033$ & $0.0565$ & $3.86\%$ \\
-\texttt{structure\_and_repo} & $0.21^*$ & $0.6120$ & $0.2033$ & $0.2887$ & $35.93\%$ \\
+\texttt{structure\_and\_repo} & $0.21^*$ & $0.6120$ & $0.2033$ & $0.2887$ & $35.93\%$ \\
 \textbf{\texttt{hybrid\_screened}} & $0.50$ & $0.6211$ & $0.2149$ & $0.0727$ & $4.63\%$ \\
 \textbf{\texttt{hybrid\_screened}} & $\mathbf{0.21^*}$ & $\mathbf{0.6211}$ & $\mathbf{0.2149}$ & $\mathbf{0.2967}$ & $\mathbf{36.67\%}$ \\
 \texttt{hybrid\_screened} (Bal) & $0.50$ & $0.6269$ & $0.2178$ & $0.3264$ & $50.76\%$ \\
@@ -156,12 +156,12 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class
 \begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.48\columnwidth}
-        \includegraphics[width=\textwidth]{paper_msr2027/figures/final_test_roc_pr_curves.png}
+        \includegraphics[width=\textwidth]{figures/final_test_roc_pr_curves.png}
         \caption{Blind test ROC and PR curves.}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
-        \includegraphics[width=\textwidth]{paper_msr2027/figures/final_test_confusion_matrix.png}
+        \includegraphics[width=\textwidth]{figures/final_test_confusion_matrix.png}
         \caption{Confusion matrix ($t^* = 0.21$).}
     \end{subfigure}
     \caption{Blind external evaluation on 40,000 instances from 14,568 foreign repos.}
