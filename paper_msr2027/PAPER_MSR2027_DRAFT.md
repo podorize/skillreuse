@@ -18,6 +18,8 @@ Autonomous coding agents (e.g., Google Antigravity, Claude Code, GitHub Copilot 
 
 However, as highlighted in the MSR 2027 Mining Challenge, agent skills differ fundamentally from traditional source code: their content is written primarily in natural language, their execution is probabilistic, and they lack a centralized package manager (e.g., npm, PyPI). Consequently, skills spread through ad-hoc directory copying across repositories. Over 50\% of observed instances are verbatim duplicates, while the vast majority of original skills remain unshared singletons.
 
+This decentralized package-manager vacuum creates three critical software engineering challenges: (1) **Authoring Uncertainty**, where developers lack empirical guidelines or linters for reusable prompt interfaces; (2) **Ecosystem Discovery**, where autonomous agents lack ranking signals to distinguish ephemeral single-use drafts from modular, generalizable capabilities; and (3) **Supply-Chain Fragility**, where unvetted, probabilistically selected prompts execute arbitrary shell commands across multiple codebases. By predicting and characterizing reuse, this paper establishes the first empirical foundations to address these challenges.
+
 This paper investigates the **GitSkills** community dataset (July 2026 release), addressing two core challenge directions: **Direction 3** (*Reuse without a package manager*) and **Direction 4** (*Software metrics for natural-language instructions*). We formulate two research questions:
 - **RQ1 (Binary Skill Reuse)**: *To what extent can structural, repository, and textual metrics predict whether a skill will be reused across multiple repositories ($y=1$) versus remaining a singleton ($y=0$) in unseen codebases?*
 - **RQ2 (Conditional Scale of Diffusion)**: *Among reused skills, what properties distinguish small-scale sharing (2 repos) from massive viral diffusion ($10+$ repos)?*
@@ -101,14 +103,16 @@ Evaluating the frozen pipeline on 40,000 instances from 14,568 unseen repositori
 ---
 
 ## 5. Implications for Practice and Tooling
-Our findings offer concrete guidelines for agent skill creators:
+Our champion model ($\text{ROC-AUC}=0.6211$, Specificity=$78.16\%$) is not intended as an autonomous binary gatekeeper, but rather as: (1) an **Authoring Linter** embedded in developer IDEs (e.g., VS Code extensions) that provides pre-commit warnings when a skill lacks standard paths, valid schemas, or contractual boundaries; and (2) an **Ecosystem Quality Prior** for skill retrieval engines (Learning-to-Rank), boosting well-specified, modular skills in decentralized community catalogs.
+
+Based on our findings, we formulate four actionable guidelines for agent skill creators:
 1. **Standardize File Locations**: Place skills at `.gemini/antigravity/skills/<skill>/SKILL.md` or `.agent/skills/`. Avoid non-standard naming.
 2. **Enforce Frontmatter Schemas**: Always provide valid delimited YAML declaring `name` and `description`.
 3. **Structure Contractual Prompt Headers**: Incorporate explicit markdown sections for `## Objective`, `## Role`, `## Rules & Constraints`, and `## Examples`.
 4. **Specify Negative Boundaries**: Explicitly declare `## Limitations` to restrict erroneous agent tool invocation.
 
 ### Threats to Validity
-- **Construct Validity**: Following GitSkills conventions, we define reuse via exact SHA-256 content hashes (Type-1 clones). Consequently, near-duplicate skills modified by developers (Type-2/Type-3 clones) are categorized as singletons, potentially underestimating semantic diffusion. Future work should incorporate syntactic tree-diffing and embedding similarity.
+- **Construct Validity**: In empirical MSR, cross-repository reuse serves as an observational proxy for community adoption and utility, though popularity may not guarantee bug-free implementation. Furthermore, following GitSkills conventions, we define reuse via exact SHA-256 content hashes (Type-1 clones). Consequently, near-duplicate skills modified by developers (Type-2/Type-3 clones) are categorized as singletons, potentially underestimating semantic diffusion. Future work should incorporate syntactic tree-diffing and embedding similarity.
 - **Internal Validity**: Confounding factors, such as superpropagator frameworks (e.g., Svelte, AutoHotkey) adopting standardized prompts by convention, could correlate with reuse. While grouped splits prevent repository memorization, observational SE mining cannot claim pure intervention causality.
 - **External Validity**: Our dataset reflects the GitHub ecosystem as of July 2026. While capturing 72k repositories, agent skill formats continue to evolve rapidly.
 

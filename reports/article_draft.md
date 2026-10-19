@@ -21,6 +21,13 @@ The rapid transition from conversational Large Language Models (LLMs) to autonom
 
 As thousands of open-source projects adopt this paradigm, developers frequently copy, adapt, and import third-party skills to enhance their autonomous coding workflows. In open-source software engineering, component reuse has historically served as a primary catalyst for developer productivity, software quality, and architectural convergence. However, while decades of Mining Software Repositories (MSR) research have examined source code duplication, package dependency networks, and API reuse, the reuse dynamics of **natural language prompt artifacts** and **agent skill specifications** remain entirely uncharacterized.
 
+This decentralized package-manager vacuum creates three critical software engineering challenges:
+1. **Authoring Uncertainty (The Engineering Blind Spot)**: Unlike traditional software development where compilers, static type checkers, and linters enforce syntactic and structural sanity, skill authors write free-form natural language prompts in the dark. No established empirical guidelines indicate whether prompt verbosity, schema completeness, or few-shot demonstrations facilitate broader agent adoption.
+2. **Ecosystem Discovery (The Uncurated Commons)**: Without centralized package registries (e.g., npm, PyPI) providing semantic versioning, verified maintainership, or download metrics, the open-source commons is flooded with millions of ad-hoc skills. Autonomous agents searching public repositories lack automated quality signals to differentiate ephemeral, single-use drafts from robust, generalizable capabilities.
+3. **Supply-Chain Security and Malicious Propagation**: Agent skills frequently instruct language models to execute terminal commands, run bundled Python scripts, or access network endpoints. Because skills spread via unvetted peer-to-peer directory copying, widely diffused skills represent potent supply-chain attack vectors.
+
+To address these challenges, predictive modeling in this domain is not intended to serve as a naive, autonomous binary gatekeeper. Rather, it provides the foundation for two practical tools: (1) an **Authoring Linter** embedded in developer IDEs (providing pre-commit diagnostic feedback on structural conformity and contractual completeness); and (2) an **Ecosystem Quality Prior** for skill search engines (Learning-to-Rank pipelines prioritizing well-specified skills in decentralized catalogs).
+
 Predicting and understanding skill reuse presents unique conceptual and empirical challenges:
 1. **Multimodal Heterogeneity**: Skills combine free-form instructional text, structured YAML frontmatter, textometric code metrics, and broader repository context (e.g., star count, language, and commit history).
 2. **Extreme Grouped Correlation and Data Leakage**: Skills originating within the same GitHub repository share identical contextual metadata. Standard randomized train/test splitting induces insidious group leakage, causing non-linear algorithms to memorize repository identities via continuous variables.
@@ -45,7 +52,12 @@ The atomic unit of analysis is a unique normalized content payload of a `SKILL.m
    - Class 2 ($5$--$9$ repositories): Broad adoption ($11.7\%$).
    - Class 3 ($10+$ repositories): Massive viral diffusion ($8.5\%$).
 
-### 2.3 Leakage-Free Grouped Stratified Partitioning
+### 2.3 Construct Validity: Reuse Intensity as an Empirical Quality Proxy
+A fundamental conceptual question in empirical software mining is whether cross-repository reuse reflects genuine implementation quality or mere popularity bias. In traditional software ecosystems, poorly designed packages occasionally accumulate downloads through first-mover advantages or social virality. In the context of agent skills, the gold-standard measure of intrinsic quality would ideally be dynamic execution success rate (e.g., benchmark pass-rates across real-world SWE-bench or GAIA tasks). However, executing thousands of LLM inference queries across 200,000 heterogeneous skills is computationally and economically prohibitive ($> \$100,000$ in commercial API costs).
+
+Consequently, following established MSR methodologies, we adopt cross-repository persistence---the deliberate copying and retention of an exact cryptographic skill payload across multiple independent Git commit trees---as an observational proxy for perceived utility and reusability. While an individual project may commit a singleton skill as an ephemeral experiment, repeated cross-project adoption indicates that independent engineering teams judged the artifact sufficiently robust and generalizable to integrate into their autonomous workflows.
+
+### 2.4 Leakage-Free Grouped Stratified Partitioning
 To eliminate data leakage, we partition the dataset using `StratifiedGroupKFold`:
 - **Training Partition**: $160,000$ unique skills across $57,808$ repositories.
 - **External Test Partition**: $40,000$ unique skills across $14,568$ repositories.
@@ -139,9 +151,21 @@ On the conditional intensity test split ($N = 6,479$ reused skills), the hybrid 
 
 ---
 
-## 6. Actionable Guidelines for AI Skill Developers
+## 6. Actionable Recommendations and Tooling Architecture
 
+Our empirical findings translate directly into two software engineering tools and concrete creator practices:
+
+### 6.1 Architectural Design of an Agent Skill Reusability Linter
+With a verified specificity of $78.16\%$, our regularized linear model excels as an automated negative filter. We propose embedding the model into developer workflows (e.g., as a pre-commit hook or VS Code extension). When an engineer drafts a skill with low predicted reusability ($p < 0.21$), the linter generates actionable diagnostic feedback:
+- **Path Non-Canonicity Warning**: File located outside standard directories (`.gemini/antigravity/skills/`);
+- **Frontmatter Syntax Error**: Missing or unparseable YAML delimiters;
+- **Contract Deficiency**: Absence of explicit `## Objective`, `## Rules & Constraints`, or `## Limitations` boundaries.
+
+### 6.2 Ecosystem Search Prior (Learning-to-Rank)
+In decentralized skill catalogs and autonomous agent search engines, our hybrid model provides a quantitative structural prior. Rather than relying on easily manipulated star counts, retrieval engines can incorporate the model's calibrated probability to prioritize well-specified, modular skills in agent retrieval pipelines.
+
+### 6.3 Actionable Guidelines for AI Skill Developers
 1. **Adhere to Canonical Directory Hierarchy**: Store files at `.gemini/antigravity/skills/<skill-name>/SKILL.md` with uppercase naming.
-2. **Validate YAML Frontmatter**: Include delimited YAML (`---`) with valid `name` and `description` fields.
+2. **Validate YAML Frontmatter**: Include delimited YAML (`---`) with valid `name` and `description` fields. Skills without parseable frontmatter virtually never achieve viral adoption ($\text{OR} = 3.24$).
 3. **Structure Prompt Behavioral Contracts**: Declare explicit markdown sections for `Objective`, `Prompt Role`, `Rules & Constraints`, `Patterns`, and `Examples`.
-4. **Document Operational Boundaries**: Explicitly catalog negative triggers and limitations (`limitations`).
+4. **Document Operational Boundaries**: Explicitly catalog negative triggers and limitations (`limitations`, $\text{OR} = 2.28$), preventing dangerous out-of-domain tool executions and building automated agent trust.
