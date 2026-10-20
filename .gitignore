@@ -27,3 +27,7 @@ reports/modeling/**/cache/
 *.npz
 cache_sparse.tar.gz
 work/
+
+# Excecao para permitir a replicacao ultrarrapida no Colab e peer review (< 65 MB total, max 17 MB/arq)
+!data/processed/cache_sparse/
+!data/processed/cache_sparse/*
