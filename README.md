@@ -168,10 +168,12 @@ ficam registradas nos resultados. A tabela parcial e atualizada ao fim de cada d
 
 ## Estrutura
 
+- `paper_cmp263/`: relatorio completo da disciplina CMP263 (em Markdown `REPORT_CMP263.md` e formato SBC LaTeX).
+- `paper_msr2027/`: artigo cientifico formatado para o MSR 2027 Mining Challenge (IEEE format para Overleaf).
 - `configs/`: parametros de dados, features e experimentos.
-- `data/`: dados brutos, intermediarios e processados; arquivos grandes nao entram no Git.
+- `data/`: dados brutos, intermediarios e processados (inclui cache esparso reproduzivel).
 - `docs/`: metodologia, dicionario de dados e registro do uso de IA.
-- `notebooks/`: exploracao, EDA e comunicacao dos resultados.
+- `notebooks/`: exploracao, EDA e notebook interativo de 1-click no Google Colab.
 - `src/gitskills_reuse/`: codigo reproduzivel do projeto.
 - `tests/`: testes automatizados.
 - `reports/`: figuras, tabelas e registro dos experimentos.
