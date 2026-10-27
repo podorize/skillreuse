@@ -24,12 +24,8 @@
 \maketitle
 
 \begin{abstract}
-As Large Language Model (LLM) agents proliferate, modular skill specifications (such as \texttt{SKILL.md} files) have emerged as the standard mechanism for encapsulating tool invocations, system instructions, and operational workflows. However, the factors driving cross-repository reuse and wide diffusion of such skills remain largely unknown. This paper presents an empirical study on 200,000 unique agent skills across 72,376 GitHub repositories. Using a strict grouped partition that guarantees zero repository overlap between training ($N=160,000$) and an external blind test set ($N=40,000$), we evaluate multiple learning paradigms and perform systematic multimodal ablations. We discover that non-linear tree ensembles suffer from severe shortcut learning under random splits (inflating to 0.85 ROC-AUC by memorizing continuous repository variables), yet catastrophically collapse to near-random performance under grouped evaluation. Conversely, $L_2$-regularized linear models combined with supervised $\chi^2$ text screening achieve robust generalization (0.6706 CV ROC-AUC; 0.6188 on the blind test set of 14,568 unseen repositories). Probability calibration and decision threshold tuning ($t^*=0.21$) improve $F_1$-score by $+372\%$. Explainability analyses via Odds Ratios and SHAP reveal the ``Three Pillars of Skill Reuse'': structural canonicity ($+87\%$), modern software ecosystems, and formal prompt specification contracts. Furthermore, valid frontmatter syntax ($+224\%$) and operational boundary definitions enable the model to recover 49.82\% of viral, massively diffused skills ($\ge 10$ repositories) in entirely unfamiliar codebases.
+Modular skill specifications (\texttt{SKILL.md}) standardise agent capabilities, yet drivers of cross-repository reuse remain unknown. Analyzing 200,000 skills across 72,376 repositories under zero-leakage grouped splits, we show that tree models suffer shortcut learning, while regularized linear models generalize reliably (0.6188 test ROC-AUC). Threshold tuning ($t^*=0.21$) boosts $F_1$-score by $+372\%$, recovering 49.82\% of viral skills. Interpretability reveals Three Pillars of Reuse: structural canonicity, host ecosystems, and prompt contracts.
 \end{abstract}
-
-\begin{resumo}
-Com a prolifera{\c{c}}{\~a}o de agentes baseados em LLMs, especifica{\c{c}}{\~o}es modulares de habilidades (\texttt{SKILL.md}) tornaram-se o mecanismo padr{\~a}o de encapsulamento de ferramentas e fluxos operacionais. Contudo, os determinantes de seu re{\'u}so entre reposit{\'o}rios permanecem desconhecidos. Este artigo apresenta um estudo emp{\'i}rico sobre 200.000 habilidades {\'u}nicas em 72.376 reposit{\'o}rios do GitHub. Empregando parti{\c{c}}{\~a}o agrupada r{\'i}gida com sobreposi{\c{c}}{\~a}o nula entre treino ($N=160.000$) e teste cego externo ($N=40.000$), avaliamos diferentes paradigmas indutivos e abla{\c{c}}{\~o}es multimodais. Modelos baseados em {\'a}rvores sofrem aprendizado de atalho sob divis{\~a}o aleat{\'o}ria (inflacionando para 0,85 de ROC-AUC ao memorizar reposit{\'o}rios), mas colapsam sob parti{\c{c}}{\~a}o agrupada. Em contrapartida, modelos lineares regularizados com triagem $\chi^2$ atingem generaliza{\c{c}}{\~a}o robusta (0,6188 no teste cego com 14.568 reposit{\'o}rios in{\'e}ditos). Calibra{\c{c}}{\~a}o e ajuste de limiar ($t^*=0,21$) elevam o $F_1$ em $+372\%$. An{\'a}lises por Odds Ratios e SHAP revelam os Tr{\^e}s Pilares do Re{\'u}so: canonicidade estrutural ($+87\%$), ecossistemas tecnol{\'o}gicos e contratos formais de prompt, al{\'e}m de recuperar 49,82\% dos superpropagadores massivos ($\ge 10$ reposit{\'o}rios).
-\end{resumo}
 
 \section{Introduction}
 
@@ -97,6 +93,14 @@ We formulate the investigation around two complementary prediction targets:
     \end{itemize}
 \end{enumerate}
 
+\subsection{Exploratory Data Analysis (EDA)}
+Prior to model training, we conducted systematic exploratory data analysis across the $200,000$ extracted skills:
+\begin{itemize}
+    \item \textbf{Target Distribution and Extreme Class Imbalance}: Exactly $16.20\%$ ($32,397$ skills) are reused across $\ge 2$ repositories, whereas $83.80\%$ ($167,603$ skills) exist as singletons. Among reused skills, the distribution follows a severe Pareto-like decay: $56.3\%$ diffuse to only 2 repositories, while only $8.5\%$ achieve viral diffusion ($\ge 10$ repositories).
+    \item \textbf{Outlier Profiles and Heavy-Tailed Distributions}: Continuous repository metrics exhibit extreme positive skewness spanning multiple orders of magnitude: repository stars range from $0$ to over $52,000$ (median: $3$, interquartile range: $1$--$24$), and commit counts range from $1$ to over $100,000$. Similarly, skill file lengths vary from minimal stubs ($34$ characters) to verbose workflow manuals ($> 45,000$ characters).
+    \item \textbf{Missingness and Anomaly Screening}: Structural textometrics exhibited zero missing values across all $200,000$ records. Repository-level categorical variables contained missing values for unclassified programming languages ($12.4\%$) and undeclared open-source licenses ($18.1\%$), which were systematically mapped to dedicated \texttt{'Unknown'} categorical bins rather than dropped.
+\end{itemize}
+
 \subsection{Construct Validity: Cross-Repository Reuse as an Empirical Quality Proxy}
 A fundamental conceptual question in empirical software mining is whether cross-repository reuse reflects genuine implementation quality or mere popularity bias. In traditional software ecosystems, poorly designed packages occasionally accumulate downloads through first-mover advantages or social virality. In the context of agent skills, the gold-standard measure of intrinsic quality would ideally be dynamic execution success rate (e.g., benchmark pass-rates across real-world SWE-bench or GAIA tasks). However, executing thousands of LLM inference queries across 200,000 heterogeneous skills is computationally and economically prohibitive ($> \$100,000$ in commercial API costs).
 
@@ -122,13 +126,15 @@ To eliminate this vulnerability, we partition the dataset using \texttt{Stratifi
     \item \textbf{Target Prevalence}: Preserved at exactly $16.20\%$ in both training ($25,918 / 160,000$) and test ($6,479 / 40,000$).
 \end{itemize}
 
-\subsection{Multimodal Feature Engineering}
-For each skill, we extract three distinct modalities of predictive features:
+\subsection{Data Preprocessing and Multimodal Feature Engineering}
+To prepare the heterogeneous raw data for algorithmic learning while rigorously guarding against leakage, we constructed automated, scikit-learn compatible preprocessing pipelines:
 \begin{itemize}
-    \item \textbf{Structural \& Textometric Features (46 attributes)}: Syntactic validity of YAML frontmatter (\texttt{frontmatter\_valid}), character and line counts, lexical diversity, heading depth, count of fenced code blocks, shell prompt markers, markdown tables, and checklist items. Categorical indicators include canonical file path (\texttt{location\_class}) and naming convention (\texttt{filename}).
-    \item \textbf{Repository Context Features (97 attributes)}: Commit history, star and fork counts, fork status, primary repository programming language (one-hot encoded), and open-source license category.
-    \item \textbf{Textual Representations (50,000 attributes)}: Sublinear TF-IDF vectorization extracted over content unigrams and bigrams, with document frequency thresholds ($\text{min\_df}=5, \text{max\_df}=0.95$).
+    \item \textbf{Continuous Standardization}: Continuous numerical attributes (e.g., character length, line counts, commit counts, star counts) are transformed via \texttt{StandardScaler}. Scaler parameters (mean and variance) are computed strictly on the training partition of each split and applied out-of-sample.
+    \item \textbf{Categorical Encoding}: Discrete nominal attributes (\texttt{location\_class}, \texttt{filename}, \texttt{repo\_language}, and \texttt{repo\_license}) are encoded via \texttt{OneHotEncoder(handle\_unknown='ignore')}, mapping unseen test levels to zero vectors without breaking pipeline integrity.
+    \item \textbf{Missing Value Imputation}: Missing values in categorical indicators are encoded with dedicated \texttt{'Unknown'} tokens, while numeric missingness is imputed via median imputation (\texttt{SimpleImputer(strategy='median')}).
+    \item \textbf{Textual Representation and Supervised $\chi^2$ Screening}: For prompt content, we compute sublinear TF-IDF vectors ($1 + \log(\text{tf})$) over unigrams and bigrams ($\text{min\_df}=5, \text{max\_df}=0.95$). To combat the curse of dimensionality ($50,000$ features), we apply supervised univariate $\chi^2$ screening (\texttt{SelectKBest(chi2, k=100)}). The screening is fitted exclusively on each training fold, selecting the 100 terms with highest statistical dependence with the reuse target.
 \end{itemize}
+In total, the raw multimodal space comprises 46 structural attributes, 97 repository context variables, and 50,000 textual n-grams, condensed to a 243-dimensional screened hybrid space.
 
 \section{Experimental Methodology}
 
@@ -182,6 +188,9 @@ To ensure that our methodological choices are rigorously grounded in statistical
     \item \textbf{Constrained Tree Ensemble (Anti-Shortcut GBDT)}: Explores recursive orthogonal axis partitioning via Histogram Gradient Boosting with aggressive anti-shortcut hyperparameter controls (\texttt{min\_samples\_leaf=200}, \texttt{max\_depth=3}, $\eta=0.05$, 60 estimators) to restrict continuous feature isolation.
     \item \textbf{Heterogeneous Multi-Paradigm Blend (Stacking)}: Combines diverse hypothesis classes through soft convex probability voting ($0.50 \cdot \text{Linear} + 0.25 \cdot \text{GBDT} + 0.25 \cdot \text{MLP}$).
 \end{enumerate}
+
+\subsection{Reproducibility Protocol and Rapid Verification}
+In strict adherence to experimental reproducibility standards, all random states across data partitioning, model initialization, and sub-sampling are locked to a single deterministic seed (\texttt{seed=42}). To eliminate computational bottlenecks during independent peer review without sacrificing dataset fidelity ($N=200,000$), all preprocessed sparse matrices (one-hot categorical matrices, scaled textometrics, and sublinear TF-IDF arrays) are serialized in compressed SciPy \texttt{.npz} format ($61$~MB total, version-controlled directly within the repository). A dedicated lightweight reproduction script (\texttt{gitskills\_reuse.reproduce}) trains the champion pipeline, evaluates external test metrics, and exports verification logs in approximately $45$ to $200$ seconds, supplemented by a 1-click Google Colab notebook.
 
 \section{Empirical Results and Analysis}
 
@@ -442,8 +451,10 @@ Based on our empirical findings, we formulate four actionable recommendations fo
 
 \section{Threats to Validity}
 
-\subsection{Construct and Internal Validity}
-A construct threat lies in defining reuse via exact cryptographic matching (\texttt{content\_hash}). While this avoids false-positive semantic drift, it treats minor whitespace or comment modifications as distinct skills. To mitigate internal validity threats, we enforced strict \texttt{StratifiedGroupKFold} splitting by repository identifier, verified zero repository overlap, and froze all preprocessing parameters and decision thresholds on training data alone.
+\subsection{Construct and Internal Validity: Confounding, Causality, and Leakage Control}
+A potential construct concern is whether predictive models capture intrinsic skill reusability or merely reflect the observational popularity of the host repository (e.g., highly starred web framework repositories). Our ablation results (Table~\ref{tab:ablation_cv}) directly reject this confounding hypothesis: an isolated repository model (\texttt{repo\_only}) achieves only $0.6006$ ROC-AUC. In contrast, incorporating intrinsic file properties elevates discrimination substantially: structural syntax alone reaches $0.6450$, and contract-screened text reaches $0.6706$. Thus, while host ecosystems amplify diffusion (Pilar 2), structural canonicity and contractual prompt specification (Pilares 1 and 3) represent internal prerequisites for adoption.
+
+Another construct threat is defining reuse via exact cryptographic matching (\texttt{content\_hash}). While this avoids semantic drift, it treats whitespace alterations as distinct entities. To eliminate internal leakage threats, we enforced strict \texttt{StratifiedGroupKFold} splitting by repository identifier, verified zero repository overlap ($\text{Train} \cap \text{Test} = \emptyset$), and froze all preprocessing scalers, encoders, and decision thresholds ($t^* = 0.21$) on training data alone before external evaluation.
 
 \subsection{External Validity}
 Our dataset is derived from public GitHub repositories, which may overrepresent certain software ecosystems (e.g., web technologies and Python). However, with 200,000 distinct skills spanning 72,376 repositories, this represents the most comprehensive study of agent skills to date.
