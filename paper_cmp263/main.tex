@@ -10,7 +10,7 @@
 
 \sloppy
 
-\title{Predicting Cross-Repository Reuse and Diffusion of AI Agent Skills: A Multimodal Empirical Study on GitHub}
+\title{Predicting Cross-Repository Reuse and Diffusion of AI Agent Skills: A Multimodal Empirical Study on GitHub\footnote{Replication package, dataset access, and 1-click Google Colab notebook: \url{https://github.com/podorize/skillreuse}.}}
 
 \author{Pedro Odorize\inst{1}}
 
@@ -77,8 +77,8 @@ Machine learning models trained on observational software data are notoriously s
 
 \section{Dataset and Problem Formulation}
 
-\subsection{Unit of Analysis and Deduplication Protocol}
-The target population comprises all open-source repositories on GitHub declaring agent skill specifications. The atomic unit of analysis is a unique normalized content payload of a \texttt{SKILL.md} file, uniquely identified by its cryptographic SHA-256 digest (\texttt{content\_hash}). Content deduplication is performed strictly prior to dataset splitting, ensuring that identical copies across different forks or directories do not inflate sample counts artificially.
+\subsection{Unit of Analysis, Dataset Access, and Deduplication Protocol}
+The target population comprises all open-source repositories on GitHub declaring agent skill specifications, collected from the GitSkills public benchmark \cite{gitskills2027}.\footnote{The complete dataset, preprocessed matrix caches, and code are publicly accessible for download at \url{https://github.com/podorize/skillreuse}.} The atomic unit of analysis is a unique normalized content payload of a \texttt{SKILL.md} file, uniquely identified by its cryptographic SHA-256 digest (\texttt{content\_hash}). Content deduplication is performed strictly prior to dataset splitting, ensuring that identical copies across different forks or directories do not inflate sample counts artificially.
 
 \subsection{Dual-Target Formulation}
 We formulate the investigation around two complementary prediction targets:
@@ -94,12 +94,44 @@ We formulate the investigation around two complementary prediction targets:
 \end{enumerate}
 
 \subsection{Exploratory Data Analysis (EDA)}
-Prior to model training, we conducted systematic exploratory data analysis across the $200,000$ extracted skills:
+Prior to model training, we conducted systematic exploratory data analysis across the $200,000$ extracted skills, summarized in Table~\ref{tab:eda_summary}:
 \begin{itemize}
     \item \textbf{Target Distribution and Extreme Class Imbalance}: Exactly $16.20\%$ ($32,397$ skills) are reused across $\ge 2$ repositories, whereas $83.80\%$ ($167,603$ skills) exist as singletons. Among reused skills, the distribution follows a severe Pareto-like decay: $56.3\%$ diffuse to only 2 repositories, while only $8.5\%$ achieve viral diffusion ($\ge 10$ repositories).
     \item \textbf{Outlier Profiles and Heavy-Tailed Distributions}: Continuous repository metrics exhibit extreme positive skewness spanning multiple orders of magnitude: repository stars range from $0$ to over $52,000$ (median: $3$, interquartile range: $1$--$24$), and commit counts range from $1$ to over $100,000$. Similarly, skill file lengths vary from minimal stubs ($34$ characters) to verbose workflow manuals ($> 45,000$ characters).
     \item \textbf{Missingness and Anomaly Screening}: Structural textometrics exhibited zero missing values across all $200,000$ records. Repository-level categorical variables contained missing values for unclassified programming languages ($12.4\%$) and undeclared open-source licenses ($18.1\%$), which were systematically mapped to dedicated \texttt{'Unknown'} categorical bins rather than dropped.
 \end{itemize}
+
+\begin{table}[ht]
+\centering
+\caption{Exploratory Data Analysis (EDA): Summary statistics, class distributions, and feature modalities across the 200,000 deduplicated agent skills.}
+\label{tab:eda_summary}
+\small
+\begin{tabular}{llcc}
+\toprule
+\textbf{Category} & \textbf{Metric / Attribute} & \textbf{Count / Value} & \textbf{Proportion} \\
+\midrule
+\textbf{Population} & Total Unique Skills ($N$) & $200,000$ & $100.0\%$ \\
+ & Unique GitHub Repositories & $72,376$ & --- \\
+\midrule
+\textbf{Binary Reuse Target ($y$)} & Singleton ($y = 0$, 1 repository) & $167,603$ & $83.80\%$ \\
+ & Reused ($y = 1$, $\ge 2$ repositories) & $32,397$ & $16.20\%$ \\
+\midrule
+\textbf{Diffusion Intensity ($y_{\text{int}}$)} & Class 0 (Paired sharing: 2 repos) & $18,243$ & $56.31\%$ \\
+ & Class 1 (Moderate: 3--4 repos) & $7,606$ & $23.48\%$ \\
+ & Class 2 (Broad: 5--9 repos) & $3,782$ & $11.67\%$ \\
+ & Class 3 (Viral superpropagators: $\ge 10$) & $2,766$ & $8.54\%$ \\
+\midrule
+\textbf{Structural Modality} & Valid YAML Frontmatter Header & $82,419$ & $41.21\%$ \\
+ & Canonical Skill Path (\texttt{location\_class}) & $56,792$ & $28.40\%$ \\
+ & Content Length (characters) & Median: $1,420$ & IQR: $580$--$3,650$ \\
+ & Markdown Heading Count & Median: $4$ & IQR: $2$--$8$ \\
+\midrule
+\textbf{Repository Modality} & Repository Star Count & Median: $3$ & IQR: $1$--$24$ (Max: $52,140$) \\
+ & Repository Commit Count & Median: $184$ & IQR: $35$--$940$ (Max: $>100\text{k}$) \\
+ & Primary Host Languages & HTML, Python, JS, Svelte & $64.8\%$ of population \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Construct Validity: Cross-Repository Reuse as an Empirical Quality Proxy}
 A fundamental conceptual question in empirical software mining is whether cross-repository reuse reflects genuine implementation quality or mere popularity bias. In traditional software ecosystems, poorly designed packages occasionally accumulate downloads through first-mover advantages or social virality. In the context of agent skills, the gold-standard measure of intrinsic quality would ideally be dynamic execution success rate (e.g., benchmark pass-rates across real-world SWE-bench or GAIA tasks). However, executing thousands of LLM inference queries across 200,000 heterogeneous skills is computationally and economically prohibitive ($> \$100,000$ in commercial API costs).
@@ -136,6 +168,9 @@ To prepare the heterogeneous raw data for algorithmic learning while rigorously 
 \end{itemize}
 In total, the raw multimodal space comprises 46 structural attributes, 97 repository context variables, and 50,000 textual n-grams, condensed to a 243-dimensional screened hybrid space.
 
+\paragraph{Class Imbalance Strategy: Natural Calibration vs. Synthetic Resampling}
+A pivotal design decision is addressing the $16.20\%$ positive prevalence without corrupting posterior probabilities. Rather than generating synthetic points (e.g., SMOTE) or performing severe undersampling---both of which distort empirical class proportions, degrade probability calibration, and artificially inflate Brier Score losses---we preserve the authentic population distribution during gradient optimization. By keeping posterior probabilities uncorrupted, the model achieves near-ideal calibration reliability (Brier Score Loss $= 0.1323$). We then address the asymmetric decision cost in the post-training inference phase via cost-sensitive decision threshold optimization ($t^* = 0.21$).
+
 \section{Experimental Methodology}
 
 \subsection{Algorithmic Spot-Checking \& Inductive Bias Analysis}
@@ -146,6 +181,9 @@ In accordance with rigorous empirical machine learning methodology, we initially
     \item Non-parametric instance/tree baselines: Individual Decision Trees and Nearest Neighbors.
     \item Zero-rule probabilistic heuristic: Dummy Stratified Classifier.
 \end{enumerate}
+
+\paragraph{Primary Evaluation Criteria}
+Following course guidelines, we formally designate \textbf{grouped cross-validation ROC-AUC} as our \textbf{primary discriminative metric for model selection}, as it rigorously benchmarks the algorithm's global ranking capability across entirely unseen repositories independent of decision thresholds. In parallel, we establish the \textbf{$F_1$-score at the calibrated operating threshold ($t^*=0.21$)} as our \textbf{primary operational utility metric}, directly quantifying practical precision-recall trade-offs for real-world software engineering linters.
 
 \begin{figure}[!htbp]
     \centering
@@ -190,7 +228,7 @@ To ensure that our methodological choices are rigorously grounded in statistical
 \end{enumerate}
 
 \subsection{Reproducibility Protocol and Rapid Verification}
-In strict adherence to experimental reproducibility standards, all random states across data partitioning, model initialization, and sub-sampling are locked to a single deterministic seed (\texttt{seed=42}). To eliminate computational bottlenecks during independent peer review without sacrificing dataset fidelity ($N=200,000$), all preprocessed sparse matrices (one-hot categorical matrices, scaled textometrics, and sublinear TF-IDF arrays) are serialized in compressed SciPy \texttt{.npz} format ($61$~MB total, version-controlled directly within the repository). A dedicated lightweight reproduction script (\texttt{gitskills\_reuse.reproduce}) trains the champion pipeline, evaluates external test metrics, and exports verification logs in approximately $45$ to $200$ seconds, supplemented by a 1-click Google Colab notebook.
+In strict adherence to experimental reproducibility standards, all random states across data partitioning, model initialization, and sub-sampling are locked to a single deterministic seed (\texttt{seed=42}). To eliminate computational bottlenecks during independent peer review without sacrificing dataset fidelity ($N=200,000$), all preprocessed sparse matrices (one-hot categorical matrices, scaled textometrics, and sublinear TF-IDF arrays) are serialized in compressed SciPy \texttt{.npz} format ($61$~MB total, version-controlled directly within the repository). A dedicated lightweight reproduction script (\texttt{gitskills\_reuse.reproduce}) trains the champion pipeline, evaluates external test metrics, and exports verification logs in approximately $45$ to $200$ seconds. Furthermore, an interactive, zero-setup Google Colab notebook is provided at \url{https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce_in_colab.ipynb}, with the complete replication package hosted at \url{https://github.com/podorize/skillreuse}.
 
 \section{Empirical Results and Analysis}
 
