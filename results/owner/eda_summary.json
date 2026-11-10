@@ -1,0 +1,43 @@
+{
+  "generated_at_utc": "2026-11-10T15:18:48.345560+00:00",
+  "reference_date": "2026-07-20",
+  "dev_rows": 25918,
+  "dev_owners": 7128,
+  "share_same_owner_only": 0.28019137279111045,
+  "share_cross_owner": 0.7198086272088895,
+  "excess_same_owner_copies_share": 0.11417233042922958,
+  "top1_owner_share": 0.11929932865190215,
+  "top5_owner_share": 0.24504205571417548,
+  "name_empty_share": 0.17200401265529747,
+  "name_shared_with_other_row_share": 0.3731383594413149,
+  "population_contents": 1877981,
+  "population_reused_by_repo": 306088,
+  "population_cross_owner": 230355,
+  "development_contents_in_split": 160000,
+  "representative_rule_match": 0.9717989597762735,
+  "representative_best_class_match": 1.0,
+  "quantiles": {
+    "repository_count": {
+      "P50": 2.0,
+      "P75": 4.0,
+      "P90": 8.0,
+      "P95": 16.0,
+      "P99": 55.0,
+      "mean": 5.075160120379659,
+      "variance": 112.21960829129532,
+      "variance_to_mean": 22.11154044986082,
+      "max": 390.0
+    },
+    "owner_count": {
+      "P50": 2.0,
+      "P75": 3.0,
+      "P90": 8.0,
+      "P95": 15.0,
+      "P99": 53.0,
+      "mean": 4.495717262134424,
+      "variance": 103.87132093282776,
+      "variance_to_mean": 23.104504771172586,
+      "max": 379.0
+    }
+  }
+}
