@@ -18,6 +18,8 @@ COMMANDS: dict[str, tuple[str, str, str]] = {
     "benchmark": ("skillreuse.benchmark", "benchmark_main", "6 regressores agrupados"),
     "tune": ("skillreuse.tuning", "tune_main", "busca aninhada + repeticoes + testes pareados"),
     "controls": ("skillreuse.controls", "controls_main", "controles de atalho de coleta"),
+    "owner": ("skillreuse.owner", "owner_main", "alvo por donos, contexto, auditoria e EDA"),
+    "owner-models": ("skillreuse.owner_models", "owner_models_main", "modelos por donos"),
     "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
     "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
     "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),
