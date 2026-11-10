@@ -36,14 +36,16 @@ representative-repository attributes, with repository-grouped validation
 and an external test set. Two audits showed that this design was
 fragile. First, GitSkills keeps detailed metadata for only one
 \textbf{representative} copy of each content, chosen by the best
-location class (preferring \texttt{.claude/skills/}) and then
-alphabetically; since a content with more copies is more likely to have
-some copy in the preferred folder, the representative's location class,
-and the commit-history indicator that depends on it, encode the target
-itself. Second, 28\% of reused skills have all copies under a
-\textbf{single owner}, and one account alone accounts for 12\% of the
-development set, so counting repositories mixes diffusion among
-developers with duplication by one account.
+location class (preferring \texttt{.claude/skills/}) and then, as we
+recovered, alphabetically by repository and path; since a content with
+more copies is more likely to have some copy in the preferred folder,
+the representative's location class, and the commit-history indicator
+that depends on it, carry information about the target itself. Second,
+about a quarter of the reused skills (24.7\% in the full population,
+28.0\% in the development set) have all copies under a \textbf{single
+owner}, and one account alone accounts for 12\% of the development set,
+so counting repositories mixes diffusion among developers with
+duplication by one account.
 
 We therefore reformulated the problem. The main target is
 \textbf{cross-owner reuse} (\texttt{cross\_owner}: the content appears
@@ -89,8 +91,9 @@ questions}\label{objectives-and-research-questions}
   an owner-based target, a per-owner cap, grouped validation,
   pre-specified hypotheses and confirmation on a new holdout. (iii)
   Evidence of a \textbf{modest predictive signal}, with a stable RMSLE
-  gain across protocol variations, decomposed into blocks and confirmed
-  on unseen data (AUC 0.73). (iv) A \textbf{reproducible package} with
-  the data revision, seeds, a five-minute reproduction path and a lock
-  that prevents reusing the holdout.
+  gain across protocol variations, confirmed on unseen data (AUC 0.73)
+  and decomposed into blocks (an exploratory decomposition). (iv) A
+  \textbf{reproducible package} with the data revision, seeds, a
+  five-minute reproduction path and a lock that prevents reusing the
+  holdout.
 \end{enumerate}
