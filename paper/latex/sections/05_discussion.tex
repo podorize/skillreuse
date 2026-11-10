@@ -1,111 +1,110 @@
 \section{Discussão}\label{discussuxe3o}
 
-\subsection{Desempenho e características dos
-dados}\label{desempenho-e-caracteruxedsticas-dos-dados}
+\subsection{O que o sinal significa}\label{o-que-o-sinal-significa}
 
-Os resultados mostram sinal preditivo, mas com alcance limitado. A
-representação híbrida teve o menor RMSLE médio do Ridge na validação
-interna; a diferença de 0,004 para \texttt{skill-only} é pequena diante
-do desvio-padrão entre dobras (0,028 e 0,031). O experimento sugere
-informação nos atributos da skill, mas não demonstra superioridade
-robusta do híbrido nem desempenho externo de um modelo textual. A maior
-correlação de Spearman de \texttt{repository-only} reforça que as
-métricas capturam aspectos diferentes.
+Os atributos observáveis de uma skill e de seu repositório carregam
+informação sobre o reúso entre donos, mas pouca: AUC 0,73 no holdout e
+uma redução de 6\% do RMSLE frente à média de \texttt{log1p}. O
+resultado se sustenta nas três camadas de evidência (validação aninhada,
+robustez do desenvolvimento e holdout disjunto por dono), o que o
+distingue de uma associação de uma única partição. Ele é, porém, um
+sinal de \textbf{ordenação grossa}, e não de previsão fina: o Spearman
+do modelo de regressão é 0,33.
 
-A assimetria e a sobredispersão do alvo ajudam a explicar o
-comportamento. A maioria das skills reutilizadas aparece em poucos
-repositórios, enquanto uma parcela pequena concentra contagens elevadas.
-A referência constante teve MAE externo menor que o Random Forest (3,067
-contra 3,266), embora RMSLE pior (0,714 contra 0,583). Portanto, o ganho
-do modelo depende da métrica escolhida. Acima do P95 do treino, o Random
-Forest subestimou todas as 324 observações externas, com MAE de 35,15.
+A decomposição por blocos responde à RQ3. Skill (estrutura do arquivo) e
+repositório (visibilidade e atividade) contribuem de forma complementar:
+isolados, cada um alcança AUC 0,65--0,67; juntos, 0,72 (H3a e H3b). A
+importância por permutação associa o reúso entre donos sobretudo à
+\textbf{visibilidade do repositório} (estrelas, forks, recência do
+último push), o que é coerente com skills em repositórios mais vistos
+serem copiadas por outros donos. A associação admite mais de uma
+explicação (visibilidade que gera cópias, ou repositórios valorizados
+por conterem skills já copiadas), e os dados não as separam. O peso da
+licença e do tamanho do catálogo sugere um componente de ecossistema
+(catálogos e clones) que merece investigação própria.
 
-\subsection{Comparação dos modelos e vieses
-indutivos}\label{comparauxe7uxe3o-dos-modelos-e-vieses-indutivos}
+\subsection{Implicações para o uso do
+GitSkills}\label{implicauxe7uxf5es-para-o-uso-do-gitskills}
 
-O benchmark completo foi realizado na visão \texttt{repository-only}. O
-Random Forest foi escolhido como candidato principal pelo menor RMSLE da
-validação agrupada (0,5753). No teste externo, obteve 0,5833; o Gradient
-Boosting obteve 0,5907, mas MAE menor (3,1820 contra 3,2663). Esses
-valores externos avaliam candidatos já congelados e não são uma nova
-rodada de seleção. A variação entre três dobras e a única divisão
-externa limitam a precisão de comparações pequenas.
+A contribuição mais sólida deste trabalho é metodológica e responde à
+RQ1.
 
-O Ridge impõe uma relação aditiva e regularizada, sendo estável e
-relativamente fácil de interpretar, mas tende a encolher valores
-extremos. KNN depende da geometria local dos atributos e teve o pior
-RMSLE do benchmark completo. A árvore de decisão isolada não superou os
-ensembles e apresentou maior variabilidade. Random Forest e Gradient
-Boosting capturam não linearidades e interações, mas podem explorar
-sinais contextuais que não generalizam para outros ecossistemas.
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{\texttt{location\_class} e \texttt{history\_fetched} não são
+  preditores legítimos de reúso.} Por construção, a classe de
+  localização do representante cresce com o número de cópias (14\% →
+  92\%), e o histórico de commits herda a dependência. Estudos que os
+  usem para explicar a difusão correm o risco de reportar um artefato;
+  na primeira versão deste estudo, eles faziam a visão ``de
+  repositório'' parecer muito mais informativa do que é.
+\item
+  \textbf{Contar repositórios mistura difusão com autocópia.} O número
+  de donos distintos é um alvo mais fiel, e a escolha altera a base da
+  distribuição (28\% de conteúdos com um único dono).
+\item
+  \textbf{Resultados dependem de poucas contas.} O AUC variou de 0,615 a
+  0,747 conforme o tratamento de donos entre 500 e 1000 conteúdos.
+  Relatar a sensibilidade a donos concentrados, ou limitar a
+  contribuição por dono, deveria ser prática padrão.
+\item
+  \textbf{O representante descreve uma cópia arbitrária.} Entre cópias
+  da mesma classe, a escolha é alfabética, e os atributos do repositório
+  (estrelas, linguagem) são os de um repositório entre vários. Agregados
+  sobre todas as cópias seriam mais informativos, mas derivam das mesmas
+  ocorrências que definem o alvo; recomendamos que sejam tratados
+  explicitamente como vazamento em estudos preditivos, ou calculados só
+  com informação anterior ao reúso.
+\end{enumerate}
 
-\subsection{Explicabilidade e
-interpretação}\label{explicabilidade-e-interpretauxe7uxe3o}
+\subsection{Modelos e limites dos
+dados}\label{modelos-e-limites-dos-dados}
 
-As análises textuais exploratórias identificaram termos editoriais e
-sinais de templates; a robustez ao mascaramento não mostra que sejam
-propriedades causais da skill. No Random Forest
-\texttt{repository-only}, a importância por impureza destacou
-\texttt{repo\_stars}, \texttt{history\_fetched}, ausência de
-\texttt{commit\_count} e \texttt{repo\_forks}. Já a permutação agrupada
-colocou \texttt{repo\_language} em primeiro (aumento médio de RMSLE
-0,029), seguido por \texttt{commit\_count} (0,014),
-\texttt{history\_fetched} (0,013) e \texttt{repo\_stars} (0,012). A
-divergência decorre em parte das propriedades das medidas de importância
-e da correlação entre atributos; o sinal de estrelas variou
-substancialmente entre dobras.
-
-No cenário que varia estrelas mantendo as outras entradas, a previsão
-média foi não monotônica. Isso enfraquece uma regra simples sobre
-popularidade e reutilização, embora o cenário não seja uma estimativa
-causal e possa criar combinações raras de atributos. O uso de
-\texttt{repo\_language} e histórico também pode codificar origem,
-cobertura da coleta ou práticas de distribuição. A interpretação do
-Random Forest é apenas contextual; não identifica variáveis textuais ou
-estruturais da skill como determinantes da reutilização.
-
-\subsection{Implicações para a engenharia de
-software}\label{implicauxe7uxf5es-para-a-engenharia-de-software}
-
-O pipeline pode apoiar análises exploratórias de autoria e descoberta,
-indicando convenções que merecem inspeção ou priorizando skills para
-auditoria manual. Ele ainda não justifica um linter automático, um
-ranking de qualidade ou uma intervenção de autoria. Essas aplicações
-exigiriam validação prospectiva, avaliação de utilidade e controle de
-possíveis efeitos adversos, como reforçar padrões de popularidade ou
-favorecer determinados ecossistemas.
-
-Para o trabalho, a contribuição principal é metodológica: comparar
-modelos sob a mesma divisão agrupada, relacionar desempenho a vieses
-indutivos e demonstrar que métricas agregadas podem ocultar erros graves
-na cauda. Os resultados também delimitam o que pode ser inferido de uma
-medida observacional de replicação exata.
+As seis famílias empatam em ambas as tarefas, e a busca de
+hiperparâmetros não melhorou o resultado (RF padrão 0,716 contra 0,701
+buscado). Quando famílias de vieses indutivos tão diferentes (linear,
+vizinhança, árvores, boostings) chegam ao mesmo desempenho, o limite
+costuma estar nos dados e não no algoritmo. Os atributos descrevem uma
+cópia do conteúdo, e o alvo é uma contagem exata de hashes, que ignora
+cópias modificadas; ganhos relevantes provavelmente exigirão novas
+fontes de informação (relações entre cópias, tempo), e não modelos mais
+flexíveis.
 
 \subsection{Ameaças à validade e
 limitações}\label{ameauxe7as-uxe0-validade-e-limitauxe7uxf5es}
 
-\texttt{repository\_count} mede a presença de conteúdo idêntico em
-repositórios distintos. Não mede intenção de adoção, uso efetivo,
-qualidade, utilidade, sucesso de execução ou transferência de
-conhecimento. Cópias modificadas e equivalentes semânticos não são
-capturados.
+\textbf{Construto.} O número de donos aproxima a adoção independente,
+mas contas podem representar a mesma pessoa ou organização, e a busca do
+GitHub só conta forks com mais estrelas que o pai. As duas contagens são
+limites inferiores, e o hash exato não captura variantes. Reúso por
+cópia não indica uso, qualidade ou utilidade da skill.
 
-O agrupamento por \texttt{representative\_repo\_id} elimina a
-sobreposição desse identificador entre treino e validação, mas não
-garante que todos os repositórios relacionados, organizações ou cadeias
-de cópia estejam separados. Metadados de repositório também podem
-funcionar como proxies de popularidade ou origem.
+\textbf{Validade interna.} (i) As hipóteses H1--H4 foram fixadas depois
+de resultados exploratórios, e só o holdout é confirmatório; os valores
+do desenvolvimento são descritivos. (ii) O limite de 50 conteúdos por
+dono é uma escolha dependente dos dados. (iii) O tuning usou 2
+repetições de 3 dobras e 6 candidatas, menos que o planejado. (iv) Com 9
+escores não independentes, o teste de Nadeau--Bengio é aproximado, e os
+p-valores após Holm dependem do tamanho da família. (v) Os blocos de
+catálogo e caminho vêm do repositório e do caminho do representante e
+podem ser parcialmente afetados pela preferência por locais padrão; o
+fato de o caminho quase não ajudar e de o sinal persistir dentro de cada
+classe de localização reduz esse risco, mas não o elimina.
 
-O RMSLE reduz a influência de valores extremos, mas pode ocultar erros
-absolutos elevados. Por isso, a análise também utiliza MAE, Spearman,
-uma referência constante e auditoria por quantis. A subestimação acima
-do P95 mostra que nenhuma métrica isolada caracteriza adequadamente o
-desempenho. A comparação textual foi avaliada apenas com Ridge dentro do
-desenvolvimento; não autoriza afirmar que o modelo final explica
-características intrínsecas da skill.
+\textbf{Validade externa.} O corpus é um instantâneo de julho de 2026 de
+repositórios públicos. O holdout exclui donos concentrados por
+construção, tem mais skills \texttt{canonical} (36\% contra 21\%) e
+menos \texttt{other} (9\% contra 21\%) que o desenvolvimento, e H3 e H4
+não foram reavaliadas nele. A partição de teste original foi consultada
+na primeira versão do estudo e não sustenta nenhuma afirmação
+confirmatória.
 
-Os dados provêm de um snapshot específico do GitHub e de um ecossistema
-particular de Agent Skills. A generalização para outros períodos, hosts,
-comunidades ou mecanismos de distribuição não é garantida. A avaliação
-externa reportada é válida para a divisão adotada neste estudo e não
-substitui replicações em outros snapshots ou ecossistemas.
+\textbf{Interpretação.} A importância por permutação é associativa,
+depende do modelo e é instável entre dobras para vários atributos. Nada
+aqui estabelece causalidade.
+
+\textbf{Ética.} Os dados são públicos e o GitSkills anonimiza autores de
+commits; omitimos identificadores de donos, e a análise por dono não
+visa avaliar indivíduos.

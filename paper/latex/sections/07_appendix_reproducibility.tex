@@ -1,107 +1,135 @@
 \section{Reprodutibilidade e
 execução}\label{reprodutibilidade-e-execuuxe7uxe3o}
 
-\subsection{Dados e ambiente}\label{dados-e-ambiente}
+\subsection{Dados, ambiente e sementes}\label{dados-ambiente-e-sementes}
 
 Fonte pública:
 \href{https://huggingface.co/datasets/mvaccargiu/gitskills}{GitSkills no
 Hugging Face}, revisão fixa
-\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8} (snapshot registrado
-como julho de 2026). O download usa \texttt{artifacts} e \texttt{repos}
-e verifica SHA-256. A agregação calcula \texttt{repository\_count} por
-\texttt{file\_sha} usando \texttt{COUNT(DISTINCT\ repo\_full\_name)}
-antes da amostragem. Os 200.000 conteúdos são os primeiros na ordenação
-\texttt{md5(content\_hash\ \textbar{}\textbar{}\ \textquotesingle{}:20261009\textquotesingle{}),\ content\_hash}
-da população. A divisão externa agrupada por
-\texttt{representative\_repo\_id} produz 160.000 conteúdos de
-desenvolvimento e 40.000 de teste; entre os conteúdos reutilizados
-(\texttt{repository\_count\ \textgreater{}=\ 2}), restam 25.918 e 6.479
-linhas. Essa é uma amostra determinística, não uma amostra aleatória
-simples com erro amostral conhecido.
+\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8} (julho de 2026); o
+download verifica SHA-256. O ambiente usa Python 3.12,
+\texttt{pyproject.toml} e \texttt{uv.lock}. Sementes: amostragem
+\texttt{20261009}; validação 2027, 2028 e 2029; holdout
+\texttt{20261110}; bootstrap 2027. A data de referência para idade e
+recência é 2026-07-20. A amostra de 200.000 conteúdos é determinística
+(\texttt{md5(content\_hash\ \textbar{}\textbar{}\ \textquotesingle{}:20261009\textquotesingle{})}),
+não uma amostra aleatória simples. Os comandos partem da raiz do
+repositório; \texttt{make} encapsula cada etapa.
 
-O ambiente usa Python 3.12, \texttt{pyproject.toml} e \texttt{uv.lock}.
-A amostragem usa semente \texttt{20261009}; os experimentos usam semente
-\texttt{2027} e três dobras \texttt{StratifiedGroupKFold}. Os comandos
-abaixo partem da raiz do repositório.
-
-\subsection{Construção dos dados}\label{construuxe7uxe3o-dos-dados}
+\subsection{Construção dos dados e
+auditoria}\label{construuxe7uxe3o-dos-dados-e-auditoria}
 
 \begin{verbatim}
 uv sync
-uv run skillreuse download
-uv run skillreuse build
-uv run skillreuse features
-uv run skillreuse target
+make data      # download, amostra, divisão e alvo de contagem
+make owner     # owner_count, atributos de contexto, auditoria do representante, EDA
 \end{verbatim}
 
-As entradas resultantes são
-\texttt{data/processed/final\_modeling\_sample.parquet},
-\texttt{final\_structured\_features.parquet} e
-\texttt{final\_targets.parquet}. Versões, cardinalidades e partições
-estão em \texttt{results/tables/full\_population\_manifest.json},
-\texttt{results/tables/final\_feature\_manifest.json} e
-\texttt{results/count\_regression/count\_target\_manifest.json}.
+Saídas: \texttt{data/processed/owner\_targets.parquet} (contagens por
+conteúdo na população completa), \texttt{context\_features.parquet} e,
+em \texttt{results/owner/}, \texttt{eda\_summary.json},
+\texttt{eda\_target\_quantiles.csv},
+\texttt{eda\_owner\_concentration.csv},
+\texttt{audit\_by\_repository\_count.csv},
+\texttt{audit\_by\_owner\_count.csv}. O manifesto da EDA registra a
+concordância da regra do representante (97,2\%).
 
-\subsection{Validação e
-avaliação}\label{validauxe7uxe3o-e-avaliauxe7uxe3o}
-
-Comparação Ridge das três representações:
+\subsection{Protocolo principal e
+robustez}\label{protocolo-principal-e-robustez}
 
 \begin{verbatim}
-uv run skillreuse benchmark-views --candidate-features 10000 --top-k 500 \
-  --views skill_only repository_only hybrid --models ridge_log --folds 3 --seed 2027 \
-  --output-dir results/count_regression/selected_full_ridge
+make controls     # controle com o desenho original (Seção 4.2)
+make primary      # H1–H4 (Seção 4.3), limite de 50 por dono
+make robustness   # limiares de donos, classes de localização, alvo alternativo (4.4)
+make importance   # importância por permutação (4.5)
 \end{verbatim}
 
-Comparação dos seis regressores sobre os atributos de repositório:
+\texttt{results/owner/primary/} contém \texttt{primary\_hypotheses.csv},
+as tabelas por dobra e os testes pareados exploratórios;
+\texttt{results/owner/robustness/} e \texttt{results/owner/models*/}
+guardam cada sensibilidade, cada uma com \texttt{manifest.json}.
+
+\subsection{Tuning, congelamento e
+holdout}\label{tuning-congelamento-e-holdout}
 
 \begin{verbatim}
-uv run skillreuse benchmark --views repository_only --folds 3 --seed 2027 \
-  --output-dir results/discipline_benchmark/full_repository_only_20261109
+make final         # tuning aninhado e congelamento (Seção 4.6); não lê o holdout
+make holdout       # constrói o holdout disjunto por dono (Seção 3.9)
+make holdout-eval  # avaliação única (Seção 4.7)
 \end{verbatim}
 
-O spot-check está em
-\texttt{results/discipline\_benchmark/spot\_check\_repository\_only\_20261109/}.
-A avaliação externa abaixo \textbf{já foi executada}; repetir para
-verificar reprodutibilidade não autoriza novo ajuste pelos resultados:
+Os modelos congelados ficam em
+\texttt{results/owner/final/final\_config\_*.json} e foram commitados
+antes da avaliação (tag git \texttt{frozen-before-holdout}).
+\texttt{holdout-eval} grava
+\texttt{results/owner/holdout/evaluation\_lock.json} e \textbf{recusa}
+nova execução sem \texttt{-\/-allow-reevaluation}; qualquer reavaliação
+deve ser declarada. A reprodução deve conferir
+\texttt{holdout\_manifest.json} (sobreposição zero de donos e de
+conteúdos).
+
+\subsection{Mapa entre tabelas, figuras e
+artefatos}\label{mapa-entre-tabelas-figuras-e-artefatos}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\caption{Origem dos números do relatório.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Item
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Artefato
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Item
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Artefato
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Distribuição e concentração (4.1) &
+\texttt{results/owner/eda\_target\_quantiles.csv},
+\texttt{eda\_owner\_concentration.csv} \\
+Viés do representante (4.2, figura) &
+\texttt{results/owner/audit\_by\_repository\_count.csv},
+\texttt{eda\_owner\_and\_selection.png} \\
+Controle com o desenho original (4.2) &
+\texttt{results/controls/shortcut\_summary.csv},
+\texttt{shortcut\_paired.csv} \\
+Visões e hipóteses (4.3) &
+\texttt{results/owner/primary/\{classification,regression\}\_summary.csv},
+\texttt{primary\_hypotheses.csv} \\
+Sensibilidade (4.4) &
+\texttt{results/owner/figures/sensitivity\_owner\_limit.csv},
+\texttt{results/owner/robustness/*} \\
+Importância (4.5) &
+\texttt{results/owner/importance/*\_importance.csv} \\
+Tuning (4.6) & \texttt{results/owner/final/*\_nested\_summary.csv},
+\texttt{*\_selection\_tests.csv} \\
+Holdout (4.7) & \texttt{results/owner/holdout/holdout\_results.json} \\
+\end{longtable}
+
+\subsection{Verificações, desvios e
+limites}\label{verificauxe7uxf5es-desvios-e-limites}
 
 \begin{verbatim}
-uv run skillreuse evaluate \
-  --output-dir results/discipline_benchmark/final_repository_only
+make test
 \end{verbatim}
 
-As tabelas da Seção 4 derivam de
-\texttt{selected\_full\_ridge/count\_regression\_pilot\_summary.csv},
-\texttt{full\_repository\_only\_20261109/regression\_summary.csv},
-\texttt{spot\_check\_repository\_only\_20261109/spot\_check\_summary.csv}
-e \texttt{final\_repository\_only/test\_summary.csv}.
-\texttt{random\_forest\_test\_predictions.csv} contém as previsões
-externas usadas na auditoria.
-
-\subsection{Figuras e auditoria}\label{figuras-e-auditoria}
-
-\begin{verbatim}
-uv run skillreuse report
-\end{verbatim}
-
-O comando gera quantis e valores ausentes do desenvolvimento, referência
-constante calculada pela mediana do desenvolvimento, métricas por faixa
-das previsões externas salvas e gráficos em
-\texttt{results/discipline\_benchmark/report\_audit/}. A importância por
-permutação e o cenário de estrelas são recalculados \textbf{apenas no
-desenvolvimento} com três dobras agrupadas.
-\texttt{audit\_manifest.json} registra fontes, sementes, cortes e
-limites. A auditoria separada do Ridge híbrido está em
-\texttt{results/count\_regression/tail\_audit/}.
-
-\subsection{Verificações}\label{verificauxe7uxf5es}
-
-\begin{verbatim}
-uv run pytest -q tests/test_count_targets.py tests/test_preprocess.py
-\end{verbatim}
-
-Os testes verificam a construção do alvo e a exclusão de colunas de
-vazamento. A reprodução integral deve conferir os manifestos de divisão,
-a ausência de grupos compartilhados e a correspondência entre CSVs e
-tabelas do relatório. Arquivos históricos de modelos fora do escopo da
-entrega não integram as comparações apresentadas.
+Os testes cobrem a exclusão de atributos contaminados, os padrões de
+caminho, os testes pareados e a correção de Holm, o bootstrap por dono e
+a disjunção do holdout. Desvios em relação ao protocolo: tuning com 2×3
+dobras e 6 candidatas (planejado 3×3 e 12) por custo computacional; a
+máquina de desenvolvimento tinha 8 GB de memória. Resultados numéricos
+podem variar nas últimas casas com versões diferentes das bibliotecas. A
+primeira versão do estudo (alvo \texttt{repository\_count}, teste
+externo original) permanece no repositório
+(\texttt{results/count\_regression},
+\texttt{results/discipline\_benchmark}) apenas como histórico, e não
+sustenta nenhuma conclusão deste relatório.

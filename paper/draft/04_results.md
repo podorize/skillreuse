@@ -1,131 +1,124 @@
 # 4. Resultados
 
-## 4.1 Caracterização do alvo e dos dados
+## 4.1 O alvo e a concentração por donos
 
-Esta seção apresenta os resultados consolidados do estudo para a disciplina. O benchmark comparativo foi realizado por validação cruzada agrupada e a avaliação externa foi executada uma vez após o congelamento dos candidatos na visão `repository-only`. Os resultados das visões textuais são apresentados em análises separadas.
+No desenvolvimento (25.918 conteúdos reutilizados de 7.128 donos), o número de donos tem distribuição semelhante à de repositórios: forte assimetria positiva e sobredispersão.
 
-Entre as skills reutilizadas, `repository_count` apresenta distribuição fortemente assimétrica e sobredispersa. A média é 5,075 repositórios, a mediana é 2, a variância é 112,22 e a razão entre variância e média é 22,11. O maior valor observado no conjunto de desenvolvimento é 390 repositórios. A diferença entre média e mediana indica que poucas skills concentram valores muito elevados.
+| | média | P50 | P75 | P90 | P95 | P99 | máx. | variância/média |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `repository_count` | 5,08 | 2 | 4 | 8 | 16 | 55 | 390 | 22,1 |
+| `owner_count` | 4,50 | 2 | 3 | 8 | 15 | 53 | 379 | 23,1 |
 
-Os quantis do desenvolvimento, calculados somente nas 25.918 skills reutilizadas, são:
+: Distribuição dos alvos de contagem no desenvolvimento.
 
-| Quantil | P50 | P75 | P90 | P95 | P99 |
-|---|---:|---:|---:|---:|---:|
-| Repositórios | 2 | 4 | 8 | 16 | 55 |
+A diferença está na base da distribuição: **28,0%** dos conteúdos reutilizados têm `owner_count = 1`, isto é, todas as cópias estão em um único dono. A autocópia retira 11% da massa total de `repository_count`. Poucos donos concentram a amostra: o maior responde por 11,9% dos conteúdos, os cinco maiores por 24,5%.
 
-: Quantis de `repository_count` entre as skills reutilizadas do desenvolvimento.
+Os cinco maiores donos respondem por 11,9%, 4,7%, 3,5%, 2,2% e 2,2% dos conteúdos (identificadores omitidos). O maior e o quarto são casos claros de autocópia: seus conteúdos têm em média 2,0 repositórios, mas só 1,0 dono. Além disso, 17,2% dos conteúdos não têm `name` no front matter, e 20,1% (24,3% dos que têm `name`) compartilham o `name` com outro conteúdo, indício de variantes da mesma skill.
 
-A figura abaixo mostra a concentração nos valores baixos e a cauda longa. No teste, o maior valor observado é 573. A transformação `log1p` estabiliza o ajuste, mas o resultado agregado deve ser lido junto com o erro na cauda.
+## 4.2 O viés de seleção do representante
 
-![Distribuição do alvo no desenvolvimento](../../results/discipline_benchmark/report_audit/target_distribution.png)
+A tabela a seguir compara, na população completa (1.877.981 conteúdos), a fração de conteúdos cujo representante é `canonical` com a fração das cópias que de fato estão em `canonical`.
 
-Nos atributos de repositório do desenvolvimento, `commit_count` está ausente em 69,86% das 25.918 observações; estrelas, forks, linguagem, licença e estado de fork têm aproximadamente 0,035% de ausência cada. `history_fetched` e `repo_metadata_fetched` não têm valores ausentes, mas sinalizam a cobertura da coleta. A imputação e os indicadores de ausência foram ajustados dentro de cada dobra. A tabela auditável está em [`repository_missingness.csv`](../../results/discipline_benchmark/report_audit/repository_missingness.csv).
-
-## 4.2 Comparação das representações
-
-A confirmação completa da configuração textual atual foi realizada com 10.000 candidatos TF-IDF e 500 termos selecionados, utilizando regressão Ridge sobre `log1p(repository_count)` e três dobras agrupadas. A representação híbrida apresentou o menor RMSLE entre as três visões avaliadas, embora a diferença para *skill-only* seja pequena.
-
-| Representação com Ridge | RMSLE médio ± DP | MAE médio | Spearman médio |
+| Repositórios | conteúdos | representante é `canonical` | cópias em `canonical` |
 |---|---:|---:|---:|
-| `hybrid` | **0,568 ± 0,028** | 3,320 | 0,245 |
-| `skill-only` | 0,572 ± 0,031 | 3,325 | 0,213 |
-| `repository-only` | 0,588 ± 0,006 | 3,341 | 0,259 |
+| 1 | 1.571.893 | 13,3% | 12,6% |
+| 2 | 172.624 | 13,8% | 8,5% |
+| 3 | 49.535 | 19,5% | 9,1% |
+| 4–5 | 36.312 | 24,1% | 10,9% |
+| 6–10 | 24.142 | 30,4% | 10,1% |
+| 11–50 | 19.589 | 57,7% | 7,7% |
+| mais de 50 | 3.886 | 91,7% | 5,1% |
 
-: Comparação das três representações com Ridge em três dobras agrupadas do desenvolvimento.
+: Efeito da regra do representante, por número de repositórios (população completa).
 
-Os resultados sugerem sinal nos atributos textuais e estruturais da skill. A diferença média entre `hybrid` e `skill-only` é de apenas 0,004 no RMSLE, menor que a variação entre dobras; não se pode afirmar uma superioridade robusta do híbrido. `repository-only` apresenta a maior correlação de Spearman nessa comparação, apesar do pior RMSLE. Essas são estimativas de validação interna do Ridge; nenhum dos dois modelos textuais foi avaliado no teste externo.
+A probabilidade de o representante ser `canonical` cresce de 14% a 92% com o número de cópias, enquanto a fração real de cópias nessa pasta é plana ou decrescente (5–13%). Isso é consequência da regra recuperada (Seção 3.3): basta uma cópia em `.claude/skills/` para o representante ser `canonical`. A classe de localização do representante, e o histórico de commits que só existe para locais padrão, **codificam o número de cópias**.
 
-Essa diferença também reforça a necessidade de interpretar o modelo híbrido com cautela. Parte do sinal pode estar associada ao contexto do repositório, e não a propriedades intrínsecas da skill. Assim, a vantagem híbrida não deve ser descrita como evidência de que o conteúdo da skill, isoladamente, determina maior reutilização.
+![Distribuições de repositórios e donos (esquerda) e efeito da regra do representante (direita)](../../results/owner/eda_owner_and_selection.png)
 
-## 4.3 Comparação das famílias de modelos
+Na primeira versão do estudo, com `repository_count` como alvo e atributos de repositório, isso inflava o resultado. Com o Random Forest e o desenvolvimento completo, os atributos de repositório davam RMSLE 0,575; sem `history_fetched` e `commit_count`, 0,604 (diferença de +0,029, IC95% [0,018; 0,040]), contra 0,623 da baseline de média de `log1p`. Só a localização do representante (três categorias) dava 0,584, e o histórico sozinho 0,594. A visão "de repositório" era, em boa parte, uma proxy da localização.
 
-Como parte do trabalho da disciplina, foi executado um benchmark completo com 25.918 observações, três dobras agrupadas e a representação `repository-only`. Essa execução permite comparar todos os regressores sobre a mesma matriz de atributos, sem o gargalo da vetorização textual. Os resultados foram:
+## 4.3 Protocolo principal
 
-| Modelo `repository-only` | RMSLE médio ± DP | MAE médio ± DP | Spearman médio |
-|---|---:|---:|---:|
-| Random Forest | **0,575 ± 0,008** | 3,282 ± 0,120 | 0,287 |
-| HistGradientBoosting | 0,583 ± 0,019 | 3,312 ± 0,034 | 0,255 |
-| Gradient Boosting | 0,587 ± 0,010 | **3,173 ± 0,129** | **0,317** |
-| Ridge | 0,588 ± 0,006 | 3,341 ± 0,156 | 0,259 |
-| Decision Tree | 0,593 ± 0,017 | 3,321 ± 0,073 | 0,282 |
-| KNN | 0,610 ± 0,027 | 3,452 ± 0,054 | 0,214 |
+Com os atalhos fora, 17.733 conteúdos (limite de 50 por dono) e validação agrupada por dono, os resultados do Random Forest (RF) e dos modelos lineares são:
 
-: Comparação dos seis regressores com atributos de repositório em três dobras agrupadas.
-
-O Random Forest apresentou o menor RMSLE, enquanto o Gradient Boosting obteve o menor MAE e a maior correlação de Spearman. Isso mostra que a escolha do melhor modelo depende do critério: o primeiro favorece erro relativo na escala logarítmica, enquanto o segundo produz melhor erro absoluto e ordenação. O resultado também confirma que a árvore isolada e o KNN não oferecem vantagem consistente nessa representação.
-
-Um spot-check agrupado comparou variantes dos dois candidatos. O Random Forest com `max_depth=12`, 100 árvores e `min_samples_leaf=3` teve RMSLE de **0,575 ± 0,008**, contra 0,576 ± 0,008 com 200 árvores e 0,578 ± 0,004 com profundidade 8. O Gradient Boosting com 200 estimadores e taxa 0,05 obteve **0,584 ± 0,008**, ante 0,587 ± 0,010 com 100 estimadores. O critério de escolha principal foi o RMSLE médio da validação agrupada.
-
-O benchmark completo confirma que modelos ensemble não lineares capturam relações úteis na visão `repository-only`, mas não há um vencedor absoluto em todas as métricas. O desempenho de modelos mais flexíveis deve ser interpretado junto com o risco de memorizar padrões contextuais.
-
-Após o congelamento da comparação da disciplina, os dois candidatos selecionados foram treinados em todas as 25.918 observações de desenvolvimento e avaliados uma única vez nas 6.479 skills reutilizadas do teste externo. A sobreposição de `representative_repo_id` foi zero.
-
-| Modelo | RMSLE | MAE | MAE log1p | Spearman |
+| Visão | AUC RF | AUC logística | RMSLE RF | RMSLE Ridge |
 |---|---:|---:|---:|---:|
-| Random Forest | **0,5833** | 3,2663 | 0,4063 | **0,3667** |
-| Gradient Boosting | 0,5907 | **3,1820** | **0,3903** | 0,2315 |
+| skill | 0,660 ± 0,022 | 0,614 | 0,698 ± 0,007 | 0,713 |
+| repositório | 0,650 ± 0,019 | 0,655 | 0,707 ± 0,011 | 0,702 |
+| repositório + catálogo | 0,666 ± 0,009 | 0,662 | 0,696 ± 0,010 | 0,699 |
+| caminho + catálogo | 0,579 ± 0,019 | 0,576 | 0,718 ± 0,018 | 0,714 |
+| **limpo completo** | **0,716 ± 0,024** | 0,680 | **0,679 ± 0,011** | 0,694 |
+| limpo + atalhos | 0,717 ± 0,022 | 0,682 | 0,637 ± 0,015 | 0,664 |
+| só atalhos | 0,500 ± 0,015 | 0,510 | 0,688 ± 0,010 | 0,693 |
+| *baseline* | 0,500 | 0,500 | 0,720 (média), 0,780 (mediana) | |
 
-: Avaliação externa dos dois candidatos congelados após a validação agrupada.
+: Desempenho por visão (média ± desvio de 9 dobras agrupadas por dono).
 
-O Random Forest já era o candidato principal pelo RMSLE da validação. Os resultados externos estimam o desempenho dos dois candidatos na partição reservada; o teste não redefiniu a escolha. Em comparação com a referência constante que prediz a mediana do desenvolvimento (2 repositórios), o Random Forest reduz o RMSLE de **0,7142** para **0,5833**, mas aumenta o MAE de **3,0665** para **3,2663** e o MAE log1p de 0,3593 para 0,4063. A referência é forte nas métricas médias porque a maior parte do teste tem contagem baixa; o modelo melhora a diferenciação das contagens em RMSLE e Spearman, mas não domina todos os critérios.
+Todas as hipóteses pré-especificadas são rejeitadas após a correção de Holm:
 
-## 4.4 Análise de erros por intensidade de reutilização
+| | Comparação | Resultado | IC95% da diferença | p (Holm) |
+|---|---|---|---|---:|
+| H1 | AUC do RF limpo contra 0,5 | 0,716 | +0,216 [0,173; 0,259] | < 0,001 |
+| H2 | RMSLE do RF limpo contra a média | 0,679 contra 0,720 | −0,041 [−0,049; −0,033] | < 0,001 |
+| H3a | limpo contra repositório+catálogo (AUC) | 0,716 contra 0,666 | +0,050 [0,017; 0,083] | 0,008 |
+| H3b | limpo contra skill (AUC) | 0,716 contra 0,660 | +0,056 [0,040; 0,072] | < 0,001 |
+| H4 | limpo+atalhos contra limpo (RMSLE) | 0,637 contra 0,679 | −0,042 [−0,055; −0,029] | < 0,001 |
 
-Para o Random Forest `repository-only`, as faixas foram definidas pelos quantis do desenvolvimento antes da auditoria das previsões externas salvas. O erro cresce rapidamente acima de oito repositórios:
+: Hipóteses pré-especificadas no desenvolvimento (exploratório até a confirmação da Seção 4.7).
 
-| Faixa observada no teste | n | RMSLE | MAE | Erro mediano (previsto − real) | Subestimação |
-|---|---:|---:|---:|---:|---:|
-| ≤2 (P50) | 3.648 | 0,395 | 1,33 | +1,12 | 0% |
-| 3–4 (P50–P75) | 1.522 | 0,224 | 0,79 | +0,14 | 41,3% |
-| 5–8 (P75–P90) | 683 | 0,428 | 2,22 | −2,11 | 90,2% |
-| 9–16 (P90–P95) | 302 | 0,925 | 7,29 | −7,02 | 100% |
-| >16 (>P95) | 324 | 1,904 | 35,15 | −22,73 | 100% |
+Há sinal real, mas modesto: o AUC de 0,72 e uma redução de 6% do RMSLE. Skill e repositório contribuem de forma **complementar**: cada bloco isolado fica em AUC 0,65–0,67, e a combinação em 0,72 (H3a e H3b). Os atalhos acrescentam à regressão (H4), mas, sozinhos, não preveem o reúso entre donos (AUC 0,50): o ganho de regressão vem da correlação deles com o número de cópias, não do reúso entre donos. O caminho, isolado, quase não prevê.
 
-: Erros do Random Forest por faixas definidas pelos quantis do desenvolvimento e medidas no teste externo.
+## 4.4 Robustez
 
-Acima do P95, a mediana observada é 27,5 e a mediana prevista é 4,45. Em todo o teste, a maior previsão foi 10,29, frente à maior contagem observada de 573. As figuras mostram a compressão das previsões e o aumento do erro absoluto na cauda.
+**Limite por dono.** O desempenho do RF limpo muda pouco no RMSLE, mas muito no AUC, conforme o tratamento dos donos concentrados:
 
-![Observado versus previsto no teste externo do Random Forest](../../results/discipline_benchmark/report_audit/observed_vs_predicted.png)
-
-![MAE do Random Forest por faixa do alvo](../../results/discipline_benchmark/report_audit/error_by_intensity.png)
-
-Como análise separada, a auditoria por quantis do Ridge híbrido na validação encontrou subestimação crescente. Seus limiares foram calculados no treino de cada dobra e aplicados à validação; não se trata do teste do Random Forest.
-
-| Faixa do alvo | Observações | RMSLE | MAE | Subestimação |
+| Tratamento | conteúdos | AUC RF limpo | ganho de RMSLE (limpo) | ganho (só atalhos) |
 |---|---:|---:|---:|---:|
-| Até P50 | 14.593 | 0,432 | 1,46 | 6,7% |
-| P50–P75 | 6.087 | 0,302 | 1,11 | 48,3% |
-| P75–P90 | 2.773 | 0,466 | 2,25 | 89,7% |
-| P90–P95 | 1.232 | 0,890 | 7,20 | 99,7% |
-| Acima de P95 | 1.233 | 1,692 | 34,75 | 100,0% |
+| sem limite | 25.918 | 0,747 ± 0,140 | 0,039 | 0,040 |
+| excluir donos com mais de 1000 | 21.615 | 0,615 ± 0,036 | 0,036 | 0,040 |
+| excluir donos com mais de 500 | 19.567 | 0,708 ± 0,037 | 0,030 | 0,041 |
+| excluir donos com mais de 200 | 18.443 | 0,732 ± 0,035 | 0,037 | 0,040 |
+| **50 por dono** | 17.733 | 0,716 ± 0,024 | 0,041 | 0,031 |
 
-: Auditoria separada do Ridge híbrido por quantis definidos no treino de cada dobra de validação.
+: Sensibilidade ao tratamento de donos concentrados (RF, baseline = média de `log1p`).
 
-O modelo apresenta desempenho relativamente bom para a região central, mas subestima de forma crescente os valores mais altos. Para as observações acima do P95, a mediana do alvo é 33 repositórios, enquanto a mediana da previsão é aproximadamente 6,22. Portanto, o RMSLE global de 0,568 oculta uma falha importante para o subgrupo mais reutilizado.
+O RMSLE é estável (ganho de 0,03–0,04), mas o AUC oscila de 0,615 a 0,747: poucos donos entre 500 e 1000 conteúdos derrubam o AUC em 0,1, e sem limite uma única dobra concentra um dono e o desvio chega a 0,14. O desempenho depende, portanto, da composição de uma dúzia de contas. O limite de 50 estabiliza as estimativas, mas é uma escolha dependente dos dados.
 
-Essa auditoria confirma que o Ridge híbrido também não representa adequadamente a disseminação extrema. Os dois resultados de cauda pertencem a modelos, representações e conjuntos de avaliação diferentes e não são uma comparação direta.
+**Outras verificações.** (i) Fixando a classe de localização e treinando dentro de cada uma (donos com mais de 500 conteúdos excluídos), o RF limpo ainda supera a baseline: `canonical` (5.439 conteúdos) RMSLE −0,141 e AUC 0,714; `skills-dir` (10.721) −0,013 e 0,672; `other` (3.810) −0,011 e 0,828. O sinal não é só localização. (ii) Com `repository_count` como alvo, o ganho do RF limpo é igual (−0,031 contra −0,030). (iii) Só 18,8% das linhas de validação têm `name` visto no treino; no subconjunto sem sobreposição o ganho persiste (RMSLE −0,039 contra −0,041 em todas; AUC 0,726 contra 0,716), o que indica que variantes do mesmo `name` não explicam o resultado. (iv) A validação agrupada por repositório, em vez de por dono, não produziu estimativas maiores (RMSLE 0,657 contra 0,655; AUC 0,735 contra 0,747, com o desvio de 0,14 do caso sem limite).
 
-## 4.5 Robustez textual
+## 4.5 Interpretação
 
-Foi comparado o texto bruto com uma versão que remove datas, números, URLs e identificadores longos. A remoção desses artefatos alterou pouco o desempenho: no modelo híbrido, o RMSLE passou de 0,568 para 0,570; no modelo `skill-only`, passou de 0,572 para 0,575.
+![Importância por permutação do RF limpo (dobras agrupadas por dono; donos com mais de 500 conteúdos excluídos)](../../results/owner/figures/permutation_importance.png)
 
-Essa pequena diferença sugere que os artefatos textuais identificados não explicam sozinhos o sinal preditivo global. Entretanto, a análise não permite concluir que todos os termos sejam semanticamente relevantes. A representação textual ainda pode capturar convenções editoriais, templates e padrões de distribuição associados às skills reutilizadas.
+Para o reúso entre donos, o bloco de repositório pesa mais (queda de 0,104 no AUC ao permutar) que o de skill (0,084), catálogo (0,016) e caminho (≈ 0). Entre as colunas, domina o `log_stars` (0,056), seguido de `log_forks` (0,021) e recência do último push (0,016): skills em repositórios mais visíveis são mais copiadas por outros donos. Na regressão, repositório (0,019) e skill (0,018) pesam parecido, e a maior coluna é a licença (0,013), seguida do tamanho do catálogo (0,011) e da profundidade do caminho (0,005). Não identificamos por que a licença pesa tanto; pode ser um indicador de repositórios que clonam catálogos. As incertezas são grandes (6 dobras), e a correlação entre atributos limita a leitura individual.
 
-## 4.6 Explicabilidade e consistência
+## 4.6 Seleção de modelo e tuning
 
-A análise global inicial do modelo híbrido encontrou sete dos 500 termos selecionados com aparência de datas ou números; não foram identificados URLs ou identificadores longos entre os principais termos. Alguns termos recorrentes estavam relacionados a fragmentos editoriais, como `date_added` e `source community`, além de palavras de conteúdo geral.
+| Família | AUC padrão | AUC buscado | RMSLE padrão | RMSLE buscado |
+|---|---:|---:|---:|---:|
+| linear | 0,678 | 0,689 | 0,692 | 0,690 |
+| KNN | 0,667 | 0,690 | 0,703 | 0,686 |
+| árvore | 0,614 | 0,634 | 0,807 | 0,699 |
+| Random Forest | **0,716** | 0,701 | 0,679 | 0,675 |
+| Gradient Boosting | 0,691 | 0,704 | 0,690 | 0,671 |
+| HistGradientBoosting | 0,693 | 0,682 | **0,670** | 0,688 |
+| *baseline* | 0,500 | | 0,720 | |
 
-A auditoria de estabilidade em três dobras encontrou recorrência de termos editoriais e de convenções de documentação. A versão com artefatos mascarados reduziu os sinais explicitamente numéricos, mas não eliminou termos associados a padrões editoriais. Esses achados devem ser tratados como associações descritivas: a presença de um termo pode indicar um template, uma origem comum ou um processo de publicação, e não necessariamente uma propriedade que cause reutilização.
+: Validação aninhada (média de 6 dobras externas agrupadas por dono; 6 candidatas por busca).
 
-Na importância por impureza do Random Forest ajustado em todo o desenvolvimento, os maiores valores pertencem a `repo_stars` (0,170), `history_fetched` (0,153), indicador de ausência de `commit_count` (0,132) e `repo_forks` (0,129). Essa medida pode favorecer atributos com mais valores ou categorias. A permutação dos oito atributos brutos na validação agrupada do desenvolvimento fornece um contraste: aumento médio de RMSLE de 0,029 ± 0,013 para `repo_language`, 0,014 ± 0,006 para `commit_count`, 0,013 ± 0,003 para `history_fetched` e 0,012 ± 0,012 para `repo_stars`. Uma das três dobras deu aumento de apenas 0,0005 para estrelas, indicando instabilidade desse sinal. Foi feita uma permutação por atributo e dobra, portanto a incerteza dessa estimativa é limitada.
+Pela regra pré-especificada, congelamos o RF padrão (classificação) e o HistGradientBoosting padrão (regressão). **As famílias empatam:** o RF contra o segundo colocado (Gradient Boosting buscado) tem diferença de AUC de 0,012 (IC95% [−0,003; 0,026]), e na regressão o HistGB contra o Gradient Boosting buscado tem −0,001 [−0,027; 0,024]. Só a árvore de decisão (e, com menos evidência, o KNN padrão) fica atrás, e na classificação nem essas diferenças resistem à correção de Holm (p entre 0,06 e 0,13). A busca de hiperparâmetros não superou a configuração padrão (RF classificação: padrão 0,716 contra buscado 0,701).
 
-![Aumento de RMSLE após permutação em validação agrupada](../../results/discipline_benchmark/report_audit/permutation_importance.png)
+## 4.7 Confirmação no holdout
 
-Um cenário descritivo na primeira dobra variou `repo_stars` para 0, 1, 3, 10, 100 e 1.000 em 1.000 observações de validação, mantendo as outras entradas: a previsão média resultante foi 3,58; 3,62; 3,12; 3,29; 3,22; 3,17 repositórios. A resposta não é monotônica e alguns cenários podem combinar valores incomuns de estrelas e forks. Logo, o experimento não sustenta a afirmação de que aumentar estrelas causaria mais reutilização. Toda essa explicação descreve o contexto do repositório, não propriedades intrínsecas da skill.
+Os modelos congelados foram avaliados uma vez em 25.011 conteúdos de 10.484 donos disjuntos do desenvolvimento.
 
-![Previsão média ao variar estrelas no primeiro fold](../../results/discipline_benchmark/report_audit/stars_scenario_fold1.png)
+| Tarefa | Modelo | Resultado | Baseline | IC95% (bootstrap por dono) |
+|---|---|---:|---:|---|
+| `cross_owner` | Random Forest | AUC **0,731**; AUC-PR 0,913; Brier 0,140; log-loss 0,444 | 0,5; 0,808; 0,155; 0,490 | AUC [0,716; 0,745]; AUC-PR [0,905; 0,921] |
+| `log1p(owner_count)` | HistGradientBoosting | RMSLE **0,625**; Spearman 0,330 | 0,664 (média de `log1p`) | diferença −0,038 [−0,044; −0,032] |
 
-## 4.7 Síntese dos resultados e estado da avaliação
+: Avaliação única no holdout.
 
-Os resultados da disciplina sustentam quatro conclusões. Primeiro, existe sinal preditivo mensurável para a intensidade de reutilização, sobretudo na região central da distribuição. Segundo, a representação híbrida apresenta pequena vantagem global no Ridge, mas a comparação completa dos modelos foi realizada de forma controlada na visão `repository-only`. Terceiro, a cauda de alta reutilização continua sendo um problema relevante, com subestimação sistemática dos maiores valores. Quarto, as explicações identificam padrões textuais e contextuais plausíveis, mas não fornecem evidência de causalidade ou de qualidade intrínseca das skills.
+![Curva ROC e calibração do RF no holdout](../../results/owner/figures/holdout_roc_calibration.png)
 
-O Random Forest foi escolhido na validação pelo menor RMSLE médio e obteve 0,5833 no teste externo. O Gradient Boosting apresentou MAE externo menor (3,1820). Ambos os resultados são descritivos para a divisão congelada. A referência constante superar o Random Forest em MAE e a subestimação integral acima do P95 impedem uma conclusão de bom desempenho geral. A análise de atributos da skill permanece parcial, pois a comparação com texto foi interna e restrita ao Ridge.
+Os critérios de sucesso foram atendidos: o limite inferior do AUC está acima de 0,5 e o limite superior da diferença de RMSLE está abaixo de zero. O AUC do holdout (0,731) é compatível com a estimativa aninhada do desenvolvimento (0,716). O holdout tem composição diferente (36% de skills `canonical` contra 21% no desenvolvimento, e 9% `other` contra 21%), pois os donos concentrados ficam de fora por construção. H3 e H4 não foram reavaliadas no holdout e permanecem exploratórias.
