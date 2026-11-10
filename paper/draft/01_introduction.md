@@ -1,36 +1,36 @@
-# 1. Introdução
+# 1. Introduction
 
-## 1.1 Contexto e motivação
+## 1.1 Context and motivation
 
-A adoção de agentes baseados em Grandes Modelos de Linguagem (LLMs) na engenharia de software vem sendo acompanhada pelo surgimento de novos artefatos destinados a encapsular conhecimento operacional. Entre eles estão as *Agent Skills*: diretórios portáveis que combinam metadados estruturados, instruções em linguagem natural e, eventualmente, scripts e referências. O arquivo `SKILL.md` é o núcleo descritivo do artefato e orienta o agente sobre como executar uma tarefa, quais restrições observar e quais recursos usar \cite{agentskills_spec}. As skills ampliam a noção tradicional de reúso, pois distribuem procedimentos e conhecimento de domínio sem depender de uma biblioteca com interface formal.
+The adoption of agents based on Large Language Models (LLMs) in software engineering has been accompanied by new artifacts designed to encapsulate operational knowledge. Among them are *agent skills*: portable directories that combine structured metadata, natural-language instructions and, optionally, scripts and references. The `SKILL.md` file is the descriptive core of the artifact and tells the agent how to perform a task, which constraints to observe and which resources to use \cite{agentskills_spec}. Skills extend the traditional notion of reuse, since they distribute procedures and domain knowledge without depending on a library with a formal interface.
 
-O reúso de software é estudado há décadas \cite{haefliger2008code,lopes2017dejavu}, mas a difusão de Agent Skills tem características próprias: não há registro central nem gerenciador de pacotes, e o reúso ocorre por cópia de pastas entre repositórios. Uma mesma skill pode aparecer em muitos repositórios porque é clara e portável, porque pertence a um template ou catálogo, porque foi instalada por uma ferramenta, ou porque uma mesma conta a duplicou em vários de seus projetos. Essas explicações misturam propriedades do artefato e do contexto de distribuição, e dificultam interpretar a reutilização observada.
+Software reuse has been studied for decades \cite{haefliger2008code,lopes2017dejavu}, but the diffusion of agent skills has its own characteristics: there is no central registry or package manager, and reuse happens by copying folders between repositories. The same skill may appear in many repositories because it is clear and portable, because it belongs to a template or catalog, because a tool installed it, or because a single account duplicated it across its own projects. These explanations mix properties of the artifact and of the distribution context, which makes the observed reuse hard to interpret.
 
-O GitSkills disponibiliza um corpus em larga escala com ocorrências de skills, conteúdos únicos e metadados de repositórios \cite{gitskills2027}. Outros estudos examinam defeitos de especificação \cite{zhang2026keepskillsreuse}, o efeito de skills em tarefas de engenharia de software \cite{han2026sweskillsbench} e a evolução de prompts \cite{tafreshipour2025prompting}. Resta uma questão complementar e metodologicamente delicada: quais características observáveis estão associadas à difusão de uma skill entre donos distintos, e o quanto essa previsibilidade resulta da forma como o próprio dataset foi construído?
+GitSkills provides a large-scale corpus with skill occurrences, distinct contents and repository metadata \cite{gitskills2027}. Other studies examine specification defects \cite{zhang2026keepskillsreuse}, the effect of skills on software engineering tasks \cite{han2026sweskillsbench} and the evolution of prompts \cite{tafreshipour2025prompting}. A complementary and methodologically delicate question remains: which observable characteristics are associated with the diffusion of a skill across distinct owners, and how much of this predictability results from how the dataset itself was built?
 
-## 1.2 Problema de pesquisa
+## 1.2 Research problem
 
-Operacionalizamos o reúso pela presença de conteúdo idêntico de `SKILL.md` (mesmo `content_hash`) em repositórios distintos. Uma primeira versão deste estudo modelava o número de repositórios (`repository_count`) a partir de atributos da skill, de texto e do repositório representativo, com validação agrupada por repositório e um teste externo. Duas auditorias, descritas neste relatório, mostraram que esse desenho era frágil.
+We operationalize reuse as the presence of identical `SKILL.md` content (same `content_hash`) in distinct repositories. A first version of this study modeled the number of repositories (`repository_count`) from skill attributes, text and attributes of the representative repository, with repository-grouped validation and an external test set. Two audits, described in this report, showed that this design was fragile.
 
-A primeira diz respeito ao **representante**. O GitSkills guarda metadados detalhados de apenas uma cópia de cada conteúdo, escolhida pela melhor classe de localização (preferindo `.claude/skills/`) e, depois, pela ordem alfabética do repositório e do caminho. Como um conteúdo com mais cópias tem mais chances de ter alguma cópia na pasta preferida, a classe de localização do representante, e o indicador de histórico de commits que depende dela, passam a codificar o próprio alvo. A segunda diz respeito à **autocópia e à concentração**: 28% das skills reutilizadas têm todas as cópias dentro de um único dono, e uma conta responde sozinha por 12% do conjunto de desenvolvimento. Contar repositórios mistura difusão entre desenvolvedores com duplicação por uma mesma conta.
+The first concerns the **representative**. GitSkills keeps detailed metadata for only one copy of each content, chosen by the best location class (preferring `.claude/skills/`) and then by the alphabetical order of repository and path. Because a content with more copies has more chances of having some copy in the preferred folder, the location class of the representative, and the commit-history indicator that depends on it, end up encoding the target itself. The second concerns **self-copying and concentration**: 28% of reused skills have all copies under a single owner, and one account alone accounts for 12% of the development set. Counting repositories mixes diffusion among developers with duplication by a single account.
 
-Reformulamos, então, o problema. O alvo principal passa a ser o **reúso entre donos** (`cross_owner`: o conteúdo aparece sob dois ou mais donos distintos) e, secundariamente, o número de donos (`owner_count`). Os atributos passam a excluir as variáveis que dependem da regra do representante, que são analisadas como um achado. A avaliação usa validação agrupada por dono, um limite de conteúdos por dono, tuning aninhado e hipóteses pré-especificadas, e a confirmação é feita em um **holdout novo, disjunto por dono**, avaliado uma única vez. Como a pesquisa passou por revisão após resultados exploratórios, distinguimos explicitamente o que é confirmatório do que é exploratório. As conclusões são associações observacionais \cite{shmueli2010explain}: não afirmamos causalidade nem qualidade da skill.
+We therefore reformulated the problem. The main target becomes **cross-owner reuse** (`cross_owner`: the content appears under two or more distinct owners) and, secondarily, the number of owners (`owner_count`). The attributes now exclude the variables that depend on the representative rule, which are analyzed as a finding. The evaluation uses owner-grouped validation, a per-owner cap, nested tuning and pre-specified hypotheses, and confirmation is done on a **new holdout, disjoint by owner**, evaluated once. Because the study was revised after exploratory results, we explicitly distinguish what is confirmatory from what is exploratory. Conclusions are observational associations \cite{shmueli2010explain}: we claim neither causality nor skill quality.
 
-## 1.3 Objetivos e perguntas de pesquisa
+## 1.3 Objectives and research questions
 
-O objetivo geral é investigar, de forma reprodutível, quais características observáveis se associam ao reúso de Agent Skills entre donos e o quanto essa associação é afetada por artefatos de construção do dataset.
+The general objective is to investigate, reproducibly, which observable characteristics are associated with the reuse of agent skills across owners and how much this association is affected by dataset construction artifacts.
 
-* **RQ1 — Vieses de construção:** em que medida a regra de escolha do representante, a autocópia e a concentração por donos confundem o alvo e os atributos do GitSkills?
-* **RQ2 — Previsibilidade:** com atributos livres desses artefatos, é possível prever o reúso entre donos e o número de donos melhor que baselines, e a estimativa se confirma em um holdout disjunto por dono?
-* **RQ3 — Origem do sinal:** qual é a contribuição de skill, repositório e catálogo, quais variáveis se associam às previsões e com que consistência?
+* **RQ1 — Construction biases:** to what extent do the representative-selection rule, self-copying and owner concentration confound the target and the attributes of GitSkills?
+* **RQ2 — Predictability:** with attributes free of these artifacts, can cross-owner reuse and the number of owners be predicted better than baselines, and is the estimate confirmed on an owner-disjoint holdout?
+* **RQ3 — Origin of the signal:** what is the contribution of skill, repository and catalog attributes, which variables are associated with the predictions, and how consistently?
 
-## 1.4 Contribuições
+## 1.4 Contributions
 
-1. Uma **auditoria do representante** do GitSkills: recuperamos sua regra (97,2% de concordância) e mostramos que a localização e o histórico dependem do número de cópias.
-2. Um **protocolo** para modelar o reúso entre donos, com alvo por donos, limite de conteúdos por dono, validação agrupada, hipóteses pré-especificadas com correção de Holm e confirmação em holdout novo.
-3. Evidência de um **sinal preditivo modesto e robusto**, decomposto em blocos (skill, repositório, catálogo, caminho) e confirmado em dados nunca vistos: AUC 0,73 para reúso entre donos.
-4. Um **pacote reprodutível** que registra revisão dos dados, sementes, partições e a trava que impede reutilizar o holdout.
+1. An **audit of the GitSkills representative**: we recover its rule (97.2% agreement) and show that location and history depend on the number of copies.
+2. A **protocol** for modeling cross-owner reuse, with an owner-based target, a per-owner cap, grouped validation, pre-specified hypotheses with Holm correction and confirmation on a new holdout.
+3. Evidence of a **modest and robust predictive signal**, decomposed into blocks (skill, repository, catalog, path) and confirmed on unseen data: AUC 0.73 for cross-owner reuse.
+4. A **reproducible package** that records the data revision, seeds, partitions and a lock that prevents reusing the holdout.
 
-## 1.5 Organização do trabalho
+## 1.5 Organization
 
-A Seção 2 apresenta os trabalhos relacionados; a 3, a metodologia; a 4, os resultados; a 5, a discussão e as ameaças à validade; a 6, as conclusões. Os apêndices tratam da reprodução e do uso de IA.
+Section 2 presents related work; Section 3, the methodology; Section 4, the results; Section 5, the discussion and threats to validity; Section 6, the conclusions. The appendices cover reproduction and the use of AI tools.

@@ -1,85 +1,86 @@
-\section{Reprodutibilidade e
-execução}\label{reprodutibilidade-e-execuuxe7uxe3o}
+\section{Reproducibility and
+execution}\label{reproducibility-and-execution}
 
-\subsection{Dados, ambiente e sementes}\label{dados-ambiente-e-sementes}
+\subsection{Data, environment and
+seeds}\label{data-environment-and-seeds}
 
-Fonte pública:
-\href{https://huggingface.co/datasets/mvaccargiu/gitskills}{GitSkills no
-Hugging Face}, revisão fixa
-\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8} (julho de 2026); o
-download verifica SHA-256. O ambiente usa Python 3.12,
-\texttt{pyproject.toml} e \texttt{uv.lock}. Sementes: amostragem
-\texttt{20261009}; validação 2027, 2028 e 2029; holdout
-\texttt{20261110}; bootstrap 2027. A data de referência para idade e
-recência é 2026-07-20. A amostra de 200.000 conteúdos é determinística
+Public source:
+\href{https://huggingface.co/datasets/mvaccargiu/gitskills}{GitSkills on
+Hugging Face}, fixed revision
+\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8} (July 2026); the
+download verifies SHA-256. The environment uses Python 3.12,
+\texttt{pyproject.toml} and \texttt{uv.lock}. Seeds: sampling
+\texttt{20261009}; validation 2027, 2028 and 2029; holdout
+\texttt{20261110}; bootstrap 2027. The reference date for age and
+recency is 2026-07-20. The sample of 200,000 contents is deterministic
 (\texttt{md5(content\_hash\ \textbar{}\textbar{}\ \textquotesingle{}:20261009\textquotesingle{})}),
-não uma amostra aleatória simples. Os comandos partem da raiz do
-repositório; \texttt{make} encapsula cada etapa.
+not a simple random sample. Commands start from the repository root;
+\texttt{make} wraps each step.
 
-\subsection{Construção dos dados e
-auditoria}\label{construuxe7uxe3o-dos-dados-e-auditoria}
+\subsection{Data construction and
+audit}\label{data-construction-and-audit}
 
 \begin{verbatim}
 uv sync
-make data      # download, amostra, divisão e alvo de contagem
-make owner     # owner_count, atributos de contexto, auditoria do representante, EDA
+make data      # download, sample, split and count target
+make owner     # owner_count, context features, representative audit, EDA
 \end{verbatim}
 
-Saídas: \texttt{data/processed/owner\_targets.parquet} (contagens por
-conteúdo na população completa), \texttt{context\_features.parquet} e,
-em \texttt{results/owner/}, \texttt{eda\_summary.json},
+Outputs: \texttt{data/processed/owner\_targets.parquet} (per-content
+counts on the full population), \texttt{context\_features.parquet} and,
+in \texttt{results/owner/}, \texttt{eda\_summary.json},
 \texttt{eda\_target\_quantiles.csv},
 \texttt{eda\_owner\_concentration.csv},
 \texttt{audit\_by\_repository\_count.csv},
-\texttt{audit\_by\_owner\_count.csv}. O manifesto da EDA registra a
-concordância da regra do representante (97,2\%).
+\texttt{audit\_by\_owner\_count.csv}. The EDA manifest records the
+agreement of the representative rule (97.2\%).
 
-\subsection{Protocolo principal e
-robustez}\label{protocolo-principal-e-robustez}
-
-\begin{verbatim}
-make controls     # controle com o desenho original (Seção 4.2)
-make primary      # H1–H4 (Seção 4.3), limite de 50 por dono
-make robustness   # limiares de donos, classes de localização, alvo alternativo (4.4)
-make importance   # importância por permutação (4.5)
-\end{verbatim}
-
-\texttt{results/owner/primary/} contém \texttt{primary\_hypotheses.csv},
-as tabelas por dobra e os testes pareados exploratórios;
-\texttt{results/owner/robustness/} e \texttt{results/owner/models*/}
-guardam cada sensibilidade, cada uma com \texttt{manifest.json}.
-
-\subsection{Tuning, congelamento e
-holdout}\label{tuning-congelamento-e-holdout}
+\subsection{Main protocol and
+robustness}\label{main-protocol-and-robustness}
 
 \begin{verbatim}
-make final         # tuning aninhado e congelamento (Seção 4.6); não lê o holdout
-make holdout       # constrói o holdout disjunto por dono (Seção 3.9)
-make holdout-eval  # avaliação única (Seção 4.7)
+make controls     # control with the original design (Section 4.2)
+make primary      # H1–H4 (Section 4.3), cap of 50 per owner
+make robustness   # owner thresholds, location classes, alternative target (4.4)
+make importance   # permutation importance (4.5)
 \end{verbatim}
 
-Os modelos congelados ficam em
-\texttt{results/owner/final/final\_config\_*.json} e foram commitados
-antes da avaliação (tag git \texttt{frozen-before-holdout}).
-\texttt{holdout-eval} grava
-\texttt{results/owner/holdout/evaluation\_lock.json} e \textbf{recusa}
-nova execução sem \texttt{-\/-allow-reevaluation}; qualquer reavaliação
-deve ser declarada. A reprodução deve conferir
-\texttt{holdout\_manifest.json} (sobreposição zero de donos e de
-conteúdos).
+\texttt{results/owner/primary/} contains
+\texttt{primary\_hypotheses.csv}, the per-fold tables and the
+exploratory paired tests; \texttt{results/owner/robustness/} and
+\texttt{results/owner/models*/} hold each sensitivity, each with a
+\texttt{manifest.json}.
 
-\subsection{Mapa entre tabelas, figuras e
-artefatos}\label{mapa-entre-tabelas-figuras-e-artefatos}
+\subsection{Tuning, freezing and
+holdout}\label{tuning-freezing-and-holdout}
+
+\begin{verbatim}
+make final         # nested tuning and freezing (Section 4.6); does not read the holdout
+make holdout       # builds the owner-disjoint holdout (Section 3.9)
+make holdout-eval  # single evaluation (Section 4.7)
+\end{verbatim}
+
+The frozen models are in
+\texttt{results/owner/final/final\_config\_*.json} and were committed
+before the evaluation (git tag \texttt{frozen-before-holdout}).
+\texttt{holdout-eval} writes
+\texttt{results/owner/holdout/evaluation\_lock.json} and
+\textbf{refuses} to run again without \texttt{-\/-allow-reevaluation};
+any re-evaluation must be declared. A reproduction should check
+\texttt{holdout\_manifest.json} (zero overlap of owners and contents).
+
+\subsection{Map between tables, figures and
+artifacts}\label{map-between-tables-figures-and-artifacts}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.5000}}@{}}
-\caption{Origem dos números do relatório.}\tabularnewline
+\caption{Origin of the numbers in the report.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Item
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Artefato
+Artifact
 \end{minipage} \\
 \midrule\noalign{}
 \endfirsthead
@@ -87,49 +88,49 @@ Artefato
 \begin{minipage}[b]{\linewidth}\raggedright
 Item
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Artefato
+Artifact
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Distribuição e concentração (4.1) &
+Distribution and concentration (4.1) &
 \texttt{results/owner/eda\_target\_quantiles.csv},
 \texttt{eda\_owner\_concentration.csv} \\
-Viés do representante (4.2, figura) &
+Representative bias (4.2, figure) &
 \texttt{results/owner/audit\_by\_repository\_count.csv},
 \texttt{eda\_owner\_and\_selection.png} \\
-Controle com o desenho original (4.2) &
+Control with the original design (4.2) &
 \texttt{results/controls/shortcut\_summary.csv},
 \texttt{shortcut\_paired.csv} \\
-Visões e hipóteses (4.3) &
+Views and hypotheses (4.3) &
 \texttt{results/owner/primary/\{classification,regression\}\_summary.csv},
 \texttt{primary\_hypotheses.csv} \\
-Sensibilidade (4.4) &
+Sensitivity (4.4) &
 \texttt{results/owner/figures/sensitivity\_owner\_limit.csv},
 \texttt{results/owner/robustness/*} \\
-Importância (4.5) &
+Importance (4.5) &
 \texttt{results/owner/importance/*\_importance.csv} \\
 Tuning (4.6) & \texttt{results/owner/final/*\_nested\_summary.csv},
 \texttt{*\_selection\_tests.csv} \\
 Holdout (4.7) & \texttt{results/owner/holdout/holdout\_results.json} \\
 \end{longtable}
 
-\subsection{Verificações, desvios e
-limites}\label{verificauxe7uxf5es-desvios-e-limites}
+\subsection{Checks, deviations and
+limits}\label{checks-deviations-and-limits}
 
 \begin{verbatim}
 make test
 \end{verbatim}
 
-Os testes cobrem a exclusão de atributos contaminados, os padrões de
-caminho, os testes pareados e a correção de Holm, o bootstrap por dono e
-a disjunção do holdout. Desvios em relação ao protocolo: tuning com 2×3
-dobras e 6 candidatas (planejado 3×3 e 12) por custo computacional; a
-máquina de desenvolvimento tinha 8 GB de memória. Resultados numéricos
-podem variar nas últimas casas com versões diferentes das bibliotecas. A
-primeira versão do estudo (alvo \texttt{repository\_count}, teste
-externo original) permanece no repositório
-(\texttt{results/count\_regression},
-\texttt{results/discipline\_benchmark}) apenas como histórico, e não
-sustenta nenhuma conclusão deste relatório.
+The tests cover the exclusion of contaminated attributes, the path
+patterns, the paired tests and the Holm correction, the owner bootstrap
+and the holdout disjointness. Deviations from the protocol: tuning with
+2×3 folds and 6 candidates (planned 3×3 and 12) for computational cost;
+the development machine had 8 GB of memory. Numerical results may vary
+in the last digits with different library versions. The first version of
+the study (target \texttt{repository\_count}, original external test)
+remains in the repository (\texttt{results/count\_regression},
+\texttt{results/discipline\_benchmark}) only as history and supports no
+conclusion of this report. The protocol document
+\texttt{paper/protocol.md} is in Portuguese.

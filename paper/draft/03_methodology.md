@@ -1,69 +1,69 @@
-# 3. Metodologia
+# 3. Methodology
 
-## 3.1 Desenho da pesquisa
+## 3.1 Research design
 
-O estudo é empírico, quantitativo e preditivo, com uma camada interpretativa; seu objetivo é medir informação preditiva, não estimar efeitos causais \cite{shmueli2010explain}. A fase de **desenvolvimento** (exploratória) inclui as auditorias do dataset, a definição dos alvos e das visões de atributos, a validação agrupada e a seleção de modelo. A fase de **confirmação** avalia, uma única vez, os modelos congelados em um holdout novo, com critérios de sucesso fixados antes. O protocolo completo, inclusive as decisões tomadas depois de ver resultados, está em `paper/protocol.md`.
+The study is empirical, quantitative and predictive, with an interpretive layer; its goal is to measure predictive information, not to estimate causal effects \cite{shmueli2010explain}. The **development** phase (exploratory) includes the dataset audits, the definition of targets and feature views, grouped validation and model selection. The **confirmation** phase evaluates, once, the frozen models on a new holdout, with success criteria fixed beforehand. The full protocol, including the decisions made after seeing results, is in `paper/protocol.md` (in Portuguese).
 
-## 3.2 Dados e unidade de análise
+## 3.2 Data and unit of analysis
 
-A fonte é o corpus GitSkills \cite{gitskills2027}, revisão `ebab17454a7c236f8f26b183567f1a126f42e3f8`: 3.797.117 arquivos `SKILL.md` de 282.200 repositórios (julho de 2026), agrupados em 1.877.981 conteúdos distintos. A unidade é o conteúdo (`content_hash`). Todas as ocorrências (repositório e caminho) são mantidas, mas somente um **representante** por conteúdo recebe texto completo, metadados do repositório, pasta e histórico.
+The source is the GitSkills corpus \cite{gitskills2027}, revision `ebab17454a7c236f8f26b183567f1a126f42e3f8`: 3,797,117 `SKILL.md` files from 282,200 repositories (July 2026), grouped into 1,877,981 distinct contents. The unit is the content (`content_hash`). All occurrences (repository and path) are kept, but only one **representative** per content receives full text, repository metadata, folder listing and history.
 
-O desenvolvimento usa 200.000 conteúdos escolhidos por `md5(content_hash || ':20261009')`, divididos por repositório em 160.000 de desenvolvimento e 40.000 de teste. Condicionamos a `repository_count >= 2`: 25.918 conteúdos de 7.128 donos no desenvolvimento. Na população completa há 306.088 conteúdos nessa condição, dos quais 230.355 sob dois ou mais donos. A partição de teste original foi consultada na primeira versão do estudo e não sustenta afirmações confirmatórias. A data de referência para idade e recência é 20/07/2026.
+Development uses 200,000 contents chosen by `md5(content_hash || ':20261009')`, split by repository into 160,000 for development and 40,000 for test. We condition on `repository_count >= 2`: 25,918 contents from 7,128 owners in development. In the full population there are 306,088 contents satisfying this condition, of which 230,355 appear under two or more owners. The original test partition was consulted in the first version of the study and does not support confirmatory claims. The reference date for age and recency is 2026-07-20.
 
-## 3.3 Regra do representante e auditoria
+## 3.3 Representative rule and audit
 
-A documentação do GitSkills indica que o representante prefere `.claude/skills/`, com desempate determinístico \cite{gitskills2027}. Recuperamos a regra a partir de todas as ocorrências brutas: ordenar por classe de localização (`canonical`, `skills-dir`, `other`) e, no empate, pelo menor par `(repo_full_name, path)`. Ela reproduz o representante em 97,2% dos 306.088 conteúdos com ao menos dois repositórios, e a classe do representante coincide com a melhor classe disponível em 100% deles. A auditoria compara, por faixa de número de repositórios, a fração de conteúdos cujo representante é `canonical` com a fração das cópias que de fato estão nessa classe, para saber se `location_class` e `history_fetched` (histórico só coletado para locais padrão e uma amostra) podem ser preditores legítimos.
+The GitSkills documentation indicates that the representative prefers `.claude/skills/`, with a deterministic tie-break \cite{gitskills2027}. We recovered the rule from all raw occurrences: sort by location class (`canonical`, `skills-dir`, `other`) and, on ties, by the smallest pair `(repo_full_name, path)`. It reproduces the representative in 97.2% of the 306,088 contents with at least two repositories, and the class of the representative matches the best available class in 100% of them. The audit compares, by number-of-repositories bin, the fraction of contents whose representative is `canonical` with the fraction of copies that are actually in that class, to establish whether `location_class` and `history_fetched` (history was only collected for standard locations and a sample) can be legitimate predictors.
 
-## 3.4 Alvos
+## 3.4 Targets
 
-| Papel | Alvo | Definição |
+| Role | Target | Definition |
 |---|---|---|
-| Principal (classificação) | `cross_owner` | `owner_count >= 2` |
-| Secundário (regressão) | `log1p(owner_count)` | donos distintos entre todas as ocorrências |
-| Sensibilidade | `log1p(repository_count)` | alvo da primeira versão |
+| Main (classification) | `cross_owner` | `owner_count >= 2` |
+| Secondary (regression) | `log1p(owner_count)` | distinct owners across all occurrences |
+| Sensitivity | `log1p(repository_count)` | target of the first version |
 
-: Alvos. O dono é o prefixo de `repo_full_name`.
+: Targets. The owner is the prefix of `repo_full_name`.
 
-Contar donos remove a autocópia entre repositórios de uma mesma conta. As contagens são limites inferiores, pois a busca de código do GitHub indexa apenas a branch padrão, arquivos de até 384 KB e repositórios recentes \cite{gitskills2027}.
+Counting owners removes self-copying among repositories of the same account. Counts are lower bounds, since GitHub code search indexes only the default branch, files up to 384 KB and recent repositories \cite{gitskills2027}.
 
-## 3.5 Atributos
+## 3.5 Features
 
-| Bloco | n | Conteúdo |
+| Block | n | Content |
 |---|---:|---|
-| `skill` | 34 | estrutura do `SKILL.md` (tamanho, títulos, listas, código, links, front matter, scripts, pasta) e nome do arquivo |
-| `repo` | 8 | `log1p` de estrelas e forks, fork, idade, recência do push, dias ativos, linguagem, licença |
-| `catalog` | 2 | `log1p` do número de skills no repositório e indicador de pelo menos 10 |
-| `path` | 8 | profundidade, raiz, `templates`, `plugins`, `vendor`, `docs`, `packages/src`, diretório de outra ferramenta |
-| *atalhos* | 4 | `location_class`, `history_fetched`, `commit_count`, `.claude` no caminho |
+| `skill` | 34 | structure of `SKILL.md` (size, headings, lists, code, links, front matter, scripts, folder) and file name |
+| `repo` | 8 | `log1p` of stars and forks, fork flag, age, push recency, active days, language, license |
+| `catalog` | 2 | `log1p` of the number of skills in the repository and an indicator of at least 10 |
+| `path` | 8 | depth, root, `templates`, `plugins`, `vendor`, `docs`, `packages/src`, other-tool directory |
+| *shortcuts* | 4 | `location_class`, `history_fetched`, `commit_count`, `.claude` in the path |
 
-: Blocos de atributos. Os modelos principais usam os quatro primeiros (52 colunas, visão *limpa*); os atalhos entram só como achado.
+: Feature blocks. The main models use the first four (52 columns, the *clean* view); shortcuts enter only as a finding.
 
-Os atalhos dependem da regra do representante e ficam fora dos modelos principais. Os atributos descrevem o representante, não todas as cópias; agregá-los sobre todas as cópias dependeria das mesmas ocorrências que definem o alvo e foi evitado. Imputação (mediana com indicador de ausência), escala e codificação (one-hot, `min_frequency=10`) são ajustadas dentro de cada dobra.
+The shortcuts depend on the representative rule and are kept out of the main models. The attributes describe the representative, not all copies; aggregating them over all copies would depend on the same occurrences that define the target and was avoided. Imputation (median with missing indicator), scaling and encoding (one-hot, `min_frequency=10`) are fitted within each fold.
 
-## 3.6 Validação e limite por dono
+## 3.6 Validation and per-owner cap
 
-A validação é agrupada pelo **dono do repositório representativo**: 3 repetições de 3 dobras (`StratifiedGroupKFold`, sementes 2027–2029, estratos por faixa de `owner_count`), com as mesmas partições para todos os modelos. Como poucas contas concentram a amostra, aplicamos um **limite de 50 conteúdos por dono** (ordem de `content_hash`), restando 17.733 conteúdos. O valor 50 foi escolhido *depois* de observar a sensibilidade do AUC ao tratamento de donos concentrados (Seção 4.4); é, portanto, uma decisão dependente dos dados. Por dobra, medimos também a fração de linhas de validação cujo `name` do front matter aparece no treino e as métricas no subconjunto sem sobreposição (um agrupamento conjunto por dono e `name` forma um componente com 64% das linhas e foi descartado).
+Validation is grouped by the **owner of the representative repository**: 3 repetitions of 3 folds (`StratifiedGroupKFold`, seeds 2027–2029, strata by `owner_count` bin), with the same partitions for all models. Because a few accounts concentrate the sample, we apply a **cap of 50 contents per owner** (in `content_hash` order), leaving 17,733 contents. The value 50 was chosen *after* observing the sensitivity of the AUC to how concentrated owners are treated (Section 4.4); it is therefore a data-dependent decision. Per fold, we also measure the fraction of validation rows whose front-matter `name` appears in training, and the metrics on the subset without overlap (a joint grouping by owner and `name` forms one component with 64% of the rows and was discarded).
 
-## 3.7 Modelos, baselines e tuning
+## 3.7 Models, baselines and tuning
 
-O modelo principal é o Random Forest (100 árvores em regressão, 300 em classificação; `max_depth=12`, `min_samples_leaf=3`, `max_features=sqrt`). As referências lineares são Ridge ($\alpha=10$) e regressão logística ($C=1$); as baselines são a prevalência e a média e a mediana de `log1p`. O tuning é aninhado: seis famílias (linear, KNN, árvore, Random Forest, Gradient Boosting, HistGradientBoosting) em duas variantes (hiperparâmetros padrão e buscados por `RandomizedSearchCV`) sobre a visão limpa. A validação externa usa 2 repetições de 3 dobras agrupadas por dono; a busca interna, 3 dobras agrupadas por dono e 6 candidatas. A combinação com melhor média externa é congelada (se for "buscada", a busca é repetida em todo o desenvolvimento). O protocolo previa 3 repetições e 12 candidatas; reduzimos por custo computacional.
+The main model is the Random Forest (100 trees for regression, 300 for classification; `max_depth=12`, `min_samples_leaf=3`, `max_features=sqrt`). The linear references are Ridge ($\alpha=10$) and logistic regression ($C=1$); the baselines are the prevalence and the mean and median of `log1p`. Tuning is nested: six families (linear, KNN, tree, Random Forest, Gradient Boosting, HistGradientBoosting) in two variants (default hyperparameters and hyperparameters searched by `RandomizedSearchCV`) on the clean view. The outer validation uses 2 repetitions of 3 owner-grouped folds; the inner search uses 3 owner-grouped folds and 6 candidates. The combination with the best outer mean is frozen (if it is "searched", the search is repeated on the whole development set). The protocol planned 3 repetitions and 12 candidates; we reduced them for computational cost.
 
-## 3.8 Métricas, inferência e interpretação
+## 3.8 Metrics, inference and interpretation
 
-As métricas principais são o AUC-ROC (classificação) e o RMSLE (regressão); as secundárias, AUC-PR, Brier, log-loss, MAE e Spearman. As comparações são pareadas por (repetição, dobra), com IC95% e teste t com **correção de Nadeau–Bengio** para amostras repetidas; o Wilcoxon pareado é complementar. Cinco hipóteses pré-especificadas formam uma família corrigida por Holm ($\alpha=0{,}05$); as demais comparações são exploratórias.
+The main metrics are the ROC AUC (classification) and the RMSLE (regression); the secondary ones are PR AUC, Brier score, log-loss, MAE and Spearman. Comparisons are paired by (repetition, fold), with 95% CIs and a t-test with the **Nadeau–Bengio correction** for repeated samples; the paired Wilcoxon test is complementary. Five pre-specified hypotheses form a family corrected by Holm ($\alpha=0.05$); all other comparisons are exploratory.
 
-| ID | Hipótese | Comparação |
+| ID | Hypothesis | Comparison |
 |---|---|---|
-| H1 | os atributos limpos preveem reúso entre donos | AUC do RF limpo contra 0,5 |
-| H2 | os atributos limpos reduzem o RMSLE de `owner_count` | RF limpo contra a média de `log1p` |
-| H3a | a skill acrescenta a repositório e catálogo | limpo contra repositório+catálogo (AUC) |
-| H3b | repositório e catálogo acrescentam à skill | limpo contra skill (AUC) |
-| H4 | os atalhos acrescentam aos atributos limpos | limpo+atalhos contra limpo (RMSLE) |
+| H1 | the clean attributes predict cross-owner reuse | clean RF AUC against 0.5 |
+| H2 | the clean attributes reduce the RMSLE of `owner_count` | clean RF against the mean of `log1p` |
+| H3a | skill adds to repository and catalog | clean against repository+catalog (AUC) |
+| H3b | repository and catalog add to skill | clean against skill (AUC) |
+| H4 | the shortcuts add to the clean attributes | clean+shortcuts against clean (RMSLE) |
 
-: Hipóteses pré-especificadas.
+: Pre-specified hypotheses.
 
-A interpretação usa importância por permutação do RF limpo em dobras agrupadas por dono, por coluna e por bloco (colunas do bloco permutadas em conjunto). É associativa; atributos correlacionados compartilham importância.
+Interpretation uses permutation importance of the clean RF on owner-grouped folds, per column and per block (the columns of a block are permuted together). It is associative; correlated attributes share importance.
 
-## 3.9 Holdout novo
+## 3.9 New holdout
 
-Como o protocolo foi fixado após resultados exploratórios, a confirmação exige dados nunca consultados. O holdout reúne conteúdos fora dos 200.000 amostrados, com `repository_count >= 2`, cujos donos não aparecem entre as skills reutilizadas da amostra (desenvolvimento e teste original), com limite de 50 por dono: 25.011 conteúdos de 10.484 donos, sem donos nem conteúdos em comum com a amostra e com no máximo 37 conteúdos por dono. Viu-se apenas a prevalência de `cross_owner` (80,8%) como verificação de integridade. Os modelos escolhidos são treinados no desenvolvimento inteiro e avaliados **uma única vez**, com IC por bootstrap de donos (2.000 reamostras). O sucesso exige limite inferior do AUC acima de 0,5 e limite superior da diferença de RMSLE para a baseline abaixo de zero; uma trava impede reavaliações sem declaração explícita.
+Because the protocol was fixed after exploratory results, confirmation requires data never consulted. The holdout gathers contents outside the 200,000 sampled, with `repository_count >= 2`, whose owners do not appear among the reused skills of the sample (development and original test), with a cap of 50 per owner: 25,011 contents from 10,484 owners, with no owners or contents in common with the sample and at most 37 contents per owner. Only the prevalence of `cross_owner` (80.8%) was inspected, as an integrity check. The chosen models are trained on the whole development set and evaluated **once**, with CIs by owner bootstrap (2,000 resamples). Success requires the lower AUC bound above 0.5 and the upper bound of the RMSLE difference to the baseline below zero; a lock prevents re-evaluation without explicit declaration.

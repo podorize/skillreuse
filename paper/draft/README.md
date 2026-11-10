@@ -1,10 +1,10 @@
-# Rascunho do relatório (fonte em Markdown)
+# Report draft (Markdown source, English)
 
-Fonte textual do relatório da disciplina CMP263, convertida em LaTeX por `paper/build_latex.py` para `paper/latex/` (template SBC, Overleaf).
+Textual source of the CMP263 report, converted to LaTeX by `paper/build_latex.py` into `paper/latex/` (SBC template, Overleaf). The Portuguese version is kept in `../draft_pt/` (earlier text, not rebuilt).
 
-- `00_summary_and_outline.md`: resumo e sumário;
-- `01`–`06`: Introdução, Trabalhos Relacionados, Metodologia, Resultados, Discussão (inclui ameaças à validade) e Conclusão;
-- `07_appendix_reproducibility.md`: comandos e origem dos números;
-- `08_appendix_ai_usage.md`: uso de IA (ver também `../ai_usage_log.md` e `../ai_usage_supplement.md`).
+- `00_summary_and_outline.md`: abstract and contents;
+- `01`–`06`: Introduction, Related Work, Methodology, Results, Discussion (includes threats to validity) and Conclusion;
+- `07_appendix_reproducibility.md`: commands and origin of the numbers;
+- `08_appendix_ai_usage.md`: AI use (see also `../ai_usage_log.md` and `../ai_usage_supplement.md`).
 
-As figuras vêm de `results/owner/` e as chaves `\cite{}` de `paper/latex/references.bib`. Protocolo: `../protocol.md`; estado: `../status.md`. Pendências: compilação e contagem de páginas no Overleaf, tradução para inglês e conferência final das referências.
+Figures come from `results/owner/` and `\cite{}` keys from `paper/latex/references.bib`. Protocol: `../protocol.md` (Portuguese); status: `../status.md`.

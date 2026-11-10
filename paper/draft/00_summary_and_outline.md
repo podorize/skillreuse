@@ -1,48 +1,47 @@
-# Resumo e sumário do relatório
+# Abstract and contents
 
-## Resumo
+## Abstract
 
-Agent Skills são copiadas entre repositórios sem registro central, e o GitSkills documenta essa difusão em larga escala. Investigamos se características observáveis de uma skill e de seu repositório se associam ao reúso entre donos distintos no GitHub e quanto dessa previsibilidade é artefato da construção do dataset. A regra que escolhe o representante de cada conteúdo faz a classe de localização depender do número de cópias: a chance de o representante estar em `.claude/skills/` sobe de 14% (2 repositórios) para 92% (mais de 50), enquanto a fração real de cópias nessa pasta fica entre 5% e 13%. Além disso, 28% das skills reutilizadas existem dentro de um único dono, e poucas contas concentram a amostra. Com atributos livres desses artefatos, validação agrupada por dono, tuning aninhado e um holdout novo disjunto por dono (25.011 skills de 10.484 donos), o Random Forest atinge AUC 0,73 (IC95% 0,72–0,75) para reúso entre donos, e um HistGradientBoosting reduz o RMSLE do número de donos em 6% frente à média (0,625 contra 0,664). O sinal é modesto, robusto a variações do protocolo e vem de skill e repositório de forma complementar; é associativo, não causal.
+Agent skills are copied between repositories without a central registry, and the GitSkills dataset documents this diffusion at scale. We investigate whether observable characteristics of a skill and of its repository are associated with reuse across distinct GitHub owners, and how much of this predictability is an artifact of how the dataset was built. The rule that selects the representative copy of each content makes its location class depend on the number of copies: the probability that the representative sits in `.claude/skills/` rises from 14% (2 repositories) to 92% (more than 50), while the actual share of copies in that folder stays between 5% and 13%. In addition, 28% of reused skills exist under a single owner, and a few accounts concentrate the sample. With attributes free of these artifacts, owner-grouped validation, nested tuning and a new owner-disjoint holdout (25,011 skills from 10,484 owners), a Random Forest reaches an AUC of 0.73 (95% CI 0.72–0.75) for cross-owner reuse, and a HistGradientBoosting model reduces the RMSLE of the number of owners by 6% relative to the mean baseline (0.625 versus 0.664). The signal is modest, robust to protocol variations, and comes from skill and repository attributes in a complementary way; it is associative, not causal.
 
-## Sumário
+## Contents
 
-1. **Introdução**
-   1.1 Contexto e motivação  
-   1.2 Problema de pesquisa  
-   1.3 Objetivos e perguntas de pesquisa  
-   1.4 Contribuições  
-   1.5 Organização do trabalho
-2. **Trabalhos relacionados**
-   2.1 Reúso, clonagem e artefatos em linguagem natural  
-   2.2 Agent Skills e artefatos de prompt  
-   2.3 Validação, vazamento e viés de construção  
-   2.4 Modelagem, explicabilidade e lacuna da pesquisa
-3. **Metodologia**
-   3.1 Desenho da pesquisa  
-   3.2 Dados e unidade de análise  
-   3.3 Regra do representante e auditoria  
-   3.4 Alvos  
-   3.5 Atributos  
-   3.6 Validação e limite por dono  
-   3.7 Modelos, baselines e tuning  
-   3.8 Métricas e inferência  
-   3.9 Holdout novo  
-   3.10 Interpretação
-4. **Resultados**
-   4.1 O alvo e a concentração por donos  
-   4.2 O viés de seleção do representante  
-   4.3 Protocolo principal  
-   4.4 Robustez  
-   4.5 Interpretação  
-   4.6 Seleção de modelo e tuning  
-   4.7 Confirmação no holdout
-5. **Discussão**
-   5.1 O que o sinal significa  
-   5.2 Implicações para o uso do GitSkills  
-   5.3 Modelos e limites dos dados  
-   5.4 Ameaças à validade e limitações
-6. **Conclusão e trabalhos futuros**
+1. **Introduction**
+   1.1 Context and motivation  
+   1.2 Research problem  
+   1.3 Objectives and research questions  
+   1.4 Contributions  
+   1.5 Organization
+2. **Related work**
+   2.1 Reuse, cloning and natural-language artifacts  
+   2.2 Agent skills and prompt artifacts  
+   2.3 Validation, leakage and construction bias  
+   2.4 Modeling, explainability and research gap
+3. **Methodology**
+   3.1 Research design  
+   3.2 Data and unit of analysis  
+   3.3 Representative rule and audit  
+   3.4 Targets  
+   3.5 Features  
+   3.6 Validation and per-owner cap  
+   3.7 Models, baselines and tuning  
+   3.8 Metrics, inference and interpretation  
+   3.9 New holdout
+4. **Results**
+   4.1 The target and owner concentration  
+   4.2 Selection bias of the representative  
+   4.3 Main protocol  
+   4.4 Robustness  
+   4.5 Interpretation  
+   4.6 Model selection and tuning  
+   4.7 Confirmation on the holdout
+5. **Discussion**
+   5.1 What the signal means  
+   5.2 Implications for using GitSkills  
+   5.3 Models and data limits  
+   5.4 Threats to validity and limitations
+6. **Conclusion and future work**
 
-**Referências**  
-**Apêndice A — Reprodutibilidade e execução**  
-**Apêndice B — Uso de ferramentas de inteligência artificial**
+**References**  
+**Appendix A — Reproducibility and execution**  
+**Appendix B — Use of artificial intelligence tools**

@@ -31,7 +31,7 @@ FIGURE_DIR = PAPER / "figures"
 def preprocess(markdown: str) -> str:
     """Remove manual section numbers and make figures portable in LaTeX."""
     markdown = re.sub(r"(?m)^(#{1,2})\s+(?:\d+(?:\.\d+)?\.?|[AB]\.\d+)\s+", r"\1 ", markdown)
-    markdown = re.sub(r"(?m)^# Apêndice [AB] —\s*", "# ", markdown)
+    markdown = re.sub(r"(?m)^# Appendix [AB] —\s*", "# ", markdown)
 
     figure_number = 0
 
@@ -78,7 +78,7 @@ def convert(markdown: str) -> str:
 
 def abstract() -> str:
     source = (DRAFT / "00_summary_and_outline.md").read_text(encoding="utf-8")
-    body = source.split("## Resumo\n", 1)[1].split("\n## Sumário", 1)[0].strip()
+    body = source.split("## Abstract\n", 1)[1].split("\n## Contents", 1)[0].strip()
     return convert(body).strip()
 
 
@@ -88,16 +88,13 @@ def main() -> None:
     for name in (*SECTIONS, *APPENDICES):
         text = (DRAFT / f"{name}.md").read_text(encoding="utf-8")
         latex = convert(preprocess(text))
-        if name == "08_appendix_ai_usage":
-            latex = latex.replace("OpenAI Codex foi utilizado", "OpenAI Codex \\cite{openai_codex} foi utilizado", 1)
-            latex = latex.replace("o Claude Code (Anthropic) foi usado", "o Claude Code \\cite{claude_code} foi usado", 1)
         (PAPER / "sections" / f"{name}.tex").write_text(latex, encoding="utf-8")
 
     preamble = r"""\documentclass[12pt]{article}
 \usepackage{sbc-template}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[brazil]{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{booktabs,longtable,array,calc}
 \usepackage{amsmath,amssymb}
@@ -107,10 +104,10 @@ def main() -> None:
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{Reúso de Agent Skills entre donos do GitHub: previsibilidade e vieses de construção do GitSkills\footnote{Dados e código: \protect\url{https://github.com/podorize/skillreuse}.}}
+\title{Cross-owner reuse of agent skills on GitHub: predictability and construction biases of GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
 \author{Pedro Odorize\inst{1}}
-\address{Instituto de Informática -- Universidade Federal do Rio Grande do Sul (UFRGS)\\
-  Porto Alegre, RS -- Brasil
+\address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
+  Porto Alegre, RS -- Brazil
   \email{pedro.odorize@inf.ufrgs.br}
 }
 
@@ -119,7 +116,7 @@ def main() -> None:
 \begin{abstract}
 """
     body = [preamble, abstract(), r"\end{abstract}",
-            r"\noindent\textbf{Palavras-chave:} Agent Skills; reúso de software; mineração de repositórios; vieses de construção; validação agrupada."]
+            r"\noindent\textbf{Keywords:} agent skills; software reuse; mining software repositories; construction bias; grouped validation."]
     body.extend(f"\\input{{sections/{name}.tex}}" for name in SECTIONS)
     body.extend([r"\bibliographystyle{sbc}", r"\bibliography{references}", r"\appendix"])
     body.extend(f"\\input{{sections/{name}.tex}}" for name in APPENDICES)

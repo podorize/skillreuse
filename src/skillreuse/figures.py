@@ -16,9 +16,9 @@ RESULTS = Path("results/owner")
 OUT = RESULTS / "figures"
 PRIMARY = RESULTS / "primary"
 LABEL = {
-    "skill": "skill", "repo": "repositório", "repo+catalog": "repositório+catálogo",
-    "path+catalog": "caminho+catálogo", "clean_full": "limpo completo",
-    "clean_full+shortcuts": "limpo + atalhos", "shortcuts_only": "só atalhos",
+    "skill": "skill", "repo": "repository", "repo+catalog": "repository+catalog",
+    "path+catalog": "path+catalog", "clean_full": "clean (full)",
+    "clean_full+shortcuts": "clean + shortcuts", "shortcuts_only": "shortcuts only",
 }
 COLORS = {"limpo": "#1f77b4", "atalho": "#d62728", "base": "#7f7f7f"}
 
@@ -34,34 +34,34 @@ def fig_views() -> None:
     reg = reg[(reg.subset == "all") & reg.config.str.endswith("|random_forest_log")]
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.9))
     for a, df, mean, std, base, title, xlabel in (
-        (ax[0], clf, "roc_auc_mean", "roc_auc_std", 0.5, "Reúso entre donos (cross_owner)",
-         "AUC-ROC (RF; média ± dp de 9 dobras)"),
+        (ax[0], clf, "roc_auc_mean", "roc_auc_std", 0.5, "Cross-owner reuse (cross_owner)",
+         "ROC AUC (RF; mean ± sd over 9 folds)"),
         (ax[1], reg, "rmsle_mean", "rmsle_std", float(
             pd.read_csv(PRIMARY / "regression_summary.csv").query(
                 "subset=='all' and config=='dummy_mean_log'")["rmsle_mean"].iloc[0]),
-         "Regressão: log1p(owner_count)", "RMSLE (RF; menor é melhor)"),
+         "Regression: log1p(owner_count)", "RMSLE (RF; lower is better)"),
     ):
         df = df.assign(view=df.config.str.split("|").str[0]).sort_values(
-            mean, ascending=(title.startswith("Reúso")))
+            mean, ascending=(title.startswith("Cross")))
         a.barh([LABEL[v] for v in df.view], df[mean], xerr=df[std],
                color=[_view_color(v) for v in df.view], alpha=0.85)
         a.axvline(base, color=COLORS["base"], ls="--", lw=1.2, label="baseline")
-        lo, hi = (0.45, 0.76) if title.startswith("Reúso") else (0.6, 0.74)
+        lo, hi = (0.45, 0.76) if title.startswith("Cross") else (0.6, 0.74)
         a.set_xlim(lo, hi)
         a.set_xlabel(xlabel)
         a.set_title(title, fontsize=10)
-        a.legend(fontsize=8, loc="lower right" if title.startswith("Reúso") else "lower left")
+        a.legend(fontsize=8, loc="lower right" if title.startswith("Cross") else "lower left")
     fig.tight_layout()
     fig.savefig(OUT / "views_primary.png", dpi=160)
     plt.close(fig)
 
 
 SENSITIVITY = [
-    ("sem limite", RESULTS / "models"),
+    ("no limit", RESULTS / "models"),
     ("excl. >1000", RESULTS / "robustness" / "excl1000"),
     ("excl. >500", RESULTS / "models_excl_big_owners"),
     ("excl. >200", RESULTS / "robustness" / "excl200"),
-    ("50 por dono", PRIMARY),
+    ("50 per owner", PRIMARY),
 ]
 
 
@@ -92,9 +92,9 @@ def fig_sensitivity() -> None:
     ax[0].bar(table["setting"], table["auc_clean_rf"], yerr=table["auc_std"], color="#1f77b4")
     ax[0].axhline(0.5, color=COLORS["base"], ls="--")
     ax[0].set_ylim(0.45, 0.95)
-    ax[0].set_ylabel("AUC-ROC (RF limpo)")
+    ax[0].set_ylabel("ROC AUC (clean RF)")
     ax[1].bar(table["setting"], table["rmsle_gain_clean_rf"], color="#2ca02c")
-    ax[1].set_ylabel("redução do RMSLE vs. baseline")
+    ax[1].set_ylabel("RMSLE reduction vs. baseline")
     for a in ax:
         a.tick_params(axis="x", rotation=30, labelsize=8)
     fig.tight_layout()
@@ -105,14 +105,14 @@ def fig_sensitivity() -> None:
 def fig_importance() -> None:
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.9))
     for a, task, title, xlabel in (
-        (ax[0], "classification", "Reúso entre donos", "queda do AUC ao permutar"),
-        (ax[1], "regression", "log1p(owner_count)", "aumento do RMSLE ao permutar"),
+        (ax[0], "classification", "Cross-owner reuse", "AUC drop when permuted"),
+        (ax[1], "regression", "log1p(owner_count)", "RMSLE increase when permuted"),
     ):
         df = pd.read_csv(RESULTS / "importance" / f"{task}_importance.csv")
         grp = df[df.feature.str.startswith("grupo:")]
         col = df[~df.feature.str.startswith("grupo:")].head(6)
         sel = pd.concat([grp, col]).sort_values("mean")
-        a.barh(sel.feature.str.replace("grupo:", "[grupo] "), sel["mean"], xerr=sel["std"],
+        a.barh(sel.feature.str.replace("grupo:", "[group] "), sel["mean"], xerr=sel["std"],
                color=["#9467bd" if f.startswith("grupo:") else "#1f77b4" for f in sel.feature])
         a.set_xlabel(xlabel)
         a.set_title(title, fontsize=10)
@@ -126,9 +126,9 @@ def fig_holdout() -> None:
     fpr, tpr, _ = roc_curve(pred["y"], pred["prob"])
     fig, ax = plt.subplots(1, 2, figsize=(9, 3.7))
     ax[0].plot(fpr, tpr, color="#1f77b4", label="RF (holdout)")
-    ax[0].plot([0, 1], [0, 1], "--", color=COLORS["base"], label="acaso")
-    ax[0].set_xlabel("taxa de falsos positivos")
-    ax[0].set_ylabel("taxa de verdadeiros positivos")
+    ax[0].plot([0, 1], [0, 1], "--", color=COLORS["base"], label="chance")
+    ax[0].set_xlabel("false positive rate")
+    ax[0].set_ylabel("true positive rate")
     ax[0].legend(fontsize=8)
     bins = np.linspace(pred["prob"].min(), pred["prob"].max(), 11)
     idx = np.clip(np.digitize(pred["prob"], bins) - 1, 0, 9)
@@ -136,8 +136,8 @@ def fig_holdout() -> None:
                                                    n=("y", "size"))
     ax[1].plot(cal["p"], cal["y"], "o-", color="#1f77b4")
     ax[1].plot([0.3, 1], [0.3, 1], "--", color=COLORS["base"])
-    ax[1].set_xlabel("probabilidade prevista")
-    ax[1].set_ylabel("frequência observada")
+    ax[1].set_xlabel("predicted probability")
+    ax[1].set_ylabel("observed frequency")
     fig.tight_layout()
     fig.savefig(OUT / "holdout_roc_calibration.png", dpi=160)
     plt.close(fig)
