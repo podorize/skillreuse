@@ -10,8 +10,7 @@ Agent skills are copied between repositories without a central registry, and the
    1.1 Context and motivation  
    1.2 Research problem  
    1.3 Objectives and research questions  
-   1.4 Contributions  
-   1.5 Organization
+   1.4 Contributions
 2. **Related work**
    2.1 Reuse, cloning and natural-language artifacts  
    2.2 Agent skills and prompt artifacts  

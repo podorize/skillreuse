@@ -3,95 +3,61 @@
 \subsection{Research design}\label{research-design}
 
 The study is empirical, quantitative and predictive, with an
-interpretive layer; its goal is to measure predictive information, not
-to estimate causal effects \cite{shmueli2010explain}. The
-\textbf{development} phase (exploratory) includes the dataset audits,
+interpretive layer; it measures predictive information and does not
+estimate causal effects \cite{shmueli2010explain}. The
+\textbf{development} phase (exploratory) comprises the dataset audits,
 the definition of targets and feature views, grouped validation and
 model selection. The \textbf{confirmation} phase evaluates, once, the
 frozen models on a new holdout, with success criteria fixed beforehand.
-The full protocol, including the decisions made after seeing results, is
-in \texttt{paper/protocol.md} (in Portuguese).
+The full protocol, including decisions made after seeing results, is in
+\texttt{paper/protocol.md} (Portuguese).
 
 \subsection{Data and unit of analysis}\label{data-and-unit-of-analysis}
 
-The source is the GitSkills corpus \cite{gitskills2027}, revision
+The source is GitSkills \cite{gitskills2027}, revision
 \texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8}: 3,797,117
 \texttt{SKILL.md} files from 282,200 repositories (July 2026), grouped
-into 1,877,981 distinct contents. The unit is the content
-(\texttt{content\_hash}). All occurrences (repository and path) are
-kept, but only one \textbf{representative} per content receives full
-text, repository metadata, folder listing and history.
-
+into 1,877,981 distinct contents (\texttt{content\_hash}). All
+occurrences are kept, but only one \textbf{representative} per content
+receives full text, repository metadata, folder listing and history.
 Development uses 200,000 contents chosen by
 \texttt{md5(content\_hash\ \textbar{}\textbar{}\ \textquotesingle{}:20261009\textquotesingle{})},
-split by repository into 160,000 for development and 40,000 for test. We
-condition on \texttt{repository\_count\ \textgreater{}=\ 2}: 25,918
-contents from 7,128 owners in development. In the full population there
-are 306,088 contents satisfying this condition, of which 230,355 appear
+split by repository into 160,000 for development and 40,000 for test; we
+condition on \texttt{repository\_count\ \textgreater{}=\ 2}, which
+leaves 25,918 contents from 7,128 owners in development. In the full
+population, 306,088 contents satisfy this condition, 230,355 of them
 under two or more owners. The original test partition was consulted in
-the first version of the study and does not support confirmatory claims.
-The reference date for age and recency is 2026-07-20.
+the first version of the study and supports no confirmatory claim. The
+reference date for age and recency is 2026-07-20.
 
 \subsection{Representative rule and
 audit}\label{representative-rule-and-audit}
 
-The GitSkills documentation indicates that the representative prefers
+GitSkills documents that the representative prefers
 \texttt{.claude/skills/}, with a deterministic tie-break
 \cite{gitskills2027}. We recovered the rule from all raw occurrences:
 sort by location class (\texttt{canonical}, \texttt{skills-dir},
-\texttt{other}) and, on ties, by the smallest pair
+\texttt{other}) and, on ties, by the smallest
 \texttt{(repo\_full\_name,\ path)}. It reproduces the representative in
 97.2\% of the 306,088 contents with at least two repositories, and the
-class of the representative matches the best available class in 100\% of
-them. The audit compares, by number-of-repositories bin, the fraction of
-contents whose representative is \texttt{canonical} with the fraction of
-copies that are actually in that class, to establish whether
-\texttt{location\_class} and \texttt{history\_fetched} (history was only
-collected for standard locations and a sample) can be legitimate
-predictors.
+representative's class equals the best available class in 100\% of them.
+The audit compares, by number of repositories, the fraction of contents
+whose representative is \texttt{canonical} with the fraction of copies
+that actually are, to decide whether \texttt{location\_class} and
+\texttt{history\_fetched} (history was collected only for standard
+locations and a sample) can be legitimate predictors.
 
 \subsection{Targets}\label{targets}
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
-\caption{Targets. The owner is the prefix of
-\texttt{repo\_full\_name}.}\tabularnewline
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Role
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Target
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Definition
-\end{minipage} \\
-\midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Role
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Target
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Definition
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Main (classification) & \texttt{cross\_owner} &
-\texttt{owner\_count\ \textgreater{}=\ 2} \\
-Secondary (regression) & \texttt{log1p(owner\_count)} & distinct owners
-across all occurrences \\
-Sensitivity & \texttt{log1p(repository\_count)} & target of the first
-version \\
-\end{longtable}
-
-Counting owners removes self-copying among repositories of the same
-account. Counts are lower bounds, since GitHub code search indexes only
-the default branch, files up to 384 KB and recent repositories
-\cite{gitskills2027}.
+The main target is
+\texttt{cross\_owner\ =\ owner\_count\ \textgreater{}=\ 2}, where
+\texttt{owner\_count} is the number of distinct owners (prefix of
+\texttt{repo\_full\_name}) across all occurrences; the secondary target
+is \texttt{log1p(owner\_count)}, and \texttt{log1p(repository\_count)}
+is used for sensitivity. Counting owners removes self-copying among
+repositories of one account. Counts are lower bounds, since GitHub code
+search indexes only the default branch, files up to 384 KB and recent
+repositories \cite{gitskills2027}.
 
 \subsection{Features}\label{features}
 
@@ -127,9 +93,9 @@ Content
 \texttt{skill} & 34 & structure of \texttt{SKILL.md} (size, headings,
 lists, code, links, front matter, scripts, folder) and file name \\
 \texttt{repo} & 8 & \texttt{log1p} of stars and forks, fork flag, age,
-push recency, active days, language, license \\
+days since last push, active days, language, license \\
 \texttt{catalog} & 2 & \texttt{log1p} of the number of skills in the
-repository and an indicator of at least 10 \\
+repository; indicator of at least 10 \\
 \texttt{path} & 8 & depth, root, \texttt{templates}, \texttt{plugins},
 \texttt{vendor}, \texttt{docs}, \texttt{packages/src}, other-tool
 directory \\
@@ -140,15 +106,14 @@ the path \\
 
 The shortcuts depend on the representative rule and are kept out of the
 main models. The attributes describe the representative, not all copies;
-aggregating them over all copies would depend on the same occurrences
-that define the target and was avoided. Imputation (median with missing
-indicator), scaling and encoding (one-hot, \texttt{min\_frequency=10})
-are fitted within each fold. The decisions about transformations
-(\texttt{log1p} for linear models only), redundant columns, constant
-columns and class balance follow from the feature EDA of Section 4.1. We
-apply no resampling to the 80/20 class imbalance of
-\texttt{cross\_owner}: the main metrics (ROC AUC, Brier score, log-loss)
-are threshold-free, and PR AUC is always read against the prevalence.
+aggregating over all copies would use the same occurrences that define
+the target and was avoided. Imputation (median with missing indicator),
+scaling and one-hot encoding (\texttt{min\_frequency=10}) are fitted
+within each fold. Decisions on transformations (\texttt{log1p} for
+linear models only), redundant and constant columns and class balance
+follow from the feature EDA (Section 4.1). We do not resample the 80/20
+imbalance of \texttt{cross\_owner}: the main metrics are threshold-free,
+and PR AUC is read against prevalence.
 
 \subsection{Validation and per-owner
 cap}\label{validation-and-per-owner-cap}
@@ -157,110 +122,66 @@ Validation is grouped by the \textbf{owner of the representative
 repository}: 3 repetitions of 3 folds (\texttt{StratifiedGroupKFold},
 seeds 2027--2029, strata by \texttt{owner\_count} bin), with the same
 partitions for all models. Because a few accounts concentrate the
-sample, we apply a \textbf{cap of 50 contents per owner} (in
+sample, we cap the contribution at \textbf{50 contents per owner} (in
 \texttt{content\_hash} order), leaving 17,733 contents. The value 50 was
-chosen \emph{after} observing the sensitivity of the AUC to how
-concentrated owners are treated (Section 4.4); it is therefore a
-data-dependent decision. Per fold, we also measure the fraction of
-validation rows whose front-matter \texttt{name} appears in training,
-and the metrics on the subset without overlap (a joint grouping by owner
-and \texttt{name} forms one component with 64\% of the rows and was
-discarded).
+chosen \emph{after} observing the AUC's sensitivity to how concentrated
+owners are treated (Section 4.4); it is a data-dependent decision. Per
+fold we also measure the share of validation rows whose front-matter
+\texttt{name} appears in training and the metrics on the subset without
+overlap (a joint owner--\texttt{name} grouping forms a component with
+64\% of the rows and was discarded).
 
 \subsection{Models, baselines and
 tuning}\label{models-baselines-and-tuning}
 
 The main model is the Random Forest (100 trees for regression, 300 for
 classification; \texttt{max\_depth=12}, \texttt{min\_samples\_leaf=3},
-\texttt{max\_features=sqrt}). The linear references are Ridge
-(\(\alpha=10\)) and logistic regression (\(C=1\)); the baselines are the
-prevalence and the mean and median of \texttt{log1p}. Tuning is nested:
-six families (linear, KNN, tree, Random Forest, Gradient Boosting,
-HistGradientBoosting) in two variants (default hyperparameters and
-hyperparameters searched by \texttt{RandomizedSearchCV}) on the clean
-view. The outer validation uses 2 repetitions of 3 owner-grouped folds;
-the inner search uses 3 owner-grouped folds and 6 candidates. The
-combination with the best outer mean is frozen (if it is ``searched'',
-the search is repeated on the whole development set). The protocol
-planned 3 repetitions and 12 candidates; we reduced them for
-computational cost.
+\texttt{max\_features=sqrt}), with Ridge (\(\alpha=10\)) and logistic
+regression (\(C=1\)) as linear references and the prevalence and the
+mean and median of \texttt{log1p} as baselines. Tuning is nested: six
+families (linear, KNN, tree, Random Forest, Gradient Boosting,
+HistGradientBoosting) in two variants (default and
+\texttt{RandomizedSearchCV}) on the clean view, with an outer validation
+of 2 repetitions of 3 owner-grouped folds and an inner search of 3
+owner-grouped folds and 6 candidates (planned: 3 repetitions and 12
+candidates; reduced for computational cost). The combination with the
+best outer mean is frozen.
 
 \subsection{Metrics, inference and
 interpretation}\label{metrics-inference-and-interpretation}
 
-The main metrics are the ROC AUC (classification) and the RMSLE
-(regression); the secondary ones are PR AUC, Brier score, log-loss, MAE
-and Spearman. Comparisons are paired by (repetition, fold), with 95\%
-CIs and a t-test with the \textbf{Nadeau--Bengio correction} for
-repeated samples; the paired Wilcoxon test is complementary. Five
+The main metrics are ROC AUC (classification) and RMSLE (regression);
+the secondary ones are PR AUC, Brier score, log-loss, MAE and Spearman.
+Comparisons are paired by (repetition, fold), with 95\% CIs and a t-test
+with the \textbf{Nadeau--Bengio correction} for repeated samples. Five
 pre-specified hypotheses form a family corrected by Holm
-(\(\alpha=0.05\)); all other comparisons are exploratory.
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
-\caption{Pre-specified hypotheses.}\tabularnewline
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-ID
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Hypothesis
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Comparison
-\end{minipage} \\
-\midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-ID
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Hypothesis
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Comparison
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-H1 & the clean attributes predict cross-owner reuse & clean RF AUC
-against 0.5 \\
-H2 & the clean attributes reduce the RMSLE of \texttt{owner\_count} &
-clean RF against the mean of \texttt{log1p} \\
-H3a & skill adds to repository and catalog & clean against
-repository+catalog (AUC) \\
-H3b & repository and catalog add to skill & clean against skill (AUC) \\
-H4 & the shortcuts add to the clean attributes & clean+shortcuts against
-clean (RMSLE) \\
-\end{longtable}
+(\(\alpha=0.05\)); all other comparisons are exploratory: \textbf{H1}
+the clean attributes predict cross-owner reuse (AUC against 0.5);
+\textbf{H2} they reduce the RMSLE of \texttt{owner\_count} (clean RF
+against the mean of \texttt{log1p}); \textbf{H3a/H3b} skill adds to
+repository+catalog and vice versa (AUC); \textbf{H4} the shortcuts add
+to the clean attributes (RMSLE).
 
 Interpretation uses permutation importance of the clean RF on
-owner-grouped folds, per column and per block (the columns of a block
-are permuted together), and out-of-fold partial dependence of the frozen
-models (trained on each training fold, with the curve computed on the
-validation rows; mean and standard deviation across folds) for the main
-attributes. Both are associative; correlated attributes share
-importance. For the binary task we also report the minority class
-(\texttt{cross\_owner\ =\ 0}, content that exists under a single owner):
-its PR AUC against its prevalence and the performance at a decision
-threshold that maximizes the balanced accuracy on development
-out-of-fold predictions (3×3 folds). The threshold is fixed on
-development and then applied, unchanged, to the saved holdout
-predictions; this is a descriptive reading of the same predictions, not
-a new evaluation.
+owner-grouped folds (per column and per block) and out-of-fold partial
+dependence of the frozen models (trained on each training fold, curves
+computed on the validation rows). Both are associative. For the binary
+task we also report the minority class (\texttt{cross\_owner\ =\ 0}) and
+the performance at a threshold that maximizes the balanced accuracy on
+development out-of-fold predictions; the threshold is then applied,
+unchanged, to the saved holdout predictions, as a descriptive reading
+and not a new evaluation.
 
 \subsection{New holdout}\label{new-holdout}
 
-Because the protocol was fixed after exploratory results, confirmation
-requires data never consulted. The holdout gathers contents outside the
-200,000 sampled, with \texttt{repository\_count\ \textgreater{}=\ 2},
-whose owners do not appear among the reused skills of the sample
-(development and original test), with a cap of 50 per owner: 25,011
-contents from 10,484 owners, with no owners or contents in common with
-the sample and at most 37 contents per owner. Only the prevalence of
-\texttt{cross\_owner} (80.8\%) was inspected, as an integrity check. The
-chosen models are trained on the whole development set and evaluated
-\textbf{once}, with CIs by owner bootstrap (2,000 resamples). Success
-requires the lower AUC bound above 0.5 and the upper bound of the RMSLE
-difference to the baseline below zero; a lock prevents re-evaluation
-without explicit declaration.
+The holdout gathers contents outside the 200,000 sampled, with
+\texttt{repository\_count\ \textgreater{}=\ 2}, whose owners do not
+appear among the reused skills of the sample (development and original
+test), with the same cap of 50: 25,011 contents from 10,484 owners,
+sharing no owners or contents with the sample (at most 37 contents per
+owner). Only the prevalence of \texttt{cross\_owner} (80.8\%) was
+inspected, as an integrity check. The chosen models are trained on the
+whole development set and evaluated \textbf{once}, with CIs by owner
+bootstrap (2,000 resamples). Success requires the lower AUC bound above
+0.5 and the upper bound of the RMSLE difference to the baseline below
+zero; a lock prevents re-evaluation without explicit declaration.

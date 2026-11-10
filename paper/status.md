@@ -16,7 +16,8 @@
 - Seções 1–6 e apêndices A–B reescritos com a nova narrativa (viés de construção + sinal modesto confirmado).
 - Reprodução rápida (`make quick`, tabelas derivadas em `data/derived/`) e notebook do Colab atualizados; EDA dos atributos incluída (Seção 4.1).
 - Interpretação: dependência parcial (fora da amostra) e análise de limiar com a classe minoritária incluídas (Seções 4.5 e 4.7).
-- **Pendente:** compilar o LaTeX no Overleaf e conferir o limite de 20 páginas (a estimativa por contagem de palavras é de cerca de 20 páginas incluindo referências); revisão visual; conferência final das referências; preparar a apresentação (01/12) e as duas revisões por pares (24–30/11).
+- Relatório enxugado (≈5.300 palavras no corpo, 7 tabelas, 3 figuras); EDA dos atributos e importância por permutação ficaram só em texto, com os arquivos em `results/owner/`.
+- **Pendente:** compilar o LaTeX no Overleaf e conferir o limite de 20 páginas (estimativa por contagem de palavras depois do corte: cerca de 18 páginas incluindo referências e apêndices, com incerteza de ±2); revisão visual; conferência final das referências; preparar a apresentação (01/12) e as duas revisões por pares (24–30/11).
 
 ## Prazos (CMP263)
 
