@@ -1,0 +1,58 @@
+{
+  "generated_at_utc": "2026-10-13T00:58:41.427307+00:00",
+  "source_table": "data/processed/final_modeling_sample.parquet",
+  "target_table": "data/processed/final_targets.parquet",
+  "feature_table": "data/processed/final_structured_features.parquet",
+  "split_table": "data/processed/final_split_assignments.parquet",
+  "intensity_split_summary_table": "reports/tables/final_intensity_split_summary.csv",
+  "batch_size": 2000,
+  "raw_feature_count": 22,
+  "engineered_feature_count": 25,
+  "strategy": "StratifiedGroupKFold over five strata; fixed-score candidate selection",
+  "random_seed": 20261009,
+  "restarts": 12,
+  "candidate_count": 60,
+  "selected_restart": 0,
+  "selected_fold": 1,
+  "selection_score": 6.45e-05,
+  "score_components": {
+    "absolute_test_fraction_gap": 0.0,
+    "absolute_binary_prevalence_gap": 1e-05,
+    "maximum_conditional_intensity_gap": 5.45e-05
+  },
+  "requested_test_fraction": 0.2,
+  "actual_test_fraction": 0.2,
+  "train_rows": 160000,
+  "test_rows": 40000,
+  "overall_positive_rate": 0.161985,
+  "train_positive_rate": 0.1619875,
+  "test_positive_rate": 0.161975,
+  "train_groups": 57808,
+  "test_groups": 14568,
+  "group_overlap": 0,
+  "stratum_counts": {
+    "test": {
+      "not_reused": 33521,
+      "reuse_2": 3648,
+      "reuse_3_4": 1522,
+      "reuse_5_9": 759,
+      "reuse_10_plus": 550
+    },
+    "train": {
+      "not_reused": 134082,
+      "reuse_2": 14593,
+      "reuse_3_4": 6087,
+      "reuse_5_9": 3038,
+      "reuse_10_plus": 2200
+    }
+  },
+  "sample_hash_signature_sha256": "0602bb94b0c1547a2385df299baf0249e2797dfb35eb6b1910b4e5bc2ad8df0d",
+  "source_rows": 200000,
+  "assignment_rows": 200000,
+  "feature_rows": 200000,
+  "feature_columns": 51,
+  "duplicate_source_hashes": 0,
+  "duplicate_feature_hashes": 0,
+  "missing_split_assignments": 0,
+  "split_fingerprint_sha256": "c608febca59f3e2065ebcacd6f27e56c8b0e90230bd060b6238bd1505e15ab15"
+}

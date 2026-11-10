@@ -1,0 +1,11 @@
+split,split_stratum,intensity_label,n,percentage_within_split
+test,not_reused,not_reused,33521,83.80250000000001
+test,reuse_10_plus,10+ repositorios,550,1.375
+test,reuse_2,2 repositorios,3648,9.120000000000001
+test,reuse_3_4,3-4 repositorios,1522,3.805
+test,reuse_5_9,5-9 repositorios,759,1.8975
+train,not_reused,not_reused,134082,83.80125000000001
+train,reuse_10_plus,10+ repositorios,2200,1.375
+train,reuse_2,2 repositorios,14593,9.120625
+train,reuse_3_4,3-4 repositorios,6087,3.8043750000000003
+train,reuse_5_9,5-9 repositorios,3038,1.8987500000000002

@@ -1,14 +1,13 @@
 import pandas as pd
 import pytest
 
-from gitskills_reuse.modeling.preprocess import (
+from skillreuse.models import (
     REPOSITORY_CATEGORICAL_FEATURES,
     REPOSITORY_NUMERIC_FEATURES,
     STRUCTURAL_CATEGORICAL_FEATURES,
     STRUCTURAL_NUMERIC_FEATURES,
     build_preprocessor,
     predictor_view,
-    validate_predictor_columns,
 )
 
 
@@ -35,7 +34,9 @@ def test_predictor_view_filters_groups() -> None:
     assert "repo_stars" in view_all.columns
     assert "reused" not in view_all.columns
 
-    view_structure = predictor_view(frame, use_text=False, use_structural=True, use_repository=False)
+    view_structure = predictor_view(
+        frame, use_text=False, use_structural=True, use_repository=False
+    )
     assert "content" not in view_structure.columns
     assert "text_word_count" in view_structure.columns
     assert "repo_stars" not in view_structure.columns
@@ -60,7 +61,9 @@ def test_build_preprocessor_ablation_transformers() -> None:
     assert "structured_numeric" in names_all
     assert "repository_categorical" in names_all
 
-    pre_struct = build_preprocessor(frame, use_text=False, use_structural=True, use_repository=False)
+    pre_struct = build_preprocessor(
+        frame, use_text=False, use_structural=True, use_repository=False
+    )
     names_struct = [name for name, _, _ in pre_struct.transformers]
     assert "text_tfidf" not in names_struct
     assert "structured_numeric" in names_struct

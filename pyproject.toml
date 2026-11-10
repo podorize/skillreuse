@@ -1,7 +1,7 @@
 [project]
 name = "skillreuse"
 version = "0.1.0"
-description = "Caracterizacao e classificacao da reutilizacao de agent skills no GitHub."
+description = "Previsao da intensidade de reutilizacao de Agent Skills (GitSkills)."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -21,22 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-skillreuse-check = "gitskills_reuse.cli:main"
-skillreuse-build-sample = "gitskills_reuse.data.sample:main"
-skillreuse-build-features = "gitskills_reuse.features.build:main"
-skillreuse-download-full = "gitskills_reuse.data.download_full:main"
-skillreuse-build-full = "gitskills_reuse.data.full:main"
-skillreuse-build-final-features = "gitskills_reuse.features.final:main"
-skillreuse-analyze-data = "gitskills_reuse.analysis.eda:main"
-skillreuse-analyze-target = "gitskills_reuse.analysis.target_eda:main"
-skillreuse-prepare-count-target = "gitskills_reuse.modeling.count_targets:main"
-skillreuse-benchmark-count = "gitskills_reuse.modeling.count_benchmark:main"
-skillreuse-explain-count = "gitskills_reuse.modeling.count_explain:main"
-skillreuse-audit-text = "gitskills_reuse.modeling.audit_text_artifacts:main"
-skillreuse-audit-tail = "gitskills_reuse.modeling.count_tail_audit:main"
-skillreuse-benchmark-discipline = "gitskills_reuse.modeling.discipline_benchmark:main"
-skillreuse-evaluate-discipline = "gitskills_reuse.modeling.discipline_test_eval:main"
-skillreuse-train = "gitskills_reuse.modeling.train:main"
+skillreuse = "skillreuse.cli:main"
 
 [dependency-groups]
 dev = [
@@ -49,7 +34,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/gitskills_reuse"]
+packages = ["src/skillreuse"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

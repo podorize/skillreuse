@@ -1,4 +1,4 @@
-from gitskills_reuse import __version__
+from skillreuse import __version__
 
 
 def test_package_version() -> None:

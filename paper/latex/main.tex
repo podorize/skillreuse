@@ -1,0 +1,74 @@
+\documentclass[12pt]{article}
+\usepackage{sbc-template}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,array,calc}
+\usepackage{amsmath,amssymb}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setlength{\emergencystretch}{3em}
+\sloppy
+
+\title{Predição e explicabilidade da intensidade de reutilização de Agent Skills entre repositórios do GitHub\footnote{Dados e código: \protect\url{https://github.com/podorize/skillreuse}.}}
+\author{Pedro Odorize\inst{1}}
+\address{Instituto de Informática -- Universidade Federal do Rio Grande do Sul (UFRGS)\\
+  Porto Alegre, RS -- Brasil
+  \email{pedro.odorize@inf.ufrgs.br}
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+
+
+Este trabalho investiga a intensidade de reutilização de \emph{Agent
+Skills}, definida como o número de repositórios que contêm o mesmo
+\texttt{SKILL.md}, entre conteúdos observados em pelo menos dois
+repositórios. A partir de 200.000 conteúdos do GitSkills, 25.918 skills
+reutilizadas compõem o desenvolvimento e 6.479 o teste externo,
+separados por repositório representativo. Com três dobras agrupadas,
+comparamos as visões \emph{skill-only}, \emph{repository-only} e
+\emph{hybrid} com Ridge; em experimento distinto, comparamos seis
+regressores usando apenas atributos de repositório. O Random Forest foi
+escolhido pelo menor RMSLE médio na validação agrupada (0,575 ± 0,008) e
+alcançou 0,583 no teste, frente a 0,714 de uma referência que prediz a
+mediana do desenvolvimento. Contudo, seu MAE externo (3,266) superou o
+da referência (3,067), e todas as 324 skills acima do P95 do treino
+foram subestimadas. A comparação de representações sugere sinal nos
+atributos da skill, mas sua diferença entre visões é pequena e não
+possui avaliação externa. As importâncias por permutação apontam
+variáveis contextuais, como linguagem e histórico, com variação entre
+dobras; não estabelecem efeitos causais nem qualidade da skill. O estudo
+oferece um pipeline auditável e delimita onde a previsão e as
+explicações são úteis ou insuficientes.
+
+\end{abstract}
+
+\noindent\textbf{Palavras-chave:} Agent Skills; reúso de software; mineração de repositórios; regressão; explicabilidade.
+
+\input{sections/01_introduction.tex}
+
+\input{sections/02_related_work.tex}
+
+\input{sections/03_methodology.tex}
+
+\input{sections/04_results.tex}
+
+\input{sections/05_discussion.tex}
+
+\input{sections/06_conclusion.tex}
+
+\bibliographystyle{sbc}
+
+\bibliography{references}
+
+\appendix
+
+\input{sections/07_appendix_reproducibility.tex}
+
+\input{sections/08_appendix_ai_usage.tex}
+
+\end{document}

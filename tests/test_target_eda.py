@@ -1,6 +1,6 @@
 import pandas as pd
 
-from gitskills_reuse.analysis.target_eda import (
+from skillreuse.report import (
     count_distribution,
     group_distribution,
     ordinal_distribution,

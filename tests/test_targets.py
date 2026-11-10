@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from gitskills_reuse.data.targets import (
+from skillreuse.data import (
     STRATA,
     build_targets,
     intensity_split_summary,

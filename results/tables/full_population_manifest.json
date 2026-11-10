@@ -1,0 +1,19 @@
+{
+  "generated_at_utc": "2026-10-09T21:56:45.623314+00:00",
+  "dataset_revision": "ebab17454a7c236f8f26b183567f1a126f42e3f8",
+  "artifacts_source": "data/raw/gitskills-full/artifacts/*.parquet",
+  "repos_source": "data/raw/gitskills-full/repos/*.parquet",
+  "reuse_threshold": 2,
+  "sampling_method": "ascending md5(content_hash || ':' || sampling_seed)",
+  "sampling_seed": 20261009,
+  "requested_sample_size": 200000,
+  "population_contents": 1877981,
+  "population_reused_contents": 306088,
+  "population_reused_percentage": 16.29878,
+  "modeling_sample_contents": 200000,
+  "modeling_sample_reused_contents": 32397,
+  "modeling_sample_reused_percentage": 16.1985,
+  "sample_population_rate_difference_percentage_points": -0.10028,
+  "population_index_sha256": "047493d6a6f2369e36addf4b70ffd613e7d8bdf89265d95398ee0902d0ea3f1f",
+  "modeling_sample_sha256": "bf06803b34cdf6d74ad86b1d37fe90182c970f9bb7aa1927c5524895c9c4248c"
+}
