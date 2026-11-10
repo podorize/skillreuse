@@ -20,6 +20,7 @@ COMMANDS: dict[str, tuple[str, str, str]] = {
     "controls": ("skillreuse.controls", "controls_main", "controles de atalho de coleta"),
     "owner": ("skillreuse.owner", "owner_main", "alvo por donos, contexto, auditoria e EDA"),
     "owner-models": ("skillreuse.owner_models", "owner_models_main", "modelos por donos"),
+    "owner-importance": ("skillreuse.owner_models", "importance_main", "permutacao (limpo)"),
     "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
     "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
     "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),

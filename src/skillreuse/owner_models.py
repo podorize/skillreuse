@@ -129,7 +129,7 @@ def _subsets(train: pd.DataFrame, valid: pd.DataFrame) -> dict[str, np.ndarray]:
 
 def run(
     frame: pd.DataFrame, *, task: str, views: list[str], group_by: str, repeats: int,
-    folds: int, seed: int,
+    folds: int, seed: int, reg_target: str = "owner",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     records: list[dict[str, object]] = []
     overlap: list[dict[str, object]] = []
@@ -141,8 +141,12 @@ def run(
             "name_seen_in_train_share": float(1 - subsets["name_unseen"].mean()),
         })
         if task == "regression":
-            y_log = train["log_owner_count"].to_numpy(dtype=float)
-            y_valid = valid["owner_count"].to_numpy(dtype=float)
+            log_col, raw_col = (
+                ("log_owner_count", "owner_count") if reg_target == "owner"
+                else ("log_count_target", "count_target")
+            )
+            y_log = train[log_col].to_numpy(dtype=float)
+            y_valid = valid[raw_col].to_numpy(dtype=float)
         else:
             y_log = train["cross_owner"].to_numpy(dtype=int)
             y_valid = valid["cross_owner"].to_numpy(dtype=int)
@@ -236,20 +240,37 @@ def owner_models_parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=2027)
     parser.add_argument("--exclude-owners-above", type=int, default=None,
                         help="remove donos com mais linhas que esse limite (sensibilidade)")
+    parser.add_argument("--cap-per-owner", type=int, default=None,
+                        help="mantem no maximo N linhas por dono (ordem deterministica)")
+    parser.add_argument("--tier", choices=("canonical", "skills-dir", "other"), default=None,
+                        help="restringe a uma classe de localizacao do representante")
+    parser.add_argument("--regression-target", choices=("owner", "repo"), default="owner")
     parser.add_argument("--max-rows", type=int, default=None)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     return parser.parse_args()
 
 
-def owner_models_main() -> None:
-    args = owner_models_parse_args()
+def _prepare(args: argparse.Namespace) -> pd.DataFrame:
     frame = load_owner_frame("train")
+    if args.tier is not None:
+        frame = frame[frame["location_class"] == args.tier].reset_index(drop=True)
     if args.exclude_owners_above is not None:
         sizes = frame["repo_owner"].map(frame["repo_owner"].value_counts())
         frame = frame[sizes <= args.exclude_owners_above].reset_index(drop=True)
+    if args.cap_per_owner is not None:
+        frame = (
+            frame.sort_values("content_hash").groupby("repo_owner", sort=False)
+            .head(args.cap_per_owner).reset_index(drop=True)
+        )
     if args.max_rows is not None:
         frame = frame.sample(n=min(args.max_rows, len(frame)), random_state=args.seed)
         frame = frame.reset_index(drop=True)
+    return frame
+
+
+def owner_models_main() -> None:
+    args = owner_models_parse_args()
+    frame = _prepare(args)
     tasks = ("regression", "classification") if args.task == "both" else (args.task,)
     started = time.monotonic()
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -257,6 +278,7 @@ def owner_models_main() -> None:
         folds_df, overlap = run(
             frame, task=task, views=args.views, group_by=args.group_by,
             repeats=args.repeats, folds=args.folds, seed=args.seed,
+            reg_target=args.regression_target,
         )
         summary = summarize(folds_df, task)
         folds_df.to_csv(args.output_dir / f"{task}_folds.csv", index=False)
@@ -276,9 +298,96 @@ def owner_models_main() -> None:
         "folds": args.folds,
         "seeds": [args.seed + r for r in range(args.repeats)],
         "exclude_owners_above": args.exclude_owners_above,
+        "cap_per_owner": args.cap_per_owner,
+        "tier": args.tier,
+        "regression_target": args.regression_target,
         "views": {v: VIEWS[v] for v in args.views},
         "targets": {"regression": "log1p(owner_count)", "classification": "owner_count >= 2"},
         "runtime_seconds": round(time.monotonic() - started, 1),
     }
     (args.output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Importancia por permutacao (grupos de atributos e colunas) no conjunto limpo
+# ---------------------------------------------------------------------------
+
+GROUPS = {"grupo:skill": SKILL, "grupo:repo": REPO, "grupo:catalog": CATALOG, "grupo:path": PATH}
+
+
+def _pipeline_for(task: str, columns: list[str]) -> Pipeline:
+    from sklearn.preprocessing import FunctionTransformer
+
+    model = default_regressor("random_forest_log") if task == "regression" else _classifier(
+        "random_forest")
+    return Pipeline([
+        ("pre", _preprocessor(columns)),
+        ("dense", FunctionTransformer(_dense, accept_sparse=True)),
+        ("model", model),
+    ])
+
+
+def run_importance(
+    frame: pd.DataFrame, *, task: str, view: str, repeats: int, folds: int, seed: int,
+    n_perm: int,
+) -> pd.DataFrame:
+    columns = VIEWS[view]
+    rng = np.random.default_rng(seed)
+    rows: list[dict[str, object]] = []
+    for repeat, fold, train, valid in _folds(frame, "owner", repeats, folds, seed):
+        if task == "regression":
+            y_tr = train["log_owner_count"].to_numpy(dtype=float)
+            y_va = valid["log_owner_count"].to_numpy(dtype=float)
+        else:
+            y_tr = train["cross_owner"].to_numpy(dtype=int)
+            y_va = valid["cross_owner"].to_numpy(dtype=int)
+        pipe = _pipeline_for(task, columns).fit(train[columns], y_tr)
+
+        def score(x: pd.DataFrame, pipe: Pipeline = pipe, y_va: np.ndarray = y_va) -> float:
+            if task == "regression":
+                pred = pipe.predict(x)
+                return float(np.sqrt(np.mean((pred - y_va) ** 2)))  # RMSE em log1p == RMSLE
+            return float(roc_auc_score(y_va, pipe.predict_proba(x)[:, 1]))
+
+        base = score(valid[columns])
+        for name, cols in {**GROUPS, **{c: [c] for c in columns}}.items():
+            drops = []
+            for _ in range(n_perm):
+                shuffled = valid[columns].copy()
+                shuffled[cols] = shuffled[cols].iloc[rng.permutation(len(valid))].to_numpy()
+                s = score(shuffled)
+                drops.append(s - base if task == "regression" else base - s)
+            rows.append({"repeat": repeat, "fold": fold, "feature": name,
+                         "metric_degradation": float(np.mean(drops)), "base_score": base})
+        print(f"[importance/{task}] repeticao {repeat} dobra {fold} concluida", flush=True)
+    return pd.DataFrame(rows)
+
+
+def importance_parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Importancia por permutacao (conjunto limpo)")
+    parser.add_argument("--view", choices=list(VIEWS), default="clean_full")
+    parser.add_argument("--repeats", type=int, default=1)
+    parser.add_argument("--folds", type=int, default=3)
+    parser.add_argument("--n-perm", type=int, default=3)
+    parser.add_argument("--seed", type=int, default=2027)
+    parser.add_argument("--exclude-owners-above", type=int, default=None)
+    parser.add_argument("--cap-per-owner", type=int, default=None)
+    parser.add_argument("--tier", default=None)
+    parser.add_argument("--max-rows", type=int, default=None)
+    parser.add_argument("--output-dir", type=Path, default=Path("results/owner/importance"))
+    return parser.parse_args()
+
+
+def importance_main() -> None:
+    args = importance_parse_args()
+    frame = _prepare(args)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    for task in ("regression", "classification"):
+        raw = run_importance(frame, task=task, view=args.view, repeats=args.repeats,
+                             folds=args.folds, seed=args.seed, n_perm=args.n_perm)
+        raw.to_csv(args.output_dir / f"{task}_importance_folds.csv", index=False)
+        summary = raw.groupby("feature")["metric_degradation"].agg(["mean", "std"]).reset_index()
+        summary = summary.sort_values("mean", ascending=False)
+        summary.to_csv(args.output_dir / f"{task}_importance.csv", index=False)
+        print(summary.head(15).round(4).to_string(index=False))
