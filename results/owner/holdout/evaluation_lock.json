@@ -1,0 +1,7 @@
+{
+  "evaluated_at_utc": "2026-11-10T18:26:59.175003+00:00",
+  "configs": {
+    "classification": "random_forest|default",
+    "regression": "hist_gradient_boosting|default"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "evaluated_at_utc": "2026-11-10T18:26:59.175003+00:00",
+  "holdout_rows": 25011,
+  "holdout_owners": 10484,
+  "classification": {
+    "model": "random_forest|default",
+    "roc_auc": 0.7309211585568416,
+    "pr_auc": 0.9133262879551367,
+    "brier": 0.14017788184639113,
+    "log_loss": 0.4441175214420072,
+    "prevalence": 0.8077246011754828,
+    "roc_auc_ci95": [
+      0.7161848346700171,
+      0.7452919790971236
+    ],
+    "pr_auc_ci95": [
+      0.904727186032321,
+      0.921359858828216
+    ],
+    "prior_from_dev": 0.8038121017312355,
+    "brier_baseline": 0.1553208774832913,
+    "log_loss_baseline": 0.48955432757370354,
+    "criterion_auc_lower_ci_gt_0.5": true
+  },
+  "regression": {
+    "model": "hist_gradient_boosting|default",
+    "rmsle": 0.6254607540646588,
+    "mae": 3.1961641286249423,
+    "mae_log1p": 0.4217903258041064,
+    "spearman": 0.3298226135665802,
+    "rmsle_baseline_mean_log1p": 0.6637640157453463,
+    "rmsle_diff_model_minus_baseline": -0.03830326168068743,
+    "rmsle_diff_ci95": [
+      -0.044479055794784936,
+      -0.031979099215827964
+    ],
+    "criterion_diff_upper_ci_lt_0": true
+  },
+  "success": true,
+  "n_boot": 2000
+}

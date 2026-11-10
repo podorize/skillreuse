@@ -105,3 +105,16 @@ A fase acima é **exploratória para fins confirmatórios**, pois os resultados 
 ## 11. Dicionário de dados
 
 Ver `results/owner/` (EDA, auditoria) e `results/owner/primary/manifest.json`. Colunas originais: tabela `artifacts` e `repos` do GitSkills (arXiv:2608.10906).
+
+## 12. Resultado da avaliação única no holdout (10/11/2026)
+
+Executado uma vez, com os modelos congelados na tag `frozen-before-holdout` (`results/owner/holdout/holdout_results.json`; trava em `evaluation_lock.json`).
+
+| Tarefa | Modelo | Resultado | Baseline | IC95% (bootstrap por dono, 2.000) |
+|---|---|---:|---:|---|
+| `cross_owner` | Random Forest padrão | AUC **0,731**; AUC-PR 0,913; Brier 0,140; log-loss 0,444 | AUC 0,5; AUC-PR 0,808; Brier 0,155; log-loss 0,490 | AUC [0,716; 0,745]; AUC-PR [0,905; 0,921] |
+| `log1p(owner_count)` | HistGradientBoosting padrão | RMSLE **0,625**; Spearman 0,330 | média de `log1p`: 0,664 | diferença −0,038 [−0,044; −0,032] |
+
+Critérios de sucesso da seção 8: **atendidos** (limite inferior do AUC > 0,5; limite superior da diferença de RMSLE < 0). A estimativa de AUC no holdout (0,731) é compatível com a do desenvolvimento (0,716 aninhado).
+
+Limitações da confirmação: (i) efeito pequeno em RMSLE (≈6% da baseline); (ii) deslocamento de composição entre desenvolvimento e holdout (seção 8); (iii) H3 e H4 não foram reavaliadas no holdout (permanecem exploratórias); (iv) a seleção entre famílias foi um empate estatístico; (v) a confirmação vale para o snapshot de julho de 2026 e para donos com poucas skills reutilizadas (donos concentrados foram excluídos por construção).
