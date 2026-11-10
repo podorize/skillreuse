@@ -3,6 +3,10 @@
 Este arquivo documenta o uso de ferramentas de IA no projeto, conforme as diretrizes da
 disciplina CMP263.
 
+> Limite do registro: as entradas abaixo resumem atividades e limitações; elas não contêm os
+> prompts e respostas integrais de todas as sessões. O suplemento `paper_cmp263/AI_USAGE_SUPPLEMENT.md`
+> fornece exemplos de prompts verbatim disponíveis no histórico e explicita o que não foi retido.
+
 ## Entrada 1 - Planejamento e preparacao do projeto
 
 - Data: 09/10/2026

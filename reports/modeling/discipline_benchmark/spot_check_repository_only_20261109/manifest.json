@@ -1,0 +1,14 @@
+{
+  "protocol": "repository-only grouped spot-check",
+  "rows": 25918,
+  "folds": 3,
+  "seed": 2027,
+  "models": [
+    "random_forest_d8_n100",
+    "random_forest_d12_n100",
+    "random_forest_d12_n200",
+    "gradient_boosting_lr005_n100",
+    "gradient_boosting_lr01_n100",
+    "gradient_boosting_lr005_n200"
+  ]
+}

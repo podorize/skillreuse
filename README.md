@@ -4,9 +4,11 @@
 
 Projeto da disciplina CMP263 - Aprendizagem de Maquina.
 
-O objetivo e classificar a reutilizacao observada de agent skills em repositorios GitHub e
+O [rascunho revisado do relatório da disciplina](docs/report_draft/README.md) reúne as seções, os resultados, as figuras e o apêndice de reprodução. O texto permanece em Markdown para a revisão editorial antes da formatação no template.
+
+O objetivo e prever a quantidade observada de repositorios que reutilizam uma agent skill e
 investigar quais caracteristicas textuais, estruturais e contextuais estao associadas a essa
-reutilizacao.
+difusao.
 
 ## Preparacao do ambiente
 
@@ -18,19 +20,23 @@ uv run skillreuse-check
 uv run pytest
 ```
 
-## 🚀 Reproducao Rapida do Artigo (< 2 minutos)
+## 🚀 Reproducao dos resultados do artigo
 
-Para reproduzir de forma ultrarrapida todos os modelos campeoes, tabelas do teste cego de 40.000 instancias ineditas e figuras em alta resolucao do artigo cientifico:
+Para reproduzir os modelos, tabelas do teste cego de 40.000 instancias e figuras do artigo:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce_in_colab.ipynb)
 
 ```bash
-# Executa a reproducao completa do artigo em ~1 minuto usando as matrizes pre-processadas:
+# Reusa as matrizes esparsas ja construidas e regenera resultados e diagnosticos:
 uv run python -m gitskills_reuse.reproduce
 
-# (Opcional) Para recomputar todo o pre-processamento e vetorizacao do zero:
-uv run python -m gitskills_reuse.reproduce --from-scratch
+# (Opcional) Recria um cache textual parametrizado, sem vocabulário herdado:
+uv run python -m gitskills_reuse.reproduce --from-scratch --text-max-features 10000
 ```
+
+O pipeline atual nao usa o pool historico de 211 termos. Os limites textuais oficiais para a nova
+avaliacao sao 5.000, 10.000 e 20.000 candidatos, com selecao posterior de 50, 100, 200 ou 500
+termos dentro de cada dobra.
 
 Para iniciar o JupyterLab localmente:
 
@@ -157,18 +163,18 @@ sao ajustados apenas no respectivo treino. Compara regressao logistica sem pesos
 reponderacao, sobreamostragem ou remocao de exemplos e aplicada ao teste. Os resultados por dobra,
 resumos e protocolo ficam em `reports/modeling/`; o teste externo permanece intocado.
 
-O processamento completo de cinco dobras com TF-IDF e deliberadamente executado sob demanda,
+O processamento completo de tres dobras com TF-IDF e deliberadamente executado sob demanda,
 pois e mais custoso do que as etapas de preparacao e analise exploratoria.
 
-As matrizes TF-IDF/esparsas por dobra sao guardadas em `reports/modeling/cache/` e reutilizadas
-em execucoes seguintes com a mesma fonte, divisao e configuracao de atributos. Mudancas nas
-entradas ou nos parametros de vetorizacao geram outro cache. A classificacao de intensidade usa
+As matrizes TF-IDF/esparsas por dobra sao guardadas em `reports/modeling/ablation/` e reutilizadas
+em execucoes seguintes com a mesma fonte, divisao, configuracao de atributos e codigo de
+pre-processamento. Mudancas nesses elementos geram outro cache. A classificacao de intensidade usa
 `saga`, tolerancia `1e-3` e ate 5.000 iteracoes por padrao; convergencia e iteracoes efetivas
 ficam registradas nos resultados. A tabela parcial e atualizada ao fim de cada dobra.
 
 ## Estrutura
 
-- `paper_cmp263/`: relatorio completo da disciplina CMP263 (em Markdown `REPORT_CMP263.md` e formato SBC LaTeX).
+- `paper_cmp263/`: artigo SBC da disciplina CMP263, bibliografia e suplemento de uso de IA. O pacote Overleaf é `sbc_paper_overleaf.zip` na raiz; `REPORT_CMP263.md` é um rascunho separado.
 - `paper_msr2027/`: artigo cientifico formatado para o MSR 2027 Mining Challenge (IEEE format para Overleaf).
 - `configs/`: parametros de dados, features e experimentos.
 - `data/`: dados brutos, intermediarios e processados (inclui cache esparso reproduzivel).
@@ -178,13 +184,10 @@ ficam registradas nos resultados. A tabela parcial e atualizada ao fim de cada d
 - `tests/`: testes automatizados.
 - `reports/`: figuras, tabelas e registro dos experimentos.
 
-## Definicao dos alvos
+## Definicao do alvo
 
-Cada instancia corresponde a um `content_hash`. O alvo inicial sera:
-
-- `0`: conteudo presente em apenas um repositorio;
-- `1`: conteudo presente em dois ou mais repositorios distintos.
-
-Para conteudos reutilizados, `reuse_intensity` assume 0 para 2 repositorios, 1 para 3-4,
-2 para 5-9 e 3 para 10 ou mais. Para conteudos nao reutilizados, a intensidade e ausente.
-Essas definicoes representam reutilizacao observada no snapshot, e nao reutilizacao futura.
+Cada instancia corresponde a um `content_hash`. O alvo principal e `repository_count` entre
+skills com `reused = 1`. A metrica principal da regressao e RMSLE; MAE, erro em `log1p` e
+Spearman sao metricas secundarias. `repository_count` e `occurrence_count` nunca entram como
+atributos preditivos. Essas definicoes representam reutilizacao observada no snapshot, e nao
+reutilizacao futura.

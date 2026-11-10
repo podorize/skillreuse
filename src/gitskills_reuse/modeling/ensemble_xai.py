@@ -37,6 +37,7 @@ import shap
 DEFAULT_CACHE_DIR = Path("data/processed/cache_sparse")
 DEFAULT_OUTPUT_DIR = Path("reports/modeling")
 DEFAULT_FIGURE_DIR = Path("reports/modeling/figures")
+EVALUATION_THRESHOLD = 0.50
 
 
 def run_ensemble_xai(
@@ -80,14 +81,14 @@ def run_ensemble_xai(
     
     # 2.1 Regressão Logística L2
     t_m = time.monotonic()
-    lr = LogisticRegression(penalty="l2", C=1.0, solver="lbfgs", max_iter=500, random_state=random_seed)
+    lr = LogisticRegression(penalty="l2", C=1.0, solver="liblinear", max_iter=1_000, random_state=random_seed)
     lr.fit(X_tr_sp, y_tr)
     lr_time = time.monotonic() - t_m
     probs_lr = lr.predict_proba(X_te_sp)[:, 1]
     roc_lr = roc_auc_score(y_te, probs_lr)
     pr_lr = average_precision_score(y_te, probs_lr)
-    f1_lr = f1_score(y_te, probs_lr >= 0.21, zero_division=0)
-    print(f"  [1. Logistic L2] ROC-AUC: {roc_lr:.4f} | PR-AUC: {pr_lr:.4f} | F1(0.21): {f1_lr:.4f} ({lr_time:.2f}s)", flush=True)
+    f1_lr = f1_score(y_te, probs_lr >= EVALUATION_THRESHOLD, zero_division=0)
+    print(f"  [1. Logistic L2] ROC-AUC: {roc_lr:.4f} | PR-AUC: {pr_lr:.4f} | F1(0.50): {f1_lr:.4f} ({lr_time:.2f}s)", flush=True)
 
     # 2.2 HistGradientBoosting
     t_m = time.monotonic()
@@ -99,8 +100,8 @@ def run_ensemble_xai(
     probs_hgb = hgb.predict_proba(X_te_dense)[:, 1]
     roc_hgb = roc_auc_score(y_te, probs_hgb)
     pr_hgb = average_precision_score(y_te, probs_hgb)
-    f1_hgb = f1_score(y_te, probs_hgb >= 0.21, zero_division=0)
-    print(f"  [2. GBDT Árvores] ROC-AUC: {roc_hgb:.4f} | PR-AUC: {pr_hgb:.4f} | F1(0.21): {f1_hgb:.4f} ({hgb_time:.2f}s)", flush=True)
+    f1_hgb = f1_score(y_te, probs_hgb >= EVALUATION_THRESHOLD, zero_division=0)
+    print(f"  [2. GBDT Árvores] ROC-AUC: {roc_hgb:.4f} | PR-AUC: {pr_hgb:.4f} | F1(0.50): {f1_hgb:.4f} ({hgb_time:.2f}s)", flush=True)
 
     # 2.3 MLP Neural Network
     t_m = time.monotonic()
@@ -117,15 +118,15 @@ def run_ensemble_xai(
     probs_mlp = mlp.predict_proba(X_te_dense)[:, 1]
     roc_mlp = roc_auc_score(y_te, probs_mlp)
     pr_mlp = average_precision_score(y_te, probs_mlp)
-    f1_mlp = f1_score(y_te, probs_mlp >= 0.21, zero_division=0)
-    print(f"  [3. MLP Neural]   ROC-AUC: {roc_mlp:.4f} | PR-AUC: {pr_mlp:.4f} | F1(0.21): {f1_mlp:.4f} ({mlp_time:.2f}s)", flush=True)
+    f1_mlp = f1_score(y_te, probs_mlp >= EVALUATION_THRESHOLD, zero_division=0)
+    print(f"  [3. MLP Neural]   ROC-AUC: {roc_mlp:.4f} | PR-AUC: {pr_mlp:.4f} | F1(0.50): {f1_mlp:.4f} ({mlp_time:.2f}s)", flush=True)
 
     # 2.4 Heterogeneous Blend
     probs_blend = 0.50 * probs_lr + 0.25 * probs_hgb + 0.25 * probs_mlp
     roc_blend = roc_auc_score(y_te, probs_blend)
     pr_blend = average_precision_score(y_te, probs_blend)
-    f1_blend = f1_score(y_te, probs_blend >= 0.21, zero_division=0)
-    print(f"  [4. Blend 50/25/25] ROC-AUC: {roc_blend:.4f} | PR-AUC: {pr_blend:.4f} | F1(0.21): {f1_blend:.4f}", flush=True)
+    f1_blend = f1_score(y_te, probs_blend >= EVALUATION_THRESHOLD, zero_division=0)
+    print(f"  [4. Blend 50/25/25] ROC-AUC: {roc_blend:.4f} | PR-AUC: {pr_blend:.4f} | F1(0.50): {f1_blend:.4f}", flush=True)
 
     # 3. Computação da Explicabilidade Estratificada
     print("\n[4/5] Computando atribuições XAI para cada componente e unificando via Aditividade...", flush=True)

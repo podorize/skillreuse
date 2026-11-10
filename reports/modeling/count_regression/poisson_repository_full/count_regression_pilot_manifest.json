@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-11-09T18:38:10.703049+00:00",
+  "protocol": "StratifiedGroupKFold on external training reused subset; external test untouched",
+  "target": "repository_count conditional on reused=1",
+  "group_column": "representative_repo_id",
+  "candidate_features": [
+    10000
+  ],
+  "top_k_text": [
+    500
+  ],
+  "views": [
+    "repository_only"
+  ],
+  "models": [
+    "poisson"
+  ],
+  "folds": 3,
+  "random_seed": 2027,
+  "rows": 25918,
+  "groups": 7701,
+  "primary_metric": "rmsle",
+  "selection_note": "f_regression over log1p(count) for textual term selection inside each fold",
+  "diagnostic_subset": false,
+  "subset_note": "full reused training subset"
+}

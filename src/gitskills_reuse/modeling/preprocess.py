@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -62,27 +63,31 @@ def build_preprocessor(
     min_df: int = 5,
     max_df: float = 0.95,
     max_features: int = 50_000,
+    text_select_k: int | None = None,
 ) -> ColumnTransformer:
     """Monta blocos multimodais; o chamador ajusta o transformer no fold de treino."""
     transformers: list[tuple[str, object, Sequence[str] | str]] = []
     if use_text:
         if "content" not in frame:
             raise ValueError("Coluna 'content' necessaria para o bloco TF-IDF")
-        transformers.append(
-            (
-                "text_tfidf",
-                TfidfVectorizer(
-                    ngram_range=ngram_range,
-                    min_df=min_df,
-                    max_df=max_df,
-                    max_features=max_features,
-                    sublinear_tf=True,
-                    strip_accents="unicode",
-                    dtype=np.float32,
-                ),
-                "content",
-            )
+        tfidf = TfidfVectorizer(
+            ngram_range=ngram_range,
+            min_df=min_df,
+            max_df=max_df,
+            max_features=max_features,
+            sublinear_tf=True,
+            strip_accents="unicode",
+            dtype=np.float32,
         )
+        if text_select_k is not None:
+            if text_select_k < 1 or text_select_k > max_features:
+                raise ValueError("text_select_k deve estar entre 1 e max_features")
+            text_transformer: object = Pipeline(
+                [("tfidf", tfidf), ("select", SelectKBest(f_regression, k=text_select_k))]
+            )
+        else:
+            text_transformer = tfidf
+        transformers.append(("text_tfidf", text_transformer, "content"))
 
     numeric_cols: list[str] = []
     categorical_cols: list[str] = []
@@ -127,7 +132,9 @@ def validate_predictor_columns(frame: pd.DataFrame) -> None:
     """Falha se uma coluna alvo ou identificador estiver prestes a virar predictor."""
     leaked = sorted(LEAKAGE_COLUMNS.intersection(frame.columns))
     if leaked:
-        raise ValueError(f"Colunas de alvo, identificacao ou particao devem ser removidas: {leaked}")
+        raise ValueError(
+            f"Colunas de alvo, identificacao ou particao devem ser removidas: {leaked}"
+        )
 
 
 def predictor_view(

@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "2026-11-09T23:33:20.537622+00:00",
+  "protocol": "discipline final evaluation; repository-only; external test used once",
+  "target": "repository_count conditional on reused=1",
+  "train_rows": 25918,
+  "test_rows": 6479,
+  "train_groups": 7701,
+  "test_groups": 2102,
+  "group_overlap": 0,
+  "feature_count": 59,
+  "models": [
+    "random_forest",
+    "gradient_boosting"
+  ]
+}

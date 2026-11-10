@@ -1,0 +1,4 @@
+fold,view,model,feature_count,train_rows,validation_rows,group_overlap,fit_seconds,macro_f1,balanced_accuracy
+1,hybrid,multinomial_nb,100,2000,1000,0,0.00849516699963715,0.3722374374816545,0.402
+2,hybrid,multinomial_nb,100,2000,1000,0,0.005661250004777685,0.10620450566329181,0.242
+3,hybrid,multinomial_nb,100,2000,1000,0,0.005410666999523528,0.12442193442401603,0.253

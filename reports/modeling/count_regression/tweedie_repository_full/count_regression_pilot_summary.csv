@@ -1,0 +1,2 @@
+index,candidate_features,top_k_text,view,model,rmsle_mean,rmsle_std,mae_mean,mae_std,mae_log1p_mean,mae_log1p_std,spearman_mean,spearman_std
+0,10000,500,repository_only,tweedie_1p5,0.6611955753068679,0.0040584260143443135,4.031487683749835,0.17718522572022868,0.5410120502081395,0.006497209865513801,0.25769099794173705,0.036323712579681706

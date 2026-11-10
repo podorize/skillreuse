@@ -1,0 +1,38 @@
+{
+  "generated_at_utc": "2026-10-27T22:25:07.557952+00:00",
+  "protocol": "Three-fold StratifiedGroupKFold on the 160,000-row external training partition; external test rows excluded",
+  "n_splits": 3,
+  "random_seed": 20261009,
+  "group_column": "representative_repo_id",
+  "stratification_column": "split_stratum",
+  "rows_used": 160000,
+  "external_test_rows_used": 0,
+  "tabular_cache": "reports/modeling/ablation/structure_and_repo/cache/9fdb7d2bce2479a92132547d3d4f59718a108083bc34cb9cbcacb55a3f795585",
+  "text_cache": "reports/modeling/ablation/text_only/cache/23e4538a5fe107e5dc4ebabd5726a0d5c1635b99d10cf86d3a0f27a8ad1bd8a9",
+  "text_selection": {
+    "method": "chi2",
+    "features_per_fold": 100
+  },
+  "hybrid_feature_count_by_fold": [
+    243,
+    248,
+    249
+  ],
+  "model_families": [
+    "1. Logistic L2 (Baseline)",
+    "2. ElasticNet (L1+L2 via SGD)",
+    "3. MLP Neural Net (2-layer, L2)",
+    "4. Constrained GBDT (Anti-Atalho)",
+    "5. Heterogeneous Blend"
+  ],
+  "threshold_for_f1": 0.5,
+  "oof_selected_threshold": 0.18872562172994545,
+  "oof_selected_f1": 0.37715179968701096,
+  "oof_threshold_selection": "Maximum F1 over three-fold out-of-fold probabilities from the Logistic L2 model; labels are training-split labels only",
+  "summary_file": "reports/modeling/model_exploration_benchmark.csv",
+  "fold_results_file": "reports/modeling/model_exploration_benchmark_folds.csv",
+  "intensity_fold_results_file": "reports/modeling/model_exploration_intensity_folds.csv",
+  "intensity_summary_file": "reports/modeling/model_exploration_intensity_summary.csv",
+  "oof_predictions_file": "reports/modeling/model_exploration_oof_predictions.csv",
+  "runtime_seconds": 282.93
+}

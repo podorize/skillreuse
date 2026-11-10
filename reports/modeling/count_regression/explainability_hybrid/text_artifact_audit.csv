@@ -1,0 +1,501 @@
+feature,coefficient_log1p,absolute_coefficient,url_artifact,date_artifact,numeric_artifact,identifier_artifact,artifact_any
+date_added,1.066281332627712,1.066281332627712,False,False,False,False,False
+date_added 2026,1.0589972540227923,1.0589972540227923,False,True,True,False,True
+source community,0.9449928791830668,0.9449928791830668,False,False,False,False,False
+your,0.8089736978309883,0.8089736978309883,False,False,False,False,False
+rube,0.7777038819112501,0.7777038819112501,False,False,False,False,False
+community date_added,0.7054847546467824,0.7054847546467824,False,False,False,False,False
+described,0.6996769107812801,0.6996769107812801,False,False,False,False,False
+skill only,0.6768576597013765,0.6768576597013765,False,False,False,False,False
+02 27,0.6679398540426126,0.6679398540426126,False,False,True,False,True
+environment specific,0.6658740115363472,0.6658740115363472,False,False,False,False,False
+substitute for,0.6334362339502804,0.6334362339502804,False,False,False,False,False
+risk unknown,0.6123335505483897,0.6123335505483897,False,False,False,False,False
+not treat,0.6028486143339148,0.6028486143339148,False,False,False,False,False
+substitute,0.5983245148053996,0.5983245148053996,False,False,False,False,False
+unknown source,0.5895779358718842,0.5895779358718842,False,False,False,False,False
+treat the,0.5829428063070015,0.5829428063070015,False,False,False,False,False
+criteria are,0.5453567708856977,0.5453567708856977,False,False,False,False,False
+02,0.5339821582435061,0.5339821582435061,False,False,True,False,True
+get,0.5294785144639461,0.5294785144639461,False,False,False,False,False
+output as,0.5204386646458917,0.5204386646458917,False,False,False,False,False
+to use,0.5172743374272105,0.5172743374272105,False,False,False,False,False
+if required,0.5156800889889461,0.5156800889889461,False,False,False,False,False
+27,0.5089245767474762,0.5089245767474762,False,False,True,False,True
+the scope,0.5030615684934765,0.5030615684934765,False,False,False,False,False
+when to,0.4922862284189042,0.4922862284189042,False,False,False,False,False
+practices and,0.4920734042603148,0.4920734042603148,False,False,False,False,False
+clarification,0.488939829263824,0.488939829263824,False,False,False,False,False
+for detailed,0.470815470269901,0.470815470269901,False,False,False,False,False
+https,0.4558534859747233,0.4558534859747233,False,False,False,False,False
+above,0.444485989782596,0.444485989782596,False,False,False,False,False
+ask for,0.4410986321427124,0.4410986321427124,False,False,False,False,False
+requires,0.4232439062132453,0.4232439062132453,False,False,False,False,False
+description use,-0.4223389077517164,0.4223389077517164,False,False,False,False,False
+2026 02,0.4212389748417258,0.4212389748417258,False,True,True,False,True
+matches the,0.4200938348579886,0.4200938348579886,False,False,False,False,False
+limitations,0.4051423661928772,0.4051423661928772,False,False,False,False,False
+are missing,0.4026934456436528,0.4026934456436528,False,False,False,False,False
+required inputs,0.4026302180270854,0.4026302180270854,False,False,False,False,False
+install,0.3806238926754577,0.3806238926754577,False,False,False,False,False
+best,0.3778115547927332,0.3778115547927332,False,False,False,False,False
+to execute,0.3719230586809144,0.3719230586809144,False,False,False,False,False
+quality,-0.357865431469046,0.357865431469046,False,False,False,False,False
+https github,0.3492762817975116,0.3492762817975116,False,False,False,False,False
+stop and,0.3443060356606561,0.3443060356606561,False,False,False,False,False
+the workflow,0.318139201068936,0.318139201068936,False,False,False,False,False
+environment,0.3070672509449776,0.3070672509449776,False,False,False,False,False
+risk,0.3068066201106199,0.3068066201106199,False,False,False,False,False
+github com,0.3031439890041494,0.3031439890041494,False,False,False,False,False
+clearly,0.2977327468122879,0.2977327468122879,False,False,False,False,False
+defaultazurecredential,0.2962363032068603,0.2962363032068603,False,False,False,False,False
+unknown,0.287604072153721,0.287604072153721,False,False,False,False,False
+the task,0.2754232608858082,0.2754232608858082,False,False,False,False,False
+validate,-0.2732594683006656,0.2732594683006656,False,False,False,False,False
+updated,-0.2721770990490476,0.2721770990490476,False,False,False,False,False
+workflow or,0.2688425455203508,0.2688425455203508,False,False,False,False,False
+assumptions,-0.258077097872399,0.258077097872399,False,False,False,False,False
+principles,0.2560227792290615,0.2560227792290615,False,False,False,False,False
+best practices,0.2551141059796876,0.2551141059796876,False,False,False,False,False
+parameters,0.2548356479697218,0.2548356479697218,False,False,False,False,False
+decisions,-0.2532675994329757,0.2532675994329757,False,False,False,False,False
+azure identity,0.2496362536734964,0.2496362536734964,False,False,False,False,False
+large,0.2421278380793812,0.2421278380793812,False,False,False,False,False
+domain,-0.2379874280395315,0.2379874280395315,False,False,False,False,False
+verification,-0.2367267200817018,0.2367267200817018,False,False,False,False,False
+of,0.2345054128586008,0.2345054128586008,False,False,False,False,False
+current,-0.226222579043775,0.226222579043775,False,False,False,False,False
+documentation,-0.2240990322829741,0.2240990322829741,False,False,False,False,False
+comprehensive,0.2217601875320836,0.2217601875320836,False,False,False,False,False
+2025,-0.2190118872796486,0.2190118872796486,False,True,True,False,True
+provide,0.2188971209390776,0.2188971209390776,False,False,False,False,False
+needs,-0.2180286015215644,0.2180286015215644,False,False,False,False,False
+described in,0.2178301743566872,0.2178301743566872,False,False,False,False,False
+trigger,-0.2109921279283515,0.2109921279283515,False,False,False,False,False
+work,-0.2105984798431167,0.2105984798431167,False,False,False,False,False
+you need,0.2073019718520503,0.2073019718520503,False,False,False,False,False
+based on,0.2061917754554722,0.2061917754554722,False,False,False,False,False
+standards,-0.2060281294468554,0.2060281294468554,False,False,False,False,False
+research,0.2006564853833662,0.2006564853833662,False,False,False,False,False
+related skills,0.2000402422102318,0.2000402422102318,False,False,False,False,False
+sdk for,0.1980496650138057,0.1980496650138057,False,False,False,False,False
+are required,0.1956085519798849,0.1956085519798849,False,False,False,False,False
+practices,0.192264738840067,0.192264738840067,False,False,False,False,False
+produces,-0.1896794680029231,0.1896794680029231,False,False,False,False,False
+patterns,0.1829948837040053,0.1829948837040053,False,False,False,False,False
+results,0.178728916365635,0.178728916365635,False,False,False,False,False
+related,0.177460848939842,0.177460848939842,False,False,False,False,False
+deep,0.1749241015117117,0.1749241015117117,False,False,False,False,False
+appropriate,0.1733601298807275,0.1733601298807275,False,False,False,False,False
+scale,0.1695553251717244,0.1695553251717244,False,False,False,False,False
+the output,0.166458206830304,0.166458206830304,False,False,False,False,False
+requests,0.1664442367929998,0.1664442367929998,False,False,False,False,False
+clear,0.1662769750274039,0.1662769750274039,False,False,False,False,False
+cross,-0.1629673027231873,0.1629673027231873,False,False,False,False,False
+consider,0.1625824068559966,0.1625824068559966,False,False,False,False,False
+for comprehensive,0.1595105565692583,0.1595105565692583,False,False,False,False,False
+overview,-0.1479558328873762,0.1479558328873762,False,False,False,False,False
+expertise,-0.147472817144128,0.147472817144128,False,False,False,False,False
+last updated,-0.1447654696818841,0.1447654696818841,False,False,False,False,False
+capabilities,0.1406162629575986,0.1406162629575986,False,False,False,False,False
+level expert,-0.1374018905936023,0.1374018905936023,False,False,False,False,False
+formats,0.1353525282917638,0.1353525282917638,False,False,False,False,False
+explanations,0.1337707325442035,0.1337707325442035,False,False,False,False,False
+technical,-0.1334797987420959,0.1334797987420959,False,False,False,False,False
+create,0.1333741416485543,0.1333741416485543,False,False,False,False,False
+analysis,0.1324540129150296,0.1324540129150296,False,False,False,False,False
+requirements,-0.1296658458399737,0.1296658458399737,False,False,False,False,False
+assumptions and,-0.1289662597895446,0.1289662597895446,False,False,False,False,False
+steps,-0.1277583781507324,0.1277583781507324,False,False,False,False,False
+science,-0.1276027042077604,0.1276027042077604,False,False,False,False,False
+applications,0.1270660646635563,0.1270660646635563,False,False,False,False,False
+usage guidelines,-0.1268161352606911,0.1268161352606911,False,False,False,False,False
+guidelines,-0.1268054739015175,0.1268054739015175,False,False,False,False,False
+last,-0.12572492906448,0.12572492906448,False,False,False,False,False
+playbook md,0.1257048460251797,0.1257048460251797,False,False,False,False,False
+validation,-0.1251699140401113,0.1251699140401113,False,False,False,False,False
+and is,-0.1249491997317262,0.1249491997317262,False,False,False,False,False
+processing,0.1238706917717377,0.1238706917717377,False,False,False,False,False
+problem,-0.1205350745422087,0.1205350745422087,False,False,False,False,False
+the context,0.1183078905377349,0.1183078905377349,False,False,False,False,False
+level,0.1160107764029026,0.1160107764029026,False,False,False,False,False
+when you,0.1144569063907407,0.1144569063907407,False,False,False,False,False
+techniques,0.1108578894746501,0.1108578894746501,False,False,False,False,False
+for production,-0.1101510668160423,0.1101510668160423,False,False,False,False,False
+results with,-0.1090385288528121,0.1090385288528121,False,False,False,False,False
+updated 2025,-0.1079362636797914,0.1079362636797914,False,True,True,False,True
+and constraints,-0.1071421020448761,0.1071421020448761,False,False,False,False,False
+activated,-0.1026622205984683,0.1026622205984683,False,False,False,False,False
+com,0.0981826912574201,0.0981826912574201,False,False,False,False,False
+to be,-0.0972120242409613,0.0972120242409613,False,False,False,False,False
+designed for,-0.0937313186618483,0.0937313186618483,False,False,False,False,False
+explicitly,-0.0934412594577497,0.0934412594577497,False,False,False,False,False
+document,-0.0928523846600561,0.0928523846600561,False,False,False,False,False
+expectations,-0.0919825374593018,0.0919825374593018,False,False,False,False,False
+input,0.0909325914973034,0.0909325914973034,False,False,False,False,False
+output format,-0.0898102953673102,0.0898102953673102,False,False,False,False,False
+trigger conditions,-0.0891695999873637,0.0891695999873637,False,False,False,False,False
+applicable,0.0879040003480077,0.0879040003480077,False,False,False,False,False
+such,-0.0837657623462733,0.0837657623462733,False,False,False,False,False
+maintain,0.0835892288229832,0.0835892288229832,False,False,False,False,False
+methodology,-0.0826306583074167,0.0826306583074167,False,False,False,False,False
+assurance,-0.0823704233791612,0.0823704233791612,False,False,False,False,False
+require,0.0819184336339662,0.0819184336339662,False,False,False,False,False
+stated,-0.0805987776834271,0.0805987776834271,False,False,False,False,False
+specify,0.0804575386371376,0.0804575386371376,False,False,False,False,False
+assumptions explicitly,-0.0768141236988635,0.0768141236988635,False,False,False,False,False
+feedback,-0.076302939273029,0.076302939273029,False,False,False,False,False
+information,0.0761124993573511,0.0761124993573511,False,False,False,False,False
+required,0.0747806277293111,0.0747806277293111,False,False,False,False,False
+the skill,-0.0742469382527387,0.0742469382527387,False,False,False,False,False
+validation and,-0.0737478912799064,0.0737478912799064,False,False,False,False,False
+known,0.0728669895534555,0.0728669895534555,False,False,False,False,False
+subject,0.0726063513787043,0.0726063513787043,False,False,False,False,False
+limit,-0.0725470966700052,0.0725470966700052,False,False,False,False,False
+efficiency,-0.0722314170437559,0.0722314170437559,False,False,False,False,False
+application,-0.0721286024762154,0.0721286024762154,False,False,False,False,False
+quality assurance,-0.0720189622777051,0.0720189622777051,False,False,False,False,False
+established,-0.0717869322462561,0.0717869322462561,False,False,False,False,False
+literature,0.0709524540368341,0.0709524540368341,False,False,False,False,False
+enables,-0.0704093727957821,0.0704093727957821,False,False,False,False,False
+approach,-0.0699159562927861,0.0699159562927861,False,False,False,False,False
+designed,-0.0688585108807227,0.0688585108807227,False,False,False,False,False
+world,-0.0685867247886484,0.0685867247886484,False,False,False,False,False
+methods,0.0682793766501467,0.0682793766501467,False,False,False,False,False
+skills for,0.0672487336528773,0.0672487336528773,False,False,False,False,False
+skill enables,-0.0671477918478763,0.0671477918478763,False,False,False,False,False
+problems,-0.0665761104299338,0.0665761104299338,False,False,False,False,False
+involves,0.0663039439816226,0.0663039439816226,False,False,False,False,False
+key capabilities,-0.0654462741196228,0.0654462741196228,False,False,False,False,False
+specific constraints,-0.0653189543110147,0.0653189543110147,False,False,False,False,False
+principles and,0.0646598800615192,0.0646598800615192,False,False,False,False,False
+all steps,-0.063942649060477,0.063942649060477,False,False,False,False,False
+the problem,-0.0638430649631321,0.0638430649631321,False,False,False,False,False
+complementary,0.0637668355743316,0.0637668355743316,False,False,False,False,False
+follows best,-0.063212492680282,0.063212492680282,False,False,False,False,False
+methodologies,-0.0627357408323525,0.0627357408323525,False,False,False,False,False
+complexity,-0.0624613507041596,0.0624613507041596,False,False,False,False,False
+need to,0.0621208549501783,0.0621208549501783,False,False,False,False,False
+diagrams,-0.0613864532011585,0.0613864532011585,False,False,False,False,False
+intermediate,-0.0611814736920583,0.0611814736920583,False,False,False,False,False
+recommendations,-0.0610966431629325,0.0610966431629325,False,False,False,False,False
+needs to,-0.060814016016063,0.060814016016063,False,False,False,False,False
+industry,0.0604308820979232,0.0604308820979232,False,False,False,False,False
+overview this,0.0595266218148658,0.0595266218148658,False,False,False,False,False
+such as,-0.0584225751796154,0.0584225751796154,False,False,False,False,False
+context of,-0.0573703786203322,0.0573703786203322,False,False,False,False,False
+production use,-0.0570213582365701,0.0570213582365701,False,False,False,False,False
+may,0.0561766644135895,0.0561766644135895,False,False,False,False,False
+ability,-0.0559765409653348,0.0559765409653348,False,False,False,False,False
+relevant,0.0549728316307485,0.0549728316307485,False,False,False,False,False
+includes,-0.0548468049426039,0.0548468049426039,False,False,False,False,False
+skill type,-0.0544963188741522,0.0544963188741522,False,False,False,False,False
+and methods,-0.0544611263182909,0.0544611263182909,False,False,False,False,False
+proficiency,-0.0541778676826914,0.0541778676826914,False,False,False,False,False
+version information,-0.0541691650207584,0.0541691650207584,False,False,False,False,False
+protocols,-0.0541075418826771,0.0541075418826771,False,False,False,False,False
+validate inputs,-0.053731348678974,0.053731348678974,False,False,False,False,False
+format the,-0.0529004071950116,0.0529004071950116,False,False,False,False,False
+domain expertise,0.0513306131406898,0.0513306131406898,False,False,False,False,False
+task requires,-0.0508783549706568,0.0508783549706568,False,False,False,False,False
+follow established,-0.0502390867787878,0.0502390867787878,False,False,False,False,False
+practical,-0.0495511208418823,0.0495511208418823,False,False,False,False,False
+references to,-0.0487987194357919,0.0487987194357919,False,False,False,False,False
+this skill,0.048585828074942,0.048585828074942,False,False,False,False,False
+be,0.0485406436574846,0.0485406436574846,False,False,False,False,False
+validation verify,-0.0484761866261778,0.0484761866261778,False,False,False,False,False
+use in,-0.0483058994986631,0.0483058994986631,False,False,False,False,False
+inputs before,-0.0480030657022892,0.0480030657022892,False,False,False,False,False
+explicitly requests,-0.0479535630434894,0.0479535630434894,False,False,False,False,False
+domain specific,0.0477801320435475,0.0477801320435475,False,False,False,False,False
+stated in,-0.0475270376317322,0.0475270376317322,False,False,False,False,False
+and decisions,-0.0473669899791292,0.0473669899791292,False,False,False,False,False
+provide comprehensive,-0.046997220273365,0.046997220273365,False,False,False,False,False
+outputs,0.0466519667376415,0.0466519667376415,False,False,False,False,False
+skill produces,-0.046439183366719,0.046439183366719,False,False,False,False,False
+follows,0.044889009221162,0.044889009221162,False,False,False,False,False
+with problem,-0.0448868975168453,0.0448868975168453,False,False,False,False,False
+literature and,-0.0445544351481892,0.0445544351481892,False,False,False,False,False
+iteration,-0.0434333480870781,0.0434333480870781,False,False,False,False,False
+ability to,-0.0430521581025173,0.0430521581025173,False,False,False,False,False
+perform,0.0428756654888844,0.0428756654888844,False,False,False,False,False
+to relevant,-0.042858490244388,0.042858490244388,False,False,False,False,False
+through,0.0427738739897368,0.0427738739897368,False,False,False,False,False
+and limitations,-0.0426344360316222,0.0426344360316222,False,False,False,False,False
+applicability,-0.0420353910775434,0.0420353910775434,False,False,False,False,False
+benchmarks or,-0.0417651807862822,0.0417651807862822,False,False,False,False,False
+skill overview,-0.0414499715899279,0.0414499715899279,False,False,False,False,False
+understanding,0.0414493590664463,0.0414493590664463,False,False,False,False,False
+subject to,-0.0414021078597093,0.0414021078597093,False,False,False,False,False
+protocols and,-0.0413288247223445,0.0413288247223445,False,False,False,False,False
+adjacent,-0.0411852377188425,0.0411852377188425,False,False,False,False,False
+level understanding,-0.0407195250852104,0.0407195250852104,False,False,False,False,False
+stay current,-0.0404480568036579,0.0404480568036579,False,False,False,False,False
+explanation,0.0399073030104291,0.0399073030104291,False,False,False,False,False
+constraints,0.0398259331405697,0.0398259331405697,False,False,False,False,False
+documentation clear,-0.0397601097234243,0.0397601097234243,False,False,False,False,False
+against,-0.0393117006393854,0.0393117006393854,False,False,False,False,False
+detailed technical,-0.039186530334622,0.039186530334622,False,False,False,False,False
+use of,-0.0388928055802289,0.0388928055802289,False,False,False,False,False
+to real,-0.0388032427180608,0.0388032427180608,False,False,False,False,False
+conditions,-0.0387684791052046,0.0387684791052046,False,False,False,False,False
+feedback output,-0.0383600367446878,0.0383600367446878,False,False,False,False,False
+expertise deep,-0.0383357172211767,0.0383357172211767,False,False,False,False,False
+contexts,0.0383196260940679,0.0383196260940679,False,False,False,False,False
+current with,-0.0382318409511341,0.0382318409511341,False,False,False,False,False
+the domain,-0.0381976762674883,0.0381976762674883,False,False,False,False,False
+intermediate results,-0.038175745779164,0.038175745779164,False,False,False,False,False
+explicitly use,-0.0380450112837647,0.0380450112837647,False,False,False,False,False
+skills consider,-0.0380448065816242,0.0380448065816242,False,False,False,False,False
+standardized,-0.0379183278389851,0.0379183278389851,False,False,False,False,False
+stay,0.0378988329859222,0.0378988329859222,False,False,False,False,False
+assurance validation,-0.037647811649007,0.037647811649007,False,False,False,False,False
+standardized formats,-0.0374344459690525,0.0374344459690525,False,False,False,False,False
+domain of,-0.0371091758091739,0.0371091758091739,False,False,False,False,False
+established in,-0.0370643760767268,0.0370643760767268,False,False,False,False,False
+techniques key,-0.0369787334533417,0.0369787334533417,False,False,False,False,False
+validation through,-0.0369276442022532,0.0369276442022532,False,False,False,False,False
+efficiency for,-0.0368450835416077,0.0368450835416077,False,False,False,False,False
+comprehensive explanations,-0.0366853145802903,0.0366853145802903,False,False,False,False,False
+results are,-0.0364574125465737,0.0364574125465737,False,False,False,False,False
+and feedback,-0.0361673034904141,0.0361673034904141,False,False,False,False,False
+deep understanding,-0.0361369114217202,0.0361369114217202,False,False,False,False,False
+clearly specify,-0.0361081509257465,0.0361081509257465,False,False,False,False,False
+is designed,-0.0360702884052943,0.0360702884052943,False,False,False,False,False
+and completeness,-0.0358569392615839,0.0358569392615839,False,False,False,False,False
+verify results,-0.0357672757709478,0.0357672757709478,False,False,False,False,False
+skill,-0.0357471048014178,0.0357471048014178,False,False,False,False,False
+completeness,-0.0354094096078554,0.0354094096078554,False,False,False,False,False
+investigation limitations,-0.0353832357718473,0.0353832357718473,False,False,False,False,False
+activated when,-0.0352658023150269,0.0352658023150269,False,False,False,False,False
+through independent,-0.0352533781581119,0.0352533781581119,False,False,False,False,False
+checking and,-0.0348762720142607,0.0348762720142607,False,False,False,False,False
+real world,-0.0348475649741913,0.0348475649741913,False,False,False,False,False
+educational contexts,-0.034813130872749,0.034813130872749,False,False,False,False,False
+problem scale,-0.0347939647267571,0.0347939647267571,False,False,False,False,False
+all assumptions,-0.0346446430154961,0.0346446430154961,False,False,False,False,False
+standards tool,-0.0345851446269349,0.0345851446269349,False,False,False,False,False
+scale problems,-0.0345359826181759,0.0345359826181759,False,False,False,False,False
+inputs,0.0344008581012628,0.0344008581012628,False,False,False,False,False
+appropriate input,-0.0344005595355791,0.0344005595355791,False,False,False,False,False
+work involves,-0.0342603198612558,0.0342603198612558,False,False,False,False,False
+outputs include,-0.0342351519488676,0.0342351519488676,False,False,False,False,False
+or theoretical,-0.0341765285537489,0.0341765285537489,False,False,False,False,False
+processing document,-0.0338854897640182,0.0338854897640182,False,False,False,False,False
+application ability,-0.0338170948246416,0.0338170948246416,False,False,False,False,False
+methodologies or,-0.0337408267552329,0.0337408267552329,False,False,False,False,False
+tasks such,-0.0336845766528936,0.0336845766528936,False,False,False,False,False
+it represents,-0.0336475389975485,0.0336475389975485,False,False,False,False,False
+iteration refine,-0.0336115105500244,0.0336115105500244,False,False,False,False,False
+be activated,-0.0335628823353893,0.0335628823353893,False,False,False,False,False
+refine approach,-0.0335005216477137,0.0335005216477137,False,False,False,False,False
+to assumptions,-0.0334214034210899,0.0334214034210899,False,False,False,False,False
+problem parameters,-0.0334175323622301,0.0334175323622301,False,False,False,False,False
+level expertise,-0.0334110118361828,0.0334110118361828,False,False,False,False,False
+uncertainty,-0.0333780222615339,0.0333780222615339,False,False,False,False,False
+independent methods,-0.0333658473188579,0.0333658473188579,False,False,False,False,False
+formats appropriate,-0.0333311943912934,0.0333311943912934,False,False,False,False,False
+assumptions stated,-0.0333255444659644,0.0333255444659644,False,False,False,False,False
+error checking,-0.0333159042510076,0.0333159042510076,False,False,False,False,False
+handling compare,-0.0332665262752317,0.0332665262752317,False,False,False,False,False
+expectations maintain,-0.0332496999918201,0.0332496999918201,False,False,False,False,False
+includes tasks,-0.0331849694324676,0.0331849694324676,False,False,False,False,False
+appropriate references,-0.0331306185481447,0.0331306185481447,False,False,False,False,False
+analysis complementary,-0.0331038970093421,0.0331038970093421,False,False,False,False,False
+expertise and,-0.0330696609564209,0.0330696609564209,False,False,False,False,False
+methods version,-0.0330189536301675,0.0330189536301675,False,False,False,False,False
+completeness results,-0.0329409211046772,0.0329409211046772,False,False,False,False,False
+theoretical expectations,-0.0328535277632257,0.0328535277632257,False,False,False,False,False
+contexts description,-0.032853361538945,0.032853361538945,False,False,False,False,False
+understanding of,0.0328477494157476,0.0328477494157476,False,False,False,False,False
+methods assumptions,-0.0327870772759139,0.0327870772759139,False,False,False,False,False
+increases with,-0.0326907368371282,0.0326907368371282,False,False,False,False,False
+consider combining,-0.0326407901835979,0.0326407901835979,False,False,False,False,False
+guidelines input,-0.0325456205656032,0.0325456205656032,False,False,False,False,False
+consider computational,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+community trigger,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+constraints methodology,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+applications outputs,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+applicability related,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+practices established,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+dimensionality domain,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+maintain reproducibility,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+methodology may,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+proficiency effective,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+disciplinary approaches,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+quantification visualizations,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+information complexity,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+problems stay,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+problems quality,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+methods complexity,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+predictions documentation,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+methodologies cross,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+methods practical,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+limit applicability,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+decisions iteration,-0.0324721659179111,0.0324721659179111,False,False,False,False,False
+where appropriate,-0.0324538535339934,0.0324538535339934,False,False,False,False,False
+results against,-0.0324347135429488,0.0324347135429488,False,False,False,False,False
+numerical,0.032361485600512,0.032361485600512,False,False,False,False,False
+in standardized,-0.0323313189390425,0.0323313189390425,False,False,False,False,False
+subdiscipline,-0.0323273058809228,0.0323273058809228,False,False,False,False,False
+require validation,-0.0322898959805311,0.0322898959805311,False,False,False,False,False
+tool proficiency,-0.0322689231881906,0.0322689231881906,False,False,False,False,False
+are subject,-0.032232371000203,0.032232371000203,False,False,False,False,False
+limitations usage,-0.0322282006555463,0.0322282006555463,False,False,False,False,False
+data quality,-0.0321087858838062,0.0321087858838062,False,False,False,False,False
+steps and,0.0321053943816622,0.0321053943816622,False,False,False,False,False
+requires appropriate,-0.0320920392374434,0.0320920392374434,False,False,False,False,False
+further investigation,-0.0318558360413852,0.0318558360413852,False,False,False,False,False
+combining this,-0.0317843305430396,0.0317843305430396,False,False,False,False,False
+technical analysis,-0.0317675139377318,0.0317675139377318,False,False,False,False,False
+compare results,-0.0316334035158048,0.0316334035158048,False,False,False,False,False
+known benchmarks,-0.0316056578310717,0.0316056578310717,False,False,False,False,False
+practices validation,-0.0315110422585162,0.0315110422585162,False,False,False,False,False
+relevant literature,-0.0314986065049316,0.0314986065049316,False,False,False,False,False
+theoretical predictions,-0.0314005639005827,0.0314005639005827,False,False,False,False,False
+and follows,-0.0313905991764684,0.0313905991764684,False,False,False,False,False
+skill with,0.0313554388123534,0.0313554388123534,False,False,False,False,False
+appropriate error,-0.0312932027237023,0.0312932027237023,False,False,False,False,False
+results using,-0.0312868783051714,0.0312868783051714,False,False,False,False,False
+and verification,-0.031214383400734,0.031214383400734,False,False,False,False,False
+use appropriate,0.0311893729403857,0.0311893729403857,False,False,False,False,False
+industry and,-0.0311141130287014,0.0311141130287014,False,False,False,False,False
+world problems,-0.031114043929755,0.031114043929755,False,False,False,False,False
+include detailed,-0.0310079271466941,0.0310079271466941,False,False,False,False,False
+effective use,-0.0310007527643601,0.0310007527643601,False,False,False,False,False
+clear explanation,-0.0309583867400705,0.0309583867400705,False,False,False,False,False
+methodology follow,-0.030926900402133,0.030926900402133,False,False,False,False,False
+constraints may,-0.0307945510651807,0.0307945510651807,False,False,False,False,False
+with theoretical,-0.0307686279259152,0.0307686279259152,False,False,False,False,False
+methods recommendations,-0.030627499904576,0.030627499904576,False,False,False,False,False
+operations related,-0.0304829046379981,0.0304829046379981,False,False,False,False,False
+analysis numerical,-0.0303444188619577,0.0303444188619577,False,False,False,False,False
+of all,-0.0300810332419366,0.0300810332419366,False,False,False,False,False
+numerical results,-0.0299794213706219,0.0299794213706219,False,False,False,False,False
+requirements clearly,-0.0298903391699351,0.0298903391699351,False,False,False,False,False
+and dimensionality,-0.0297239425225506,0.0297239425225506,False,False,False,False,False
+reproducibility through,-0.0296856346751897,0.0296856346751897,False,False,False,False,False
+capabilities domain,-0.0296687494243262,0.0296687494243262,False,False,False,False,False
+where,-0.0295602627368564,0.0295602627368564,False,False,False,False,False
+when applicable,-0.029417422273373,0.029417422273373,False,False,False,False,False
+with uncertainty,-0.0293810049113916,0.0293810049113916,False,False,False,False,False
+from,0.0293607997406743,0.0293607997406743,False,False,False,False,False
+against known,-0.029258670760549,0.029258670760549,False,False,False,False,False
+input requirements,-0.0292402903731654,0.0292402903731654,False,False,False,False,False
+compare,-0.0291939129511532,0.0291939129511532,False,False,False,False,False
+may limit,-0.0289474781934093,0.0289474781934093,False,False,False,False,False
+applicable best,-0.0288565700354051,0.0288565700354051,False,False,False,False,False
+refine,-0.028843983018129,0.028843983018129,False,False,False,False,False
+in the,0.0286675079101955,0.0286675079101955,False,False,False,False,False
+level advanced,-0.0279662470452499,0.0279662470452499,False,False,False,False,False
+conditions this,-0.0279246074632923,0.0279246074632923,False,False,False,False,False
+on intermediate,-0.0275353156868974,0.0275353156868974,False,False,False,False,False
+with adjacent,-0.0275040562109549,0.0275040562109549,False,False,False,False,False
+independent,0.0273940606319707,0.0273940606319707,False,False,False,False,False
+reproducibility,-0.0270046317295136,0.0270046317295136,False,False,False,False,False
+visualizations and,-0.0268140120926851,0.0268140120926851,False,False,False,False,False
+complexity increases,-0.0267791824196137,0.0267791824196137,False,False,False,False,False
+cross disciplinary,-0.02671828371049,0.02671828371049,False,False,False,False,False
+skill leverages,-0.0266181249787856,0.0266181249787856,False,False,False,False,False
+practical application,-0.0263453929483285,0.0263453929483285,False,False,False,False,False
+input data,-0.0263393115351237,0.0263393115351237,False,False,False,False,False
+or techniques,-0.0262113909764914,0.0262113909764914,False,False,False,False,False
+verification of,-0.0256160647489061,0.0256160647489061,False,False,False,False,False
+real,0.0253832340740384,0.0253832340740384,False,False,False,False,False
+explanations of,-0.024942529792743,0.024942529792743,False,False,False,False,False
+quality and,-0.0248018610247554,0.0248018610247554,False,False,False,False,False
+diagrams where,-0.0247811769232692,0.0247811769232692,False,False,False,False,False
+research industry,-0.0246745388234194,0.0246745388234194,False,False,False,False,False
+output needs,-0.0244665458940663,0.0244665458940663,False,False,False,False,False
+leverages,-0.0242262663885975,0.0242262663885975,False,False,False,False,False
+documentation provide,-0.0238767103215124,0.0238767103215124,False,False,False,False,False
+disciplinary,-0.0237117698843026,0.0237117698843026,False,False,False,False,False
+before processing,-0.0234107434461136,0.0234107434461136,False,False,False,False,False
+in research,-0.0230231565611142,0.0230231565611142,False,False,False,False,False
+documentation consider,-0.0226534828171543,0.0226534828171543,False,False,False,False,False
+skill when,0.0225518937317969,0.0225518937317969,False,False,False,False,False
+comprehensive analysis,0.0225385472895938,0.0225385472895938,False,False,False,False,False
+computational efficiency,-0.0225354024668965,0.0225354024668965,False,False,False,False,False
+uncertainty quantification,-0.0223774910714751,0.0223774910714751,False,False,False,False,False
+for further,-0.0223221137885933,0.0223221137885933,False,False,False,False,False
+specify the,-0.022149661661921,0.022149661661921,False,False,False,False,False
+results and,-0.0216061908057108,0.0216061908057108,False,False,False,False,False
+approach based,-0.0211257709821308,0.0211257709821308,False,False,False,False,False
+the methodology,-0.0210865751164343,0.0210865751164343,False,False,False,False,False
+approaches when,-0.0204673983131281,0.0204673983131281,False,False,False,False,False
+to perform,-0.0204478603975091,0.0204478603975091,False,False,False,False,False
+theoretical,-0.0200652968597022,0.0200652968597022,False,False,False,False,False
+apply,-0.0198017192531953,0.0198017192531953,False,False,False,False,False
+software and,-0.0191671779315201,0.0191671779315201,False,False,False,False,False
+user explicitly,-0.0189510170129097,0.0189510170129097,False,False,False,False,False
+clear documentation,-0.0185153245090185,0.0185153245090185,False,False,False,False,False
+through clear,-0.0173086887554813,0.0173086887554813,False,False,False,False,False
+quantification,-0.0167718359931281,0.0167718359931281,False,False,False,False,False
+parameters and,0.0167244157007396,0.0167244157007396,False,False,False,False,False
+represents expert,0.0164082366502661,0.0164082366502661,False,False,False,False,False
+for large,0.0163566603639467,0.0163566603639467,False,False,False,False,False
+always validate,0.0155646542170778,0.0155646542170778,False,False,False,False,False
+requires expert,0.0154948590725117,0.0154948590725117,False,False,False,False,False
+of results,0.0152429773218091,0.0152429773218091,False,False,False,False,False
+may require,-0.0149902586878478,0.0149902586878478,False,False,False,False,False
+represents,0.0142064913600697,0.0142064913600697,False,False,False,False,False
+educational,-0.0140990231030896,0.0140990231030896,False,False,False,False,False
+to apply,-0.0139741843655626,0.0139741843655626,False,False,False,False,False
+expert domain,0.0137235806582642,0.0137235806582642,False,False,False,False,False
+software,-0.0133304197938412,0.0133304197938412,False,False,False,False,False
+effective,0.0125667713029063,0.0125667713029063,False,False,False,False,False
+and diagrams,-0.0125056691220484,0.0125056691220484,False,False,False,False,False
+scale and,-0.0124368476700279,0.0124368476700279,False,False,False,False,False
+of methods,-0.0118674428097736,0.0118674428097736,False,False,False,False,False
+further,-0.0115097133587039,0.0115097133587039,False,False,False,False,False
+techniques to,-0.0113019645192026,0.0113019645192026,False,False,False,False,False
+this includes,-0.0111289097436781,0.0111289097436781,False,False,False,False,False
+approaches,-0.0110537249371057,0.0110537249371057,False,False,False,False,False
+should be,0.0103749491469424,0.0103749491469424,False,False,False,False,False
+science applications,-0.0096916258858965,0.0096916258858965,False,False,False,False,False
+limitations requires,-0.0096167008510966,0.0096167008510966,False,False,False,False,False
+include,-0.0094794463400972,0.0094794463400972,False,False,False,False,False
+visualizations,-0.0094121842069085,0.0094121842069085,False,False,False,False,False
+and educational,-0.0094061813039163,0.0094061813039163,False,False,False,False,False
+the work,-0.008825379769357,0.008825379769357,False,False,False,False,False
+expert level,-0.0088198237495887,0.0088198237495887,False,False,False,False,False
+fundamental level,-0.0086988926424727,0.0086988926424727,False,False,False,False,False
+recommendations for,0.0086483315594807,0.0086483315594807,False,False,False,False,False
+investigation,-0.008618918920373,0.008618918920373,False,False,False,False,False
+dimensionality,-0.0083654365076409,0.0083654365076409,False,False,False,False,False
+combining,-0.0082369909535583,0.0082369909535583,False,False,False,False,False
+explanation of,0.0076444837958363,0.0076444837958363,False,False,False,False,False
+predictions,-0.0076371392293577,0.0076371392293577,False,False,False,False,False
+principles the,-0.0072820876736673,0.0072820876736673,False,False,False,False,False
+increases,0.0071802524818713,0.0071802524818713,False,False,False,False,False
+science methodologies,-0.0059822995909408,0.0059822995909408,False,False,False,False,False
+appropriate for,-0.0058760698297398,0.0058760698297398,False,False,False,False,False
+science standards,-0.0058713478950755,0.0058713478950755,False,False,False,False,False
+science subdiscipline,-0.0058713478950755,0.0058713478950755,False,False,False,False,False
+science it,-0.0058713478950755,0.0058713478950755,False,False,False,False,False
+science community,-0.0058713478950755,0.0058713478950755,False,False,False,False,False
+requires fundamental,-0.0057461756849705,0.0057461756849705,False,False,False,False,False
+computational,-0.0056956484604789,0.0056956484604789,False,False,False,False,False
+represents fundamental,-0.0055447657080366,0.0055447657080366,False,False,False,False,False
+level fundamental,-0.0051377061807092,0.0051377061807092,False,False,False,False,False
+fundamental domain,-0.0051377061807092,0.0051377061807092,False,False,False,False,False
+advanced level,-0.0046353443447568,0.0046353443447568,False,False,False,False,False
+related to,-0.0043956089026479,0.0043956089026479,False,False,False,False,False
+benchmarks,-0.0043123233538961,0.0043123233538961,False,False,False,False,False
+skill should,-0.004020260329376,0.004020260329376,False,False,False,False,False
+science principles,-0.0037892947192689,0.0037892947192689,False,False,False,False,False
+document all,-0.0030210811271052,0.0030210811271052,False,False,False,False,False
+intermediate level,0.0026520121409815,0.0026520121409815,False,False,False,False,False
+checking,-0.0026398929159779,0.0026398929159779,False,False,False,False,False
+software documentation,-0.0026218599822328,0.0026218599822328,False,False,False,False,False
+large scale,0.0025574526840179,0.0025574526840179,False,False,False,False,False
+and best,0.0021292336676331,0.0021292336676331,False,False,False,False,False
+complexity level,0.0021279202249669,0.0021279202249669,False,False,False,False,False
+represents advanced,-0.0014966360413537,0.0014966360413537,False,False,False,False,False
+and handling,-0.0011560350251639,0.0011560350251639,False,False,False,False,False
+intermediate domain,0.0011015350031913,0.0011015350031913,False,False,False,False,False
+requires intermediate,0.0011015350031913,0.0011015350031913,False,False,False,False,False
+represents intermediate,0.0011015350031913,0.0011015350031913,False,False,False,False,False
+requires advanced,0.0005985498589547,0.0005985498589547,False,False,False,False,False
+practices always,-0.0002755102640736,0.0002755102640736,False,False,False,False,False
+level intermediate,-2.9554847273518145e-05,2.9554847273518145e-05,False,False,False,False,False

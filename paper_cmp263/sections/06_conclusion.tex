@@ -1,0 +1,42 @@
+\section{Conclusão e trabalhos
+futuros}\label{conclusuxe3o-e-trabalhos-futuros}
+
+Este trabalho desenvolveu um pipeline reprodutível para investigar a
+intensidade de reutilização de Agent Skills como artefatos de engenharia
+de software. A pesquisa modelou o número de repositórios que contêm
+exatamente o mesmo \texttt{SKILL.md}, condicionando a análise às skills
+reutilizadas. O protocolo combinou atributos estruturais, sinais
+textuais e contexto de repositório, utilizou validação agrupada por
+\texttt{representative\_repo\_id} e realizou a seleção de atributos
+dentro das dobras.
+
+Seis regressores foram comparados sobre 25.918 skills reutilizadas na
+visão \texttt{repository-only}. O Random Forest foi escolhido pelo menor
+RMSLE médio na validação agrupada (0,5753) e obteve 0,5833 no teste
+externo de 6.479 skills. O Gradient Boosting teve MAE externo menor
+(3,1820 contra 3,2663). Uma referência constante baseada na mediana do
+desenvolvimento teve RMSLE pior (0,7142), mas MAE melhor (3,0665) que o
+Random Forest. A escolha do modelo depende, portanto, do objetivo e da
+métrica.
+
+A previsão da reutilização é parcial. O Random Forest subestimou todas
+as 324 skills do teste acima do P95 do desenvolvimento e teve MAE de
+35,15 nessa faixa. O Ridge híbrido apresentou falha semelhante na
+validação interna, em análise separada. A comparação das três
+representações com Ridge sugere sinal em texto e estrutura, mas a
+diferença entre \texttt{hybrid} e \texttt{skill-only} é pequena diante
+da variação entre dobras e ainda não foi testada externamente. As
+importâncias por permutação do Random Forest se referem a contexto de
+repositório, não a propriedades intrínsecas da skill.
+
+Concluímos que características observáveis permitem prever parte da
+intensidade de replicação exata entre repositórios, sobretudo na região
+central. A evidência não permite explicar por que uma skill se
+dissemina, inferir qualidade ou formular uma regra para torná-la mais
+reutilizável.
+
+Estudos futuros podem avaliar as representações textuais em um novo
+teste externo ainda não consultado, comparar outras estratégias para a
+cauda e validar hipóteses em outros snapshots ou ecossistemas. O
+presente relatório documenta os resultados e os limites do protocolo
+executado.
