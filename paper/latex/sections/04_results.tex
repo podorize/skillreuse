@@ -89,13 +89,13 @@ in that folder is flat or decreasing (5--13\%): a single copy in
 \texttt{.claude/skills/} is enough, by the recovered rule, for the
 representative to be \texttt{canonical}. The representative's location
 class, and the commit history that exists only for standard locations,
-therefore \textbf{depend on the number of copies}. In the first version
-of the study (target \texttt{repository\_count}), this inflated the
-result: with the Random Forest, the repository attributes gave an RMSLE
-of 0.575, but 0.604 without \texttt{history\_fetched} and
-\texttt{commit\_count} (difference +0.029, 95\% CI {[}0.018; 0.040{]}),
-against 0.623 for the mean-of-\texttt{log1p} baseline; the location
-class alone (three categories) gave 0.584.
+therefore \textbf{depend on the number of copies}. A control with the
+target \texttt{repository\_count} shows the size of the effect: with the
+Random Forest, the repository attributes gave an RMSLE of 0.575, but
+0.604 without \texttt{history\_fetched} and \texttt{commit\_count}
+(difference +0.029, 95\% CI {[}0.018; 0.040{]}), against 0.623 for the
+mean-of-\texttt{log1p} baseline; the location class alone (three
+categories) gave 0.584.
 
 \begin{figure}[!htbp]
 \centering

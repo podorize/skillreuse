@@ -9,12 +9,12 @@
 ```bash
 uv sync
 make data owner feature-eda       # download, sample, owner targets, audit, EDA (4.1–4.2)
-make controls primary robustness  # original-design control, H1–H4, sensitivities (4.2–4.4)
+make controls primary robustness  # target-`repository_count` control, H1–H4, sensitivities (4.2–4.4)
 make importance interpretation    # permutation importance, partial dependence, threshold (4.5, 4.7)
 make final holdout                # nested tuning and freezing (4.6); holdout construction (3.9)
 make holdout-eval                 # single evaluation (4.7)
 ```
 
-The frozen models are in `results/owner/final/final_config_*.json`, committed before the evaluation (git tag `frozen-before-holdout`). `holdout-eval` writes `results/owner/holdout/evaluation_lock.json` and refuses to run again without `--allow-reevaluation`; any re-evaluation must be declared. Every table and figure maps to a CSV or JSON under `results/owner/` (and `results/controls/` for the original-design control), each directory with a `manifest.json`; the targets of `make` name the step that produces each one. `make test` runs the 40 tests (excluded attributes, path patterns, paired tests and Holm, owner bootstrap, holdout disjointness, threshold selection).
+The frozen models are in `results/owner/final/final_config_*.json`, committed before the evaluation (git tag `frozen-before-holdout`). `holdout-eval` writes `results/owner/holdout/evaluation_lock.json` and refuses to run again without `--allow-reevaluation`; any re-evaluation must be declared. Every table and figure maps to a CSV or JSON under `results/owner/` (and `results/controls/` for the `repository_count` control), each directory with a `manifest.json`; the targets of `make` name the step that produces each one. `make test` runs the 40 tests (excluded attributes, path patterns, paired tests and Holm, owner bootstrap, holdout disjointness, threshold selection).
 
-**Deviations and limits.** Tuning used 2×3 folds and 6 candidates (planned 3×3 and 12) for computational cost, on a machine with 8 GB of memory. Numerical results may vary in the last digits across library versions. The first version of the study (target `repository_count`, original external test) remains in the repository only as history and supports no conclusion of this report. The protocol document `paper/protocol.md` is in Portuguese.
+**Deviations and limits.** Tuning used 2×3 folds and 6 candidates (planned 3×3 and 12) for computational cost, on a machine with 8 GB of memory. Numerical results may vary in the last digits across library versions. Earlier exploratory results (target `repository_count`, original external test) remain in the repository (`results/count_regression`, `results/discipline_benchmark`) only as history and support no conclusion of this report. The protocol document `paper/protocol.md` is in Portuguese.
