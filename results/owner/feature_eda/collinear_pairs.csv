@@ -1,0 +1,9 @@
+a,b,abs_spearman
+body_chars,text_char_count,0.9983262637840028
+text_line_count,text_nonempty_line_count,0.9970561959814664
+text_char_count,text_word_count,0.9885621298313264
+body_chars,text_word_count,0.9865255356852836
+frontmatter_valid,frontmatter_name_missing,0.9799409908467178
+sibling_count,sibling_bytes,0.9762620841299761
+text_word_count,text_unique_word_count,0.9669712041060813
+text_char_count,text_unique_word_count,0.9522216842251318

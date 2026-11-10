@@ -26,6 +26,8 @@ COMMANDS: dict[str, tuple[str, str, str]] = {
     "final-model": ("skillreuse.final_model", "final_main", "tuning aninhado e congelamento"),
     "holdout-eval": ("skillreuse.final_model", "holdout_eval_main", "avaliacao unica no holdout"),
     "figures": ("skillreuse.figures", "figures_main", "figuras do relatorio"),
+    "feature-eda": ("skillreuse.feature_eda", "feature_eda_main", "EDA dos atributos limpos"),
+    "export-derived": ("skillreuse.owner", "export_derived_main", "tabelas derivadas pequenas"),
     "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
     "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
     "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),

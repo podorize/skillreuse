@@ -55,3 +55,30 @@ def test_classification_metrics_perfect_and_constant() -> None:
     y = np.array([0, 0, 1, 1])
     assert _clf_metrics(y, np.array([0.1, 0.2, 0.8, 0.9]))["roc_auc"] == 1.0
     assert _clf_metrics(y, np.full(4, 0.5))["roc_auc"] == 0.5
+
+
+def test_skewed_columns_selects_nonnegative_continuous_only() -> None:
+    from skillreuse.feature_eda import skewed_columns
+
+    rng = np.random.default_rng(0)
+    frame = pd.DataFrame({
+        "body_chars": np.exp(rng.normal(0, 2, 500)),       # assimetrica e continua
+        "text_char_count": rng.normal(10, 1, 500).clip(0),  # simetrica
+        "has_scripts": rng.integers(0, 2, 500).astype(float),  # binaria
+        "markdown_link_count": -np.exp(rng.normal(0, 2, 500)),  # negativa
+    })
+    cols = skewed_columns(frame, ["body_chars", "text_char_count", "has_scripts",
+                                  "markdown_link_count"])
+    assert cols == ["body_chars"]
+
+
+def test_log_preprocessor_reduces_skew_and_keeps_shape() -> None:
+    rng = np.random.default_rng(1)
+    frame = pd.DataFrame({
+        "body_chars": np.exp(rng.normal(0, 2, 300)),
+        "log_stars": rng.normal(2, 1, 300),
+    })
+    plain = _preprocessor(["body_chars", "log_stars"]).fit_transform(frame)
+    logged = _preprocessor(["body_chars", "log_stars"], ["body_chars"]).fit_transform(frame)
+    assert plain.shape[0] == logged.shape[0] == 300
+    assert pd.Series(np.asarray(logged)[:, 0]).skew() < pd.Series(np.asarray(plain)[:, 0]).skew()

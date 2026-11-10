@@ -1,0 +1,42 @@
+{
+  "rows": 17733,
+  "owners": 7128,
+  "numeric_columns": 49,
+  "categorical_columns": 3,
+  "matrix_columns_after_preprocessing": 112,
+  "columns_with_missing": 13,
+  "max_missing_share": 0.0019737213105509503,
+  "constant_columns": [
+    "repo_is_fork"
+  ],
+  "collinear_pairs_gt_0.95": 8,
+  "skewed_columns_gt_2": [
+    "body_chars",
+    "sibling_count",
+    "sibling_bytes",
+    "text_char_count",
+    "text_line_count",
+    "text_nonempty_line_count",
+    "text_word_count",
+    "text_unique_word_count",
+    "text_sentence_count",
+    "text_average_sentence_words",
+    "markdown_heading_count",
+    "markdown_unordered_list_items",
+    "markdown_ordered_list_items",
+    "markdown_fenced_code_blocks",
+    "markdown_inline_code_count",
+    "markdown_link_count",
+    "markdown_url_count",
+    "markdown_blockquote_count",
+    "markdown_checkbox_count",
+    "markdown_table_row_count",
+    "markdown_shell_prompt_count",
+    "frontmatter_description_char_count",
+    "log_forks",
+    "repo_age_days",
+    "path_depth"
+  ],
+  "cross_owner_prevalence": 0.8038121017312355,
+  "owner_count_equal_1_share": 0.19618789826876445
+}

@@ -4,7 +4,18 @@ Previsibilidade do **reúso de Agent Skills entre donos** (conteúdos idênticos
 
 O texto do relatório está em [`paper/draft/`](paper/draft/README.md); o Apêndice A ([`paper/draft/07_appendix_reproducibility.md`](paper/draft/07_appendix_reproducibility.md)) associa cada tabela e figura ao comando que a gera.
 
-## Reprodução
+## Reprodução rápida (sem baixar dados brutos, ~5 min)
+
+As tabelas derivadas necessárias (9,5 MB) estão em `data/derived/`.
+
+```bash
+uv sync
+make quick        # protocolo principal (1 repetição) e re-execução dos modelos congelados no holdout
+```
+
+O holdout já foi avaliado uma vez; `make quick` o reexecuta em `results/owner/holdout_repro/` (a trava do holdout original não é afetada). Notebook para o Colab: [`notebooks/reproduce.ipynb`](notebooks/reproduce.ipynb).
+
+## Reprodução completa
 
 ```bash
 uv sync

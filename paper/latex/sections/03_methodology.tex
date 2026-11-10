@@ -143,7 +143,12 @@ main models. The attributes describe the representative, not all copies;
 aggregating them over all copies would depend on the same occurrences
 that define the target and was avoided. Imputation (median with missing
 indicator), scaling and encoding (one-hot, \texttt{min\_frequency=10})
-are fitted within each fold.
+are fitted within each fold. The decisions about transformations
+(\texttt{log1p} for linear models only), redundant columns, constant
+columns and class balance follow from the feature EDA of Section 4.1. We
+apply no resampling to the 80/20 class imbalance of
+\texttt{cross\_owner}: the main metrics (ROC AUC, Brier score, log-loss)
+are threshold-free, and PR AUC is always read against the prevalence.
 
 \subsection{Validation and per-owner
 cap}\label{validation-and-per-owner-cap}

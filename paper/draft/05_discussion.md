@@ -17,7 +17,7 @@ The most solid contribution of this work is methodological and answers RQ1.
 
 ## 5.3 Models and data limits
 
-The six families tie in both tasks, and the hyperparameter search did not improve the result (default RF 0.716 versus 0.701 searched). When families with such different inductive biases (linear, neighborhood, trees, boostings) reach the same performance, the limit is usually in the data and not in the algorithm. The attributes describe one copy of the content, and the target is an exact count of hashes, which ignores modified copies; relevant gains will probably require new sources of information (relations among copies, time), and not more flexible models.
+The six families are statistically indistinguishable in both tasks, and the hyperparameter search did not improve the result (default RF 0.716 versus 0.701 searched). The linear models trail the forests by 0.02–0.04 AUC even after `log1p` of the skewed attributes, but with intervals that include zero. The evidence is therefore of a tie within the resolution of 6 outer folds, not of proven equivalence. When families with such different inductive biases (linear, neighborhood, trees, boostings) reach the same performance, the limit is usually in the data and not in the algorithm. The attributes describe one copy of the content, and the target is an exact count of hashes, which ignores modified copies; relevant gains will probably require new sources of information (relations among copies, time), and not more flexible models.
 
 ## 5.4 Threats to validity and limitations
 

@@ -1,7 +1,7 @@
 \section{Results}\label{results}
 
-\subsection{The target and owner
-concentration}\label{the-target-and-owner-concentration}
+\subsection{The target, the features and owner
+concentration}\label{the-target-the-features-and-owner-concentration}
 
 In development (25,918 reused contents from 7,128 owners), the number of
 owners has a distribution similar to that of repositories: strong
@@ -35,6 +35,32 @@ fourth are clear cases of self-copying: their contents have on average
 have no \texttt{name} in the front matter, and 20.1\% (24.3\% of those
 that have a \texttt{name}) share the \texttt{name} with another content,
 a sign of variants of the same skill.
+
+\textbf{Features.} The clean view has 52 columns (49 numeric, 3
+categorical) that expand to 112 columns after preprocessing. Missing
+values are rare: 13 columns have any, at most 0.2\% (folder information
+0.2\%, repository metadata 0.05\%), imputed by the training median with
+an indicator. One column is constant (\texttt{repo\_is\_fork}) and was
+kept, as it is harmless. Twenty-five numeric columns have skewness above
+2 (for example \texttt{sibling\_count} 116, \texttt{sibling\_bytes} 63,
+\texttt{markdown\_url\_count} 32, reduced to 1.6, 0.5 and 1.7 by
+\texttt{log1p}); because trees are invariant to monotone
+transformations, we apply \texttt{log1p} only in a sensitivity analysis
+for linear models (Section 4.4). Eight pairs of numeric columns have
+\textbar ρ\textbar{} \textgreater{} 0.95 (for example
+\texttt{body\_chars} and \texttt{text\_char\_count}, 0.998); we kept
+them, since trees tolerate redundancy, and read the permutation
+importance of redundant columns with caution (Section 4.5). No
+dimensionality reduction was applied. Finally, \texttt{cross\_owner} is
+positive for 80.4\% of the development contents (80.8\% in the holdout);
+we do not resample and rely on threshold-free metrics.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/report_feature_eda.png}
+\caption{Feature EDA: skewness before and after `log1p` (left) and absolute Spearman correlation among numeric attributes (right)}
+\label{fig:report-1}
+\end{figure}
 
 \subsection{Selection bias of the
 representative}\label{selection-bias-of-the-representative}
@@ -98,7 +124,7 @@ standard locations, \textbf{encode the number of copies}.
 \centering
 \includegraphics[width=0.82\linewidth]{figures/report_eda_owner_and_selection.png}
 \caption{Distributions of repositories and owners (left) and effect of the representative rule (right)}
-\label{fig:report-1}
+\label{fig:report-2}
 \end{figure}
 
 In the first version of the study, with \texttt{repository\_count} as
@@ -298,7 +324,12 @@ AUC 0.726 versus 0.716), which indicates that variants of the same
 \texttt{name} do not explain the result. (iv) Repository-grouped
 validation, instead of owner-grouped, did not produce larger estimates
 (RMSLE 0.657 versus 0.655; AUC 0.735 versus 0.747, with the standard
-deviation of 0.14 of the no-limit case).
+deviation of 0.14 of the no-limit case). (v) Applying \texttt{log1p} to
+the 25 skewed numeric columns improves the linear models only slightly
+(logistic AUC 0.680 → 0.691; Ridge RMSLE 0.694 → 0.690) and leaves the
+forests unchanged (0.716 → 0.714); the forest's advantage over the
+linear model remains statistically undistinguishable from zero (AUC
++0.023, 95\% CI {[}−0.012; 0.058{]}; RMSLE −0.012 {[}−0.024; 0.001{]}).
 
 \subsection{Interpretation}\label{interpretation}
 
@@ -306,7 +337,7 @@ deviation of 0.14 of the no-limit case).
 \centering
 \includegraphics[width=0.82\linewidth]{figures/report_permutation_importance.png}
 \caption{Permutation importance of the clean RF (owner-grouped folds; owners with more than 500 contents excluded)}
-\label{fig:report-2}
+\label{fig:report-3}
 \end{figure}
 
 For cross-owner reuse, the repository block weighs more (AUC drop of
@@ -412,13 +443,15 @@ difference −0.038 {[}−0.044; −0.032{]} \\
 \centering
 \includegraphics[width=0.82\linewidth]{figures/report_holdout_roc_calibration.png}
 \caption{ROC curve and calibration of the RF on the holdout}
-\label{fig:report-3}
+\label{fig:report-4}
 \end{figure}
 
-The success criteria were met: the lower AUC bound is above 0.5 and the
-upper bound of the RMSLE difference is below zero. The holdout AUC
-(0.731) is consistent with the nested estimate on development (0.716).
-The holdout has a different composition (36\% \texttt{canonical} skills
-versus 21\% in development, and 9\% \texttt{other} versus 21\%), since
-concentrated owners are left out by construction. H3 and H4 were not
-re-evaluated on the holdout and remain exploratory.
+PR AUC is computed for the majority class (80.8\% of the holdout), so it
+must be read against that prevalence. The success criteria were met: the
+lower AUC bound is above 0.5 and the upper bound of the RMSLE difference
+is below zero. The holdout AUC (0.731) is consistent with the nested
+estimate on development (0.716). The holdout has a different composition
+(36\% \texttt{canonical} skills versus 21\% in development, and 9\%
+\texttt{other} versus 21\%), since concentrated owners are left out by
+construction. H3 and H4 were not re-evaluated on the holdout and remain
+exploratory.

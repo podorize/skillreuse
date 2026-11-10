@@ -1,6 +1,6 @@
 # 4. Results
 
-## 4.1 The target and owner concentration
+## 4.1 The target, the features and owner concentration
 
 In development (25,918 reused contents from 7,128 owners), the number of owners has a distribution similar to that of repositories: strong positive skew and overdispersion.
 
@@ -12,6 +12,10 @@ In development (25,918 reused contents from 7,128 owners), the number of owners 
 : Distribution of the count targets in development.
 
 The difference lies at the base of the distribution: **28.0%** of reused contents have `owner_count = 1`, i.e., all copies are under a single owner. Self-copying accounts for 11% of the total mass of `repository_count`. A few owners concentrate the sample: the five largest account for 11.9%, 4.7%, 3.5%, 2.2% and 2.2% of the contents (24.5% together; identifiers omitted). The largest and the fourth are clear cases of self-copying: their contents have on average 2.0 repositories but only 1.0 owner. In addition, 17.2% of the contents have no `name` in the front matter, and 20.1% (24.3% of those that have a `name`) share the `name` with another content, a sign of variants of the same skill.
+
+**Features.** The clean view has 52 columns (49 numeric, 3 categorical) that expand to 112 columns after preprocessing. Missing values are rare: 13 columns have any, at most 0.2% (folder information 0.2%, repository metadata 0.05%), imputed by the training median with an indicator. One column is constant (`repo_is_fork`) and was kept, as it is harmless. Twenty-five numeric columns have skewness above 2 (for example `sibling_count` 116, `sibling_bytes` 63, `markdown_url_count` 32, reduced to 1.6, 0.5 and 1.7 by `log1p`); because trees are invariant to monotone transformations, we apply `log1p` only in a sensitivity analysis for linear models (Section 4.4). Eight pairs of numeric columns have |ρ| > 0.95 (for example `body_chars` and `text_char_count`, 0.998); we kept them, since trees tolerate redundancy, and read the permutation importance of redundant columns with caution (Section 4.5). No dimensionality reduction was applied. Finally, `cross_owner` is positive for 80.4% of the development contents (80.8% in the holdout); we do not resample and rely on threshold-free metrics.
+
+![Feature EDA: skewness before and after `log1p` (left) and absolute Spearman correlation among numeric attributes (right)](../../results/owner/feature_eda/feature_eda.png)
 
 ## 4.2 Selection bias of the representative
 
@@ -82,7 +86,7 @@ There is a real but modest signal: an AUC of 0.72 and a 6% reduction in RMSLE. S
 
 The RMSLE is stable (gain of 0.03–0.04), but the AUC oscillates from 0.615 to 0.747: a few owners with 500 to 1000 contents lower the AUC by 0.1, and with no limit a single fold concentrates one owner and the standard deviation reaches 0.14. Performance therefore depends on the composition of a dozen accounts. The cap of 50 stabilizes the estimates, but it is a data-dependent choice.
 
-**Other checks.** (i) Fixing the location class and training within each one (owners with more than 500 contents excluded), the clean RF still beats the baseline: `canonical` (5,439 contents) RMSLE −0.141 and AUC 0.714; `skills-dir` (10,721) −0.013 and 0.672; `other` (3,810) −0.011 and 0.828. The signal is not only location. (ii) With `repository_count` as target, the gain of the clean RF is the same (−0.031 versus −0.030). (iii) Only 18.8% of validation rows have a `name` seen in training; on the subset without overlap the gain persists (RMSLE −0.039 versus −0.041 on all; AUC 0.726 versus 0.716), which indicates that variants of the same `name` do not explain the result. (iv) Repository-grouped validation, instead of owner-grouped, did not produce larger estimates (RMSLE 0.657 versus 0.655; AUC 0.735 versus 0.747, with the standard deviation of 0.14 of the no-limit case).
+**Other checks.** (i) Fixing the location class and training within each one (owners with more than 500 contents excluded), the clean RF still beats the baseline: `canonical` (5,439 contents) RMSLE −0.141 and AUC 0.714; `skills-dir` (10,721) −0.013 and 0.672; `other` (3,810) −0.011 and 0.828. The signal is not only location. (ii) With `repository_count` as target, the gain of the clean RF is the same (−0.031 versus −0.030). (iii) Only 18.8% of validation rows have a `name` seen in training; on the subset without overlap the gain persists (RMSLE −0.039 versus −0.041 on all; AUC 0.726 versus 0.716), which indicates that variants of the same `name` do not explain the result. (iv) Repository-grouped validation, instead of owner-grouped, did not produce larger estimates (RMSLE 0.657 versus 0.655; AUC 0.735 versus 0.747, with the standard deviation of 0.14 of the no-limit case). (v) Applying `log1p` to the 25 skewed numeric columns improves the linear models only slightly (logistic AUC 0.680 → 0.691; Ridge RMSLE 0.694 → 0.690) and leaves the forests unchanged (0.716 → 0.714); the forest's advantage over the linear model remains statistically undistinguishable from zero (AUC +0.023, 95% CI [−0.012; 0.058]; RMSLE −0.012 [−0.024; 0.001]).
 
 ## 4.5 Interpretation
 
@@ -119,4 +123,4 @@ The frozen models were evaluated once on 25,011 contents from 10,484 owners disj
 
 ![ROC curve and calibration of the RF on the holdout](../../results/owner/figures/holdout_roc_calibration.png)
 
-The success criteria were met: the lower AUC bound is above 0.5 and the upper bound of the RMSLE difference is below zero. The holdout AUC (0.731) is consistent with the nested estimate on development (0.716). The holdout has a different composition (36% `canonical` skills versus 21% in development, and 9% `other` versus 21%), since concentrated owners are left out by construction. H3 and H4 were not re-evaluated on the holdout and remain exploratory.
+PR AUC is computed for the majority class (80.8% of the holdout), so it must be read against that prevalence. The success criteria were met: the lower AUC bound is above 0.5 and the upper bound of the RMSLE difference is below zero. The holdout AUC (0.731) is consistent with the nested estimate on development (0.716). The holdout has a different composition (36% `canonical` skills versus 21% in development, and 9% `other` versus 21%), since concentrated owners are left out by construction. H3 and H4 were not re-evaluated on the holdout and remain exploratory.

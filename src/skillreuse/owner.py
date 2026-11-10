@@ -316,3 +316,42 @@ def owner_main() -> None:
         build_owner_targets()
         build_context_features()
     print(json.dumps(run_eda(args.output_dir), indent=2, ensure_ascii=False, default=str)[:3500])
+
+
+# ---------------------------------------------------------------------------
+# Tabelas derivadas pequenas para reproducao rapida (sem baixar os 6,5 GB brutos)
+# ---------------------------------------------------------------------------
+
+DERIVED_DIR = Path("data/derived")
+
+
+def export_derived(output: Path = DERIVED_DIR) -> dict[str, int]:
+    """Exporta o necessario para `primary`, `final-model` e `holdout-eval` (so reutilizados)."""
+    from skillreuse.holdout import HOLDOUT_CONTEXT, HOLDOUT_FEATURES
+
+    processed = Path("data/processed")
+    targets = pd.read_parquet(processed / "final_targets.parquet")
+    reused = set(targets.loc[targets["reused"] == 1, "content_hash"])
+    holdout = pd.read_parquet(HOLDOUT_FEATURES)
+    keep_owner = reused | set(holdout["content_hash"])
+    output.mkdir(parents=True, exist_ok=True)
+    features = pd.read_parquet(processed / "final_structured_features.parquet")
+    context = pd.read_parquet(CONTEXT_FEATURES)
+    owner_targets = pd.read_parquet(OWNER_TARGETS)
+    files = {
+        "final_targets.parquet": targets[targets["content_hash"].isin(reused)],
+        "final_structured_features.parquet": features[features["content_hash"].isin(reused)],
+        "context_features.parquet": context[context["content_hash"].isin(reused)],
+        "owner_targets.parquet": owner_targets[owner_targets["content_hash"].isin(keep_owner)],
+        "holdout_structured_features.parquet": holdout,
+        "holdout_context_features.parquet": pd.read_parquet(HOLDOUT_CONTEXT),
+    }
+    sizes = {}
+    for name, frame in files.items():
+        frame.to_parquet(output / name, index=False, compression="zstd")
+        sizes[name] = int(len(frame))
+    return sizes
+
+
+def export_derived_main() -> None:
+    print(json.dumps(export_derived(), indent=2))
