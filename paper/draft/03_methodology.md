@@ -10,7 +10,7 @@ The source is GitSkills \cite{gitskills2027}, revision `ebab17454a7c236f8f26b183
 
 ## 3.3 Representative rule and audit
 
-GitSkills documents that the representative prefers `.claude/skills/`, with a deterministic tie-break \cite{gitskills2027}. We recovered the rule from all raw occurrences: sort by location class (`canonical`, `skills-dir`, `other`) and, on ties, by the smallest `(repo_full_name, path)`. It reproduces the representative in 97.2% of the 306,088 contents with at least two repositories, and the representative's class equals the best available class in 100% of them. The audit compares, by number of repositories, the fraction of contents whose representative is `canonical` with the fraction of copies that actually are, to decide whether `location_class` and `history_fetched` (history was collected only for standard locations and a sample) can be legitimate predictors.
+GitSkills documents that the representative prefers `.claude/skills/`, with a deterministic tie-break \cite{gitskills2027}. We recovered the rule from all raw occurrences: sort by location class (`canonical`, which is essentially `.claude/skills/` in any letter case, then `skills-dir`, then `other`) and, on ties, by the smallest `(repo_full_name, path)`. It reproduces the representative in 97.2% of the 306,088 contents with at least two repositories, and the representative's class equals the best available class in 100% of them. The audit compares, by number of repositories, the fraction of contents whose representative is `canonical` with the fraction of copies that actually are, to decide whether `location_class` and `history_fetched` (history was collected only for standard locations and a sample) can be legitimate predictors.
 
 ## 3.4 Targets
 
