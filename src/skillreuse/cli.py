@@ -17,6 +17,7 @@ COMMANDS: dict[str, tuple[str, str, str]] = {
     "benchmark-views": ("skillreuse.benchmark", "views_main", "Ridge: skill/repo/hybrid"),
     "benchmark": ("skillreuse.benchmark", "benchmark_main", "6 regressores agrupados"),
     "tune": ("skillreuse.tuning", "tune_main", "busca aninhada + repeticoes + testes pareados"),
+    "controls": ("skillreuse.controls", "controls_main", "controles de atalho de coleta"),
     "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
     "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
     "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),
