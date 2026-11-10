@@ -1,41 +1,39 @@
-\section{Conclusão e trabalhos
-futuros}\label{conclusuxe3o-e-trabalhos-futuros}
+\section{Conclusion and future work}\label{conclusion-and-future-work}
 
-Este trabalho investigou se características observáveis de uma skill e
-de seu repositório se associam ao reúso entre donos no GitSkills e
-quanto dessa previsibilidade é artefato da construção do dataset. Três
-conclusões se sustentam.
+This work investigated whether observable characteristics of a skill and
+of its repository are associated with cross-owner reuse in GitSkills,
+and how much of this predictability is an artifact of the dataset's
+construction. Three conclusions hold.
 
-\textbf{Primeiro}, o GitSkills tem vieses de construção que afetam
-estudos preditivos. A regra que escolhe o representante faz a
-probabilidade de ele estar em \texttt{.claude/skills/} crescer de 14\%
-para 92\% com o número de cópias, enquanto a fração real de cópias nessa
-pasta fica em 5--13\%. Isso torna a localização e o histórico de commits
-preditores espúrios de reúso. Além disso, 28\% das skills reutilizadas
-existem em um único dono, e poucas contas concentram a amostra, de modo
-que contar repositórios superestima a difusão e o desempenho depende de
-poucos donos (AUC de 0,615 a 0,747 conforme o tratamento).
+\textbf{First}, GitSkills has construction biases that affect predictive
+studies. The rule that selects the representative makes the probability
+of it being in \texttt{.claude/skills/} grow from 14\% to 92\% with the
+number of copies, while the actual share of copies in that folder stays
+at 5--13\%. This makes location and commit history spurious predictors
+of reuse. In addition, 28\% of reused skills exist under a single owner,
+and a few accounts concentrate the sample, so that counting repositories
+overstates diffusion and performance depends on a few owners (AUC from
+0.615 to 0.747 depending on the treatment).
 
-\textbf{Segundo}, livres desses artefatos, os atributos preveem o reúso
-entre donos com um sinal modesto, confirmado em dados novos: no holdout
-disjunto por dono, o Random Forest atinge AUC 0,731 (IC95\%
-0,716--0,745) e o HistGradientBoosting reduz o RMSLE de
-\texttt{owner\_count} em 6\% frente à média (0,625 contra 0,664). Skill
-e repositório contribuem de forma complementar, e o sinal se associa
-sobretudo à visibilidade do repositório.
+\textbf{Second}, free of these artifacts, the attributes predict
+cross-owner reuse with a modest signal, confirmed on new data: on the
+owner-disjoint holdout, the Random Forest reaches an AUC of 0.731 (95\%
+CI 0.716--0.745) and the HistGradientBoosting reduces the RMSLE of
+\texttt{owner\_count} by 6\% relative to the mean (0.625 versus 0.664).
+Skill and repository contribute complementarily, and the signal is
+associated mainly with repository visibility.
 
-\textbf{Terceiro}, o limite parece estar nos dados e não nos modelos:
-seis famílias empatam e o tuning não ajuda. As afirmações são
-associativas e não identificam o que torna uma skill mais ou menos
-copiada, nem sua qualidade.
+\textbf{Third}, the limit seems to be in the data and not in the models:
+six families tie and tuning does not help. The claims are associative
+and do not identify what makes a skill more or less copied, nor its
+quality.
 
-\textbf{Trabalhos futuros.} (i) Modelar no nível da cópia, com
-informação anterior ao reúso, para usar atributos de todas as cópias sem
-vazamento. (ii) Agrupar cópias quase idênticas para mitigar a
-fragmentação do alvo por hash exato. (iii) Replicar com instantâneos
-posteriores do GitSkills e estudar a dinâmica temporal da difusão. (iv)
-Investigar a licença e o tamanho do catálogo como indicadores de clones
-de catálogos. (v) Avaliar representações de texto (por exemplo,
-embeddings) dentro de classes de localização fixas. (vi) Propor aos
-mantenedores do GitSkills indicadores que separem a escolha do
-representante dos atributos de repositório.
+\textbf{Future work.} (i) Model at the copy level, with information
+prior to reuse, in order to use attributes of all copies without
+leakage. (ii) Group near-identical copies to mitigate the fragmentation
+of the target by exact hash. (iii) Replicate with later GitSkills
+snapshots and study the temporal dynamics of diffusion. (iv) Investigate
+the license and the catalog size as indicators of catalog clones. (v)
+Evaluate text representations (for example, embeddings) within fixed
+location classes. (vi) Propose to the GitSkills maintainers indicators
+that separate the representative choice from the repository attributes.

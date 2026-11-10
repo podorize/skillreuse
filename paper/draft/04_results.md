@@ -1,124 +1,122 @@
-# 4. Resultados
+# 4. Results
 
-## 4.1 O alvo e a concentração por donos
+## 4.1 The target and owner concentration
 
-No desenvolvimento (25.918 conteúdos reutilizados de 7.128 donos), o número de donos tem distribuição semelhante à de repositórios: forte assimetria positiva e sobredispersão.
+In development (25,918 reused contents from 7,128 owners), the number of owners has a distribution similar to that of repositories: strong positive skew and overdispersion.
 
-| | média | P50 | P75 | P90 | P95 | P99 | máx. | variância/média |
+| | mean | P50 | P75 | P90 | P95 | P99 | max | variance/mean |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| `repository_count` | 5,08 | 2 | 4 | 8 | 16 | 55 | 390 | 22,1 |
-| `owner_count` | 4,50 | 2 | 3 | 8 | 15 | 53 | 379 | 23,1 |
+| `repository_count` | 5.08 | 2 | 4 | 8 | 16 | 55 | 390 | 22.1 |
+| `owner_count` | 4.50 | 2 | 3 | 8 | 15 | 53 | 379 | 23.1 |
 
-: Distribuição dos alvos de contagem no desenvolvimento.
+: Distribution of the count targets in development.
 
-A diferença está na base da distribuição: **28,0%** dos conteúdos reutilizados têm `owner_count = 1`, isto é, todas as cópias estão em um único dono. A autocópia retira 11% da massa total de `repository_count`. Poucos donos concentram a amostra: o maior responde por 11,9% dos conteúdos, os cinco maiores por 24,5%.
+The difference lies at the base of the distribution: **28.0%** of reused contents have `owner_count = 1`, i.e., all copies are under a single owner. Self-copying accounts for 11% of the total mass of `repository_count`. A few owners concentrate the sample: the five largest account for 11.9%, 4.7%, 3.5%, 2.2% and 2.2% of the contents (24.5% together; identifiers omitted). The largest and the fourth are clear cases of self-copying: their contents have on average 2.0 repositories but only 1.0 owner. In addition, 17.2% of the contents have no `name` in the front matter, and 20.1% (24.3% of those that have a `name`) share the `name` with another content, a sign of variants of the same skill.
 
-Os cinco maiores donos respondem por 11,9%, 4,7%, 3,5%, 2,2% e 2,2% dos conteúdos (identificadores omitidos). O maior e o quarto são casos claros de autocópia: seus conteúdos têm em média 2,0 repositórios, mas só 1,0 dono. Além disso, 17,2% dos conteúdos não têm `name` no front matter, e 20,1% (24,3% dos que têm `name`) compartilham o `name` com outro conteúdo, indício de variantes da mesma skill.
+## 4.2 Selection bias of the representative
 
-## 4.2 O viés de seleção do representante
+The following table compares, on the full population (1,877,981 contents), the fraction of contents whose representative is `canonical` with the fraction of copies that are actually `canonical`.
 
-A tabela a seguir compara, na população completa (1.877.981 conteúdos), a fração de conteúdos cujo representante é `canonical` com a fração das cópias que de fato estão em `canonical`.
-
-| Repositórios | conteúdos | representante é `canonical` | cópias em `canonical` |
+| Repositories | contents | representative is `canonical` | copies in `canonical` |
 |---|---:|---:|---:|
-| 1 | 1.571.893 | 13,3% | 12,6% |
-| 2 | 172.624 | 13,8% | 8,5% |
-| 3 | 49.535 | 19,5% | 9,1% |
-| 4–5 | 36.312 | 24,1% | 10,9% |
-| 6–10 | 24.142 | 30,4% | 10,1% |
-| 11–50 | 19.589 | 57,7% | 7,7% |
-| mais de 50 | 3.886 | 91,7% | 5,1% |
+| 1 | 1,571,893 | 13.3% | 12.6% |
+| 2 | 172,624 | 13.8% | 8.5% |
+| 3 | 49,535 | 19.5% | 9.1% |
+| 4–5 | 36,312 | 24.1% | 10.9% |
+| 6–10 | 24,142 | 30.4% | 10.1% |
+| 11–50 | 19,589 | 57.7% | 7.7% |
+| more than 50 | 3,886 | 91.7% | 5.1% |
 
-: Efeito da regra do representante, por número de repositórios (população completa).
+: Effect of the representative rule, by number of repositories (full population).
 
-A probabilidade de o representante ser `canonical` cresce de 14% a 92% com o número de cópias, enquanto a fração real de cópias nessa pasta é plana ou decrescente (5–13%). Isso é consequência da regra recuperada (Seção 3.3): basta uma cópia em `.claude/skills/` para o representante ser `canonical`. A classe de localização do representante, e o histórico de commits que só existe para locais padrão, **codificam o número de cópias**.
+The probability that the representative is `canonical` grows from 14% to 92% with the number of copies, while the actual share of copies in that folder is flat or decreasing (5–13%). This follows from the recovered rule (Section 3.3): a single copy in `.claude/skills/` is enough for the representative to be `canonical`. The location class of the representative, and the commit history that only exists for standard locations, **encode the number of copies**.
 
-![Distribuições de repositórios e donos (esquerda) e efeito da regra do representante (direita)](../../results/owner/eda_owner_and_selection.png)
+![Distributions of repositories and owners (left) and effect of the representative rule (right)](../../results/owner/eda_owner_and_selection.png)
 
-Na primeira versão do estudo, com `repository_count` como alvo e atributos de repositório, isso inflava o resultado. Com o Random Forest e o desenvolvimento completo, os atributos de repositório davam RMSLE 0,575; sem `history_fetched` e `commit_count`, 0,604 (diferença de +0,029, IC95% [0,018; 0,040]), contra 0,623 da baseline de média de `log1p`. Só a localização do representante (três categorias) dava 0,584, e o histórico sozinho 0,594. A visão "de repositório" era, em boa parte, uma proxy da localização.
+In the first version of the study, with `repository_count` as target and repository attributes, this inflated the result. With the Random Forest and the full development set, the repository attributes gave an RMSLE of 0.575; without `history_fetched` and `commit_count`, 0.604 (difference of +0.029, 95% CI [0.018; 0.040]), against 0.623 for the mean-of-`log1p` baseline. The location of the representative alone (three categories) gave 0.584, and the history alone 0.594. The "repository" view was, to a large extent, a proxy for location.
 
-## 4.3 Protocolo principal
+## 4.3 Main protocol
 
-Com os atalhos fora, 17.733 conteúdos (limite de 50 por dono) e validação agrupada por dono, os resultados do Random Forest (RF) e dos modelos lineares são:
+With the shortcuts out, 17,733 contents (cap of 50 per owner) and owner-grouped validation, the results of the Random Forest (RF) and of the linear models are:
 
-| Visão | AUC RF | AUC logística | RMSLE RF | RMSLE Ridge |
+| View | RF AUC | logistic AUC | RF RMSLE | Ridge RMSLE |
 |---|---:|---:|---:|---:|
-| skill | 0,660 ± 0,022 | 0,614 | 0,698 ± 0,007 | 0,713 |
-| repositório | 0,650 ± 0,019 | 0,655 | 0,707 ± 0,011 | 0,702 |
-| repositório + catálogo | 0,666 ± 0,009 | 0,662 | 0,696 ± 0,010 | 0,699 |
-| caminho + catálogo | 0,579 ± 0,019 | 0,576 | 0,718 ± 0,018 | 0,714 |
-| **limpo completo** | **0,716 ± 0,024** | 0,680 | **0,679 ± 0,011** | 0,694 |
-| limpo + atalhos | 0,717 ± 0,022 | 0,682 | 0,637 ± 0,015 | 0,664 |
-| só atalhos | 0,500 ± 0,015 | 0,510 | 0,688 ± 0,010 | 0,693 |
-| *baseline* | 0,500 | 0,500 | 0,720 (média), 0,780 (mediana) | |
+| skill | 0.660 ± 0.022 | 0.614 | 0.698 ± 0.007 | 0.713 |
+| repository | 0.650 ± 0.019 | 0.655 | 0.707 ± 0.011 | 0.702 |
+| repository + catalog | 0.666 ± 0.009 | 0.662 | 0.696 ± 0.010 | 0.699 |
+| path + catalog | 0.579 ± 0.019 | 0.576 | 0.718 ± 0.018 | 0.714 |
+| **clean (full)** | **0.716 ± 0.024** | 0.680 | **0.679 ± 0.011** | 0.694 |
+| clean + shortcuts | 0.717 ± 0.022 | 0.682 | 0.637 ± 0.015 | 0.664 |
+| shortcuts only | 0.500 ± 0.015 | 0.510 | 0.688 ± 0.010 | 0.693 |
+| *baseline* | 0.500 | 0.500 | 0.720 (mean), 0.780 (median) | |
 
-: Desempenho por visão (média ± desvio de 9 dobras agrupadas por dono).
+: Performance by view (mean ± standard deviation over 9 owner-grouped folds).
 
-Todas as hipóteses pré-especificadas são rejeitadas após a correção de Holm:
+All pre-specified hypotheses are rejected after Holm correction:
 
-| | Comparação | Resultado | IC95% da diferença | p (Holm) |
+| | Comparison | Result | 95% CI of the difference | p (Holm) |
 |---|---|---|---|---:|
-| H1 | AUC do RF limpo contra 0,5 | 0,716 | +0,216 [0,173; 0,259] | < 0,001 |
-| H2 | RMSLE do RF limpo contra a média | 0,679 contra 0,720 | −0,041 [−0,049; −0,033] | < 0,001 |
-| H3a | limpo contra repositório+catálogo (AUC) | 0,716 contra 0,666 | +0,050 [0,017; 0,083] | 0,008 |
-| H3b | limpo contra skill (AUC) | 0,716 contra 0,660 | +0,056 [0,040; 0,072] | < 0,001 |
-| H4 | limpo+atalhos contra limpo (RMSLE) | 0,637 contra 0,679 | −0,042 [−0,055; −0,029] | < 0,001 |
+| H1 | clean RF AUC against 0.5 | 0.716 | +0.216 [0.173; 0.259] | < 0.001 |
+| H2 | clean RF RMSLE against the mean | 0.679 vs 0.720 | −0.041 [−0.049; −0.033] | < 0.001 |
+| H3a | clean against repository+catalog (AUC) | 0.716 vs 0.666 | +0.050 [0.017; 0.083] | 0.008 |
+| H3b | clean against skill (AUC) | 0.716 vs 0.660 | +0.056 [0.040; 0.072] | < 0.001 |
+| H4 | clean+shortcuts against clean (RMSLE) | 0.637 vs 0.679 | −0.042 [−0.055; −0.029] | < 0.001 |
 
-: Hipóteses pré-especificadas no desenvolvimento (exploratório até a confirmação da Seção 4.7).
+: Pre-specified hypotheses on development (exploratory until the confirmation of Section 4.7).
 
-Há sinal real, mas modesto: o AUC de 0,72 e uma redução de 6% do RMSLE. Skill e repositório contribuem de forma **complementar**: cada bloco isolado fica em AUC 0,65–0,67, e a combinação em 0,72 (H3a e H3b). Os atalhos acrescentam à regressão (H4), mas, sozinhos, não preveem o reúso entre donos (AUC 0,50): o ganho de regressão vem da correlação deles com o número de cópias, não do reúso entre donos. O caminho, isolado, quase não prevê.
+There is a real but modest signal: an AUC of 0.72 and a 6% reduction in RMSLE. Skill and repository contribute **complementarily**: each block alone sits at AUC 0.65–0.67, and the combination at 0.72 (H3a and H3b). The shortcuts add to the regression (H4) but, alone, do not predict cross-owner reuse (AUC 0.50): the regression gain comes from their correlation with the number of copies, not from cross-owner reuse. The path, in isolation, barely predicts.
 
-## 4.4 Robustez
+## 4.4 Robustness
 
-**Limite por dono.** O desempenho do RF limpo muda pouco no RMSLE, mas muito no AUC, conforme o tratamento dos donos concentrados:
+**Per-owner cap.** The performance of the clean RF changes little in RMSLE, but a lot in AUC, depending on how concentrated owners are treated:
 
-| Tratamento | conteúdos | AUC RF limpo | ganho de RMSLE (limpo) | ganho (só atalhos) |
+| Treatment | contents | clean RF AUC | RMSLE gain (clean) | gain (shortcuts only) |
 |---|---:|---:|---:|---:|
-| sem limite | 25.918 | 0,747 ± 0,140 | 0,039 | 0,040 |
-| excluir donos com mais de 1000 | 21.615 | 0,615 ± 0,036 | 0,036 | 0,040 |
-| excluir donos com mais de 500 | 19.567 | 0,708 ± 0,037 | 0,030 | 0,041 |
-| excluir donos com mais de 200 | 18.443 | 0,732 ± 0,035 | 0,037 | 0,040 |
-| **50 por dono** | 17.733 | 0,716 ± 0,024 | 0,041 | 0,031 |
+| no limit | 25,918 | 0.747 ± 0.140 | 0.039 | 0.040 |
+| exclude owners with more than 1000 | 21,615 | 0.615 ± 0.036 | 0.036 | 0.040 |
+| exclude owners with more than 500 | 19,567 | 0.708 ± 0.037 | 0.030 | 0.041 |
+| exclude owners with more than 200 | 18,443 | 0.732 ± 0.035 | 0.037 | 0.040 |
+| **50 per owner** | 17,733 | 0.716 ± 0.024 | 0.041 | 0.031 |
 
-: Sensibilidade ao tratamento de donos concentrados (RF, baseline = média de `log1p`).
+: Sensitivity to the treatment of concentrated owners (RF, baseline = mean of `log1p`).
 
-O RMSLE é estável (ganho de 0,03–0,04), mas o AUC oscila de 0,615 a 0,747: poucos donos entre 500 e 1000 conteúdos derrubam o AUC em 0,1, e sem limite uma única dobra concentra um dono e o desvio chega a 0,14. O desempenho depende, portanto, da composição de uma dúzia de contas. O limite de 50 estabiliza as estimativas, mas é uma escolha dependente dos dados.
+The RMSLE is stable (gain of 0.03–0.04), but the AUC oscillates from 0.615 to 0.747: a few owners with 500 to 1000 contents lower the AUC by 0.1, and with no limit a single fold concentrates one owner and the standard deviation reaches 0.14. Performance therefore depends on the composition of a dozen accounts. The cap of 50 stabilizes the estimates, but it is a data-dependent choice.
 
-**Outras verificações.** (i) Fixando a classe de localização e treinando dentro de cada uma (donos com mais de 500 conteúdos excluídos), o RF limpo ainda supera a baseline: `canonical` (5.439 conteúdos) RMSLE −0,141 e AUC 0,714; `skills-dir` (10.721) −0,013 e 0,672; `other` (3.810) −0,011 e 0,828. O sinal não é só localização. (ii) Com `repository_count` como alvo, o ganho do RF limpo é igual (−0,031 contra −0,030). (iii) Só 18,8% das linhas de validação têm `name` visto no treino; no subconjunto sem sobreposição o ganho persiste (RMSLE −0,039 contra −0,041 em todas; AUC 0,726 contra 0,716), o que indica que variantes do mesmo `name` não explicam o resultado. (iv) A validação agrupada por repositório, em vez de por dono, não produziu estimativas maiores (RMSLE 0,657 contra 0,655; AUC 0,735 contra 0,747, com o desvio de 0,14 do caso sem limite).
+**Other checks.** (i) Fixing the location class and training within each one (owners with more than 500 contents excluded), the clean RF still beats the baseline: `canonical` (5,439 contents) RMSLE −0.141 and AUC 0.714; `skills-dir` (10,721) −0.013 and 0.672; `other` (3,810) −0.011 and 0.828. The signal is not only location. (ii) With `repository_count` as target, the gain of the clean RF is the same (−0.031 versus −0.030). (iii) Only 18.8% of validation rows have a `name` seen in training; on the subset without overlap the gain persists (RMSLE −0.039 versus −0.041 on all; AUC 0.726 versus 0.716), which indicates that variants of the same `name` do not explain the result. (iv) Repository-grouped validation, instead of owner-grouped, did not produce larger estimates (RMSLE 0.657 versus 0.655; AUC 0.735 versus 0.747, with the standard deviation of 0.14 of the no-limit case).
 
-## 4.5 Interpretação
+## 4.5 Interpretation
 
-![Importância por permutação do RF limpo (dobras agrupadas por dono; donos com mais de 500 conteúdos excluídos)](../../results/owner/figures/permutation_importance.png)
+![Permutation importance of the clean RF (owner-grouped folds; owners with more than 500 contents excluded)](../../results/owner/figures/permutation_importance.png)
 
-Para o reúso entre donos, o bloco de repositório pesa mais (queda de 0,104 no AUC ao permutar) que o de skill (0,084), catálogo (0,016) e caminho (≈ 0). Entre as colunas, domina o `log_stars` (0,056), seguido de `log_forks` (0,021) e recência do último push (0,016): skills em repositórios mais visíveis são mais copiadas por outros donos. Na regressão, repositório (0,019) e skill (0,018) pesam parecido, e a maior coluna é a licença (0,013), seguida do tamanho do catálogo (0,011) e da profundidade do caminho (0,005). Não identificamos por que a licença pesa tanto; pode ser um indicador de repositórios que clonam catálogos. As incertezas são grandes (6 dobras), e a correlação entre atributos limita a leitura individual.
+For cross-owner reuse, the repository block weighs more (AUC drop of 0.104 when permuted) than skill (0.084), catalog (0.016) and path (≈ 0). Among columns, `log_stars` dominates (0.056), followed by `log_forks` (0.021) and push recency (0.016): skills in more visible repositories are copied more by other owners. In regression, repository (0.019) and skill (0.018) weigh similarly, and the largest column is the license (0.013), followed by catalog size (0.011) and path depth (0.005). We could not identify why the license weighs so much; it may be an indicator of repositories that clone catalogs. Uncertainties are large (6 folds), and the correlation among attributes limits the individual reading.
 
-## 4.6 Seleção de modelo e tuning
+## 4.6 Model selection and tuning
 
-| Família | AUC padrão | AUC buscado | RMSLE padrão | RMSLE buscado |
+| Family | AUC default | AUC searched | RMSLE default | RMSLE searched |
 |---|---:|---:|---:|---:|
-| linear | 0,678 | 0,689 | 0,692 | 0,690 |
-| KNN | 0,667 | 0,690 | 0,703 | 0,686 |
-| árvore | 0,614 | 0,634 | 0,807 | 0,699 |
-| Random Forest | **0,716** | 0,701 | 0,679 | 0,675 |
-| Gradient Boosting | 0,691 | 0,704 | 0,690 | 0,671 |
-| HistGradientBoosting | 0,693 | 0,682 | **0,670** | 0,688 |
-| *baseline* | 0,500 | | 0,720 | |
+| linear | 0.678 | 0.689 | 0.692 | 0.690 |
+| KNN | 0.667 | 0.690 | 0.703 | 0.686 |
+| tree | 0.614 | 0.634 | 0.807 | 0.699 |
+| Random Forest | **0.716** | 0.701 | 0.679 | 0.675 |
+| Gradient Boosting | 0.691 | 0.704 | 0.690 | 0.671 |
+| HistGradientBoosting | 0.693 | 0.682 | **0.670** | 0.688 |
+| *baseline* | 0.500 | | 0.720 | |
 
-: Validação aninhada (média de 6 dobras externas agrupadas por dono; 6 candidatas por busca).
+: Nested validation (mean of 6 outer owner-grouped folds; 6 candidates per search).
 
-Pela regra pré-especificada, congelamos o RF padrão (classificação) e o HistGradientBoosting padrão (regressão). **As famílias empatam:** o RF contra o segundo colocado (Gradient Boosting buscado) tem diferença de AUC de 0,012 (IC95% [−0,003; 0,026]), e na regressão o HistGB contra o Gradient Boosting buscado tem −0,001 [−0,027; 0,024]. Só a árvore de decisão (e, com menos evidência, o KNN padrão) fica atrás, e na classificação nem essas diferenças resistem à correção de Holm (p entre 0,06 e 0,13). A busca de hiperparâmetros não superou a configuração padrão (RF classificação: padrão 0,716 contra buscado 0,701).
+By the pre-specified rule, we froze the default RF (classification) and the default HistGradientBoosting (regression). **The families tie:** the RF against the runner-up (searched Gradient Boosting) has an AUC difference of 0.012 (95% CI [−0.003; 0.026]), and in regression the HistGB against the searched Gradient Boosting has −0.001 [−0.027; 0.024]. Only the decision tree (and, with less evidence, the default KNN) falls behind, and in classification even these differences do not survive Holm correction (p between 0.06 and 0.13). The hyperparameter search did not beat the default configuration (RF classification: default 0.716 versus searched 0.701).
 
-## 4.7 Confirmação no holdout
+## 4.7 Confirmation on the holdout
 
-Os modelos congelados foram avaliados uma vez em 25.011 conteúdos de 10.484 donos disjuntos do desenvolvimento.
+The frozen models were evaluated once on 25,011 contents from 10,484 owners disjoint from development.
 
-| Tarefa | Modelo | Resultado | Baseline | IC95% (bootstrap por dono) |
+| Task | Model | Result | Baseline | 95% CI (owner bootstrap) |
 |---|---|---:|---:|---|
-| `cross_owner` | Random Forest | AUC **0,731**; AUC-PR 0,913; Brier 0,140; log-loss 0,444 | 0,5; 0,808; 0,155; 0,490 | AUC [0,716; 0,745]; AUC-PR [0,905; 0,921] |
-| `log1p(owner_count)` | HistGradientBoosting | RMSLE **0,625**; Spearman 0,330 | 0,664 (média de `log1p`) | diferença −0,038 [−0,044; −0,032] |
+| `cross_owner` | Random Forest | AUC **0.731**; PR AUC 0.913; Brier 0.140; log-loss 0.444 | 0.5; 0.808; 0.155; 0.490 | AUC [0.716; 0.745]; PR AUC [0.905; 0.921] |
+| `log1p(owner_count)` | HistGradientBoosting | RMSLE **0.625**; Spearman 0.330 | 0.664 (mean of `log1p`) | difference −0.038 [−0.044; −0.032] |
 
-: Avaliação única no holdout.
+: Single evaluation on the holdout.
 
-![Curva ROC e calibração do RF no holdout](../../results/owner/figures/holdout_roc_calibration.png)
+![ROC curve and calibration of the RF on the holdout](../../results/owner/figures/holdout_roc_calibration.png)
 
-Os critérios de sucesso foram atendidos: o limite inferior do AUC está acima de 0,5 e o limite superior da diferença de RMSLE está abaixo de zero. O AUC do holdout (0,731) é compatível com a estimativa aninhada do desenvolvimento (0,716). O holdout tem composição diferente (36% de skills `canonical` contra 21% no desenvolvimento, e 9% `other` contra 21%), pois os donos concentrados ficam de fora por construção. H3 e H4 não foram reavaliadas no holdout e permanecem exploratórias.
+The success criteria were met: the lower AUC bound is above 0.5 and the upper bound of the RMSLE difference is below zero. The holdout AUC (0.731) is consistent with the nested estimate on development (0.716). The holdout has a different composition (36% `canonical` skills versus 21% in development, and 9% `other` versus 21%), since concentrated owners are left out by construction. H3 and H4 were not re-evaluated on the holdout and remain exploratory.

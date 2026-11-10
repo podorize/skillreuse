@@ -2,7 +2,7 @@
 \usepackage{sbc-template}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[brazil]{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{booktabs,longtable,array,calc}
 \usepackage{amsmath,amssymb}
@@ -12,10 +12,10 @@
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{Reúso de Agent Skills entre donos do GitHub: previsibilidade e vieses de construção do GitSkills\footnote{Dados e código: \protect\url{https://github.com/podorize/skillreuse}.}}
+\title{Cross-owner reuse of agent skills on GitHub: predictability and construction biases of GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
 \author{Pedro Odorize\inst{1}}
-\address{Instituto de Informática -- Universidade Federal do Rio Grande do Sul (UFRGS)\\
-  Porto Alegre, RS -- Brasil
+\address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
+  Porto Alegre, RS -- Brazil
   \email{pedro.odorize@inf.ufrgs.br}
 }
 
@@ -24,28 +24,29 @@
 \begin{abstract}
 
 
-Agent Skills são copiadas entre repositórios sem registro central, e o
-GitSkills documenta essa difusão em larga escala. Investigamos se
-características observáveis de uma skill e de seu repositório se
-associam ao reúso entre donos distintos no GitHub e quanto dessa
-previsibilidade é artefato da construção do dataset. A regra que escolhe
-o representante de cada conteúdo faz a classe de localização depender do
-número de cópias: a chance de o representante estar em
-\texttt{.claude/skills/} sobe de 14\% (2 repositórios) para 92\% (mais
-de 50), enquanto a fração real de cópias nessa pasta fica entre 5\% e
-13\%. Além disso, 28\% das skills reutilizadas existem dentro de um
-único dono, e poucas contas concentram a amostra. Com atributos livres
-desses artefatos, validação agrupada por dono, tuning aninhado e um
-holdout novo disjunto por dono (25.011 skills de 10.484 donos), o Random
-Forest atinge AUC 0,73 (IC95\% 0,72--0,75) para reúso entre donos, e um
-HistGradientBoosting reduz o RMSLE do número de donos em 6\% frente à
-média (0,625 contra 0,664). O sinal é modesto, robusto a variações do
-protocolo e vem de skill e repositório de forma complementar; é
-associativo, não causal.
+Agent skills are copied between repositories without a central registry,
+and the GitSkills dataset documents this diffusion at scale. We
+investigate whether observable characteristics of a skill and of its
+repository are associated with reuse across distinct GitHub owners, and
+how much of this predictability is an artifact of how the dataset was
+built. The rule that selects the representative copy of each content
+makes its location class depend on the number of copies: the probability
+that the representative sits in \texttt{.claude/skills/} rises from 14\%
+(2 repositories) to 92\% (more than 50), while the actual share of
+copies in that folder stays between 5\% and 13\%. In addition, 28\% of
+reused skills exist under a single owner, and a few accounts concentrate
+the sample. With attributes free of these artifacts, owner-grouped
+validation, nested tuning and a new owner-disjoint holdout (25,011
+skills from 10,484 owners), a Random Forest reaches an AUC of 0.73 (95\%
+CI 0.72--0.75) for cross-owner reuse, and a HistGradientBoosting model
+reduces the RMSLE of the number of owners by 6\% relative to the mean
+baseline (0.625 versus 0.664). The signal is modest, robust to protocol
+variations, and comes from skill and repository attributes in a
+complementary way; it is associative, not causal.
 
 \end{abstract}
 
-\noindent\textbf{Palavras-chave:} Agent Skills; reúso de software; mineração de repositórios; vieses de construção; validação agrupada.
+\noindent\textbf{Keywords:} agent skills; software reuse; mining software repositories; construction bias; grouped validation.
 
 \input{sections/01_introduction.tex}
 

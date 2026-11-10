@@ -1,110 +1,110 @@
-\section{Discussão}\label{discussuxe3o}
+\section{Discussion}\label{discussion}
 
-\subsection{O que o sinal significa}\label{o-que-o-sinal-significa}
+\subsection{What the signal means}\label{what-the-signal-means}
 
-Os atributos observáveis de uma skill e de seu repositório carregam
-informação sobre o reúso entre donos, mas pouca: AUC 0,73 no holdout e
-uma redução de 6\% do RMSLE frente à média de \texttt{log1p}. O
-resultado se sustenta nas três camadas de evidência (validação aninhada,
-robustez do desenvolvimento e holdout disjunto por dono), o que o
-distingue de uma associação de uma única partição. Ele é, porém, um
-sinal de \textbf{ordenação grossa}, e não de previsão fina: o Spearman
-do modelo de regressão é 0,33.
+The observable attributes of a skill and of its repository carry
+information about cross-owner reuse, but not much: an AUC of 0.73 on the
+holdout and a 6\% reduction of the RMSLE relative to the mean of
+\texttt{log1p}. The result holds across three layers of evidence (nested
+validation, development robustness and an owner-disjoint holdout), which
+distinguishes it from an association on a single partition. It is,
+however, a signal of \textbf{coarse ordering}, not of fine prediction:
+the Spearman of the regression model is 0.33.
 
-A decomposição por blocos responde à RQ3. Skill (estrutura do arquivo) e
-repositório (visibilidade e atividade) contribuem de forma complementar:
-isolados, cada um alcança AUC 0,65--0,67; juntos, 0,72 (H3a e H3b). A
-importância por permutação associa o reúso entre donos sobretudo à
-\textbf{visibilidade do repositório} (estrelas, forks, recência do
-último push), o que é coerente com skills em repositórios mais vistos
-serem copiadas por outros donos. A associação admite mais de uma
-explicação (visibilidade que gera cópias, ou repositórios valorizados
-por conterem skills já copiadas), e os dados não as separam. O peso da
-licença e do tamanho do catálogo sugere um componente de ecossistema
-(catálogos e clones) que merece investigação própria.
+The decomposition by blocks answers RQ3. Skill (file structure) and
+repository (visibility and activity) contribute complementarily: in
+isolation each reaches an AUC of 0.65--0.67; together, 0.72 (H3a and
+H3b). Permutation importance associates cross-owner reuse mainly with
+\textbf{repository visibility} (stars, forks, recency of the last push),
+which is consistent with skills in more visible repositories being
+copied by other owners. The association admits more than one explanation
+(visibility that generates copies, or repositories valued for containing
+skills that were already copied), and the data do not separate them. The
+weight of the license and of the catalog size suggests an ecosystem
+component (catalogs and clones) that deserves its own investigation.
 
-\subsection{Implicações para o uso do
-GitSkills}\label{implicauxe7uxf5es-para-o-uso-do-gitskills}
+\subsection{Implications for using
+GitSkills}\label{implications-for-using-gitskills}
 
-A contribuição mais sólida deste trabalho é metodológica e responde à
+The most solid contribution of this work is methodological and answers
 RQ1.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{\texttt{location\_class} e \texttt{history\_fetched} não são
-  preditores legítimos de reúso.} Por construção, a classe de
-  localização do representante cresce com o número de cópias (14\% →
-  92\%), e o histórico de commits herda a dependência. Estudos que os
-  usem para explicar a difusão correm o risco de reportar um artefato;
-  na primeira versão deste estudo, eles faziam a visão ``de
-  repositório'' parecer muito mais informativa do que é.
+  \textbf{\texttt{location\_class} and \texttt{history\_fetched} are not
+  legitimate predictors of reuse.} By construction, the location class
+  of the representative grows with the number of copies (14\% → 92\%),
+  and the commit history inherits the dependence. Studies that use them
+  to explain diffusion risk reporting an artifact; in the first version
+  of this study, they made the ``repository'' view look much more
+  informative than it is.
 \item
-  \textbf{Contar repositórios mistura difusão com autocópia.} O número
-  de donos distintos é um alvo mais fiel, e a escolha altera a base da
-  distribuição (28\% de conteúdos com um único dono).
+  \textbf{Counting repositories mixes diffusion with self-copying.} The
+  number of distinct owners is a more faithful target, and the choice
+  changes the base of the distribution (28\% of contents with a single
+  owner).
 \item
-  \textbf{Resultados dependem de poucas contas.} O AUC variou de 0,615 a
-  0,747 conforme o tratamento de donos entre 500 e 1000 conteúdos.
-  Relatar a sensibilidade a donos concentrados, ou limitar a
-  contribuição por dono, deveria ser prática padrão.
+  \textbf{Results depend on a few accounts.} The AUC varied from 0.615
+  to 0.747 depending on the treatment of owners with 500 to 1000
+  contents. Reporting the sensitivity to concentrated owners, or capping
+  the contribution per owner, should be standard practice.
 \item
-  \textbf{O representante descreve uma cópia arbitrária.} Entre cópias
-  da mesma classe, a escolha é alfabética, e os atributos do repositório
-  (estrelas, linguagem) são os de um repositório entre vários. Agregados
-  sobre todas as cópias seriam mais informativos, mas derivam das mesmas
-  ocorrências que definem o alvo; recomendamos que sejam tratados
-  explicitamente como vazamento em estudos preditivos, ou calculados só
-  com informação anterior ao reúso.
+  \textbf{The representative describes an arbitrary copy.} Among copies
+  of the same class, the choice is alphabetical, and the repository
+  attributes (stars, language) are those of one repository among
+  several. Aggregates over all copies would be more informative, but
+  derive from the same occurrences that define the target; we recommend
+  that they be treated explicitly as leakage in predictive studies, or
+  computed only from information prior to reuse.
 \end{enumerate}
 
-\subsection{Modelos e limites dos
-dados}\label{modelos-e-limites-dos-dados}
+\subsection{Models and data limits}\label{models-and-data-limits}
 
-As seis famílias empatam em ambas as tarefas, e a busca de
-hiperparâmetros não melhorou o resultado (RF padrão 0,716 contra 0,701
-buscado). Quando famílias de vieses indutivos tão diferentes (linear,
-vizinhança, árvores, boostings) chegam ao mesmo desempenho, o limite
-costuma estar nos dados e não no algoritmo. Os atributos descrevem uma
-cópia do conteúdo, e o alvo é uma contagem exata de hashes, que ignora
-cópias modificadas; ganhos relevantes provavelmente exigirão novas
-fontes de informação (relações entre cópias, tempo), e não modelos mais
-flexíveis.
+The six families tie in both tasks, and the hyperparameter search did
+not improve the result (default RF 0.716 versus 0.701 searched). When
+families with such different inductive biases (linear, neighborhood,
+trees, boostings) reach the same performance, the limit is usually in
+the data and not in the algorithm. The attributes describe one copy of
+the content, and the target is an exact count of hashes, which ignores
+modified copies; relevant gains will probably require new sources of
+information (relations among copies, time), and not more flexible
+models.
 
-\subsection{Ameaças à validade e
-limitações}\label{ameauxe7as-uxe0-validade-e-limitauxe7uxf5es}
+\subsection{Threats to validity and
+limitations}\label{threats-to-validity-and-limitations}
 
-\textbf{Construto.} O número de donos aproxima a adoção independente,
-mas contas podem representar a mesma pessoa ou organização, e a busca do
-GitHub só conta forks com mais estrelas que o pai. As duas contagens são
-limites inferiores, e o hash exato não captura variantes. Reúso por
-cópia não indica uso, qualidade ou utilidade da skill.
+\textbf{Construct.} The number of owners approximates independent
+adoption, but accounts may represent the same person or organization,
+and GitHub search only counts forks with more stars than the parent.
+Both counts are lower bounds, and the exact hash does not capture
+variants. Reuse by copying does not indicate use, quality or usefulness
+of the skill.
 
-\textbf{Validade interna.} (i) As hipóteses H1--H4 foram fixadas depois
-de resultados exploratórios, e só o holdout é confirmatório; os valores
-do desenvolvimento são descritivos. (ii) O limite de 50 conteúdos por
-dono é uma escolha dependente dos dados. (iii) O tuning usou 2
-repetições de 3 dobras e 6 candidatas, menos que o planejado. (iv) Com 9
-escores não independentes, o teste de Nadeau--Bengio é aproximado, e os
-p-valores após Holm dependem do tamanho da família. (v) Os blocos de
-catálogo e caminho vêm do repositório e do caminho do representante e
-podem ser parcialmente afetados pela preferência por locais padrão; o
-fato de o caminho quase não ajudar e de o sinal persistir dentro de cada
-classe de localização reduz esse risco, mas não o elimina.
+\textbf{Internal validity.} (i) Hypotheses H1--H4 were fixed after
+exploratory results, and only the holdout is confirmatory; the
+development values are descriptive. (ii) The cap of 50 contents per
+owner is a data-dependent choice. (iii) Tuning used 2 repetitions of 3
+folds and 6 candidates, fewer than planned. (iv) With 9 non-independent
+scores, the Nadeau--Bengio test is approximate, and the p-values after
+Holm depend on the size of the family. (v) The catalog and path blocks
+come from the representative's repository and path and may be partially
+affected by the preference for standard locations; the fact that the
+path barely helps and that the signal persists within each location
+class reduces this risk, but does not eliminate it.
 
-\textbf{Validade externa.} O corpus é um instantâneo de julho de 2026 de
-repositórios públicos. O holdout exclui donos concentrados por
-construção, tem mais skills \texttt{canonical} (36\% contra 21\%) e
-menos \texttt{other} (9\% contra 21\%) que o desenvolvimento, e H3 e H4
-não foram reavaliadas nele. A partição de teste original foi consultada
-na primeira versão do estudo e não sustenta nenhuma afirmação
-confirmatória.
+\textbf{External validity.} The corpus is a July 2026 snapshot of public
+repositories. The holdout excludes concentrated owners by construction,
+has more \texttt{canonical} skills (36\% versus 21\%) and fewer
+\texttt{other} (9\% versus 21\%) than development, and H3 and H4 were
+not re-evaluated on it. The original test partition was consulted in the
+first version of the study and supports no confirmatory claim.
 
-\textbf{Interpretação.} A importância por permutação é associativa,
-depende do modelo e é instável entre dobras para vários atributos. Nada
-aqui estabelece causalidade.
+\textbf{Interpretation.} Permutation importance is associative, depends
+on the model, and is unstable across folds for several attributes.
+Nothing here establishes causality.
 
-\textbf{Ética.} Os dados são públicos e o GitSkills anonimiza autores de
-commits; omitimos identificadores de donos, e a análise por dono não
-visa avaliar indivíduos.
+\textbf{Ethics.} The data are public and GitSkills anonymizes commit
+authors; we omit owner identifiers, and the per-owner analysis does not
+aim to evaluate individuals.
