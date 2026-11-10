@@ -1,6 +1,6 @@
-# Protocolo principal da pesquisa (v1.0)
+# Protocolo principal da pesquisa (v1.1)
 
-**Estado:** definido em 10/11/2026, depois de uma fase exploratória no desenvolvimento. Este documento fixa o que é **confirmatório** (hipóteses H1–H4, um único modelo final, um holdout novo) e o que é **exploratório**. Decisões tomadas depois de ver resultados estão marcadas como *dependentes dos dados* (seção 9).
+**Estado:** definido em 10/11/2026, depois de uma fase exploratória no desenvolvimento; v1.1 registra o holdout construído, o tuning aninhado e os modelos congelados **antes** da avaliação do holdout (tag git `frozen-before-holdout`). Este documento fixa o que é **confirmatório** (hipóteses H1–H4, um único modelo final, um holdout novo) e o que é **exploratório**. Decisões tomadas depois de ver resultados estão marcadas como *dependentes dos dados* (seção 9).
 
 ## 1. Pergunta e posicionamento
 
@@ -56,7 +56,8 @@ Pré-processamento (sempre ajustado no treino de cada dobra): mediana + indicado
 - Baselines: prevalência (classificação), média e mediana de `log1p` (regressão).
 - **Validação:** 3 repetições × 3 dobras `StratifiedGroupKFold`, **agrupadas por dono**, estratificadas por faixa de `owner_count`; sementes 2027, 2028, 2029; mesmas partições para todos os modelos. Nenhum dono aparece em treino e validação de uma mesma dobra.
 - **Sensibilidade ao `name`:** por dobra, fração das linhas de validação com `name` visto no treino e métricas no subconjunto sem sobreposição.
-- **Modelos extras e tuning** (etapa posterior): busca aninhada (`RandomizedSearchCV`) no desenvolvimento, com seleção entre famílias pelo AUC médio aninhado. Só o modelo selecionado vai ao holdout.
+- **Tuning aninhado e seleção (executados):** `skillreuse final-model`; seis famílias (linear, KNN, árvore, Random Forest, Gradient Boosting, HistGradientBoosting) × {padrão, buscada} sobre `clean_full`; externa 2 repetições × 3 dobras agrupadas por dono; interna 3 dobras agrupadas por dono, `RandomizedSearchCV` com 6 candidatas; seleção pela maior média externa (AUC) ou menor (RMSLE). **Desvio por custo computacional:** o protocolo previa 3×3 e 12 candidatas.
+- **Modelos congelados** (`results/owner/final/final_config_*.json`): classificação = Random Forest padrão (AUC aninhado 0,716, baseline 0,5); regressão = HistGradientBoosting padrão (RMSLE aninhado 0,6695, baseline 0,7197). Em ambas as tarefas as famílias empatam estatisticamente (IC das diferenças inclui zero); a regra pré-especificada seleciona a melhor média. A busca não superou a configuração padrão. Só esses dois modelos vão ao holdout. H2 foi testada com RF no desenvolvimento; o modelo final de regressão é o HistGB selecionado pela regra.
 
 ## 6. Métricas
 
@@ -82,7 +83,8 @@ Executar: `make primary` → `results/owner/primary/primary_hypotheses.csv`.
 
 A fase acima é **exploratória para fins confirmatórios**, pois os resultados foram vistos antes de fixar o protocolo. A confirmação exige um holdout nunca consultado:
 
-- Conteúdos fora dos 200.000 amostrados (≈1,68 milhão) com `repository_count >= 2`, **donos disjuntos** dos donos do desenvolvimento, com o mesmo limite de 50 conteúdos por dono.
+- Conteúdos fora dos 200.000 amostrados (≈1,68 milhão) com `repository_count >= 2`, **donos disjuntos** dos donos de todas as skills reutilizadas da amostra (desenvolvimento e teste original; critério mais rígido que o inicial), com o mesmo limite de 50 conteúdos por dono. Construído por `skillreuse holdout`: 25.011 conteúdos de 10.484 donos, sobreposição zero de donos e de conteúdos, máximo de 37 conteúdos por dono, semente `20261110`. A prevalência de `cross_owner` (80,8%) foi vista como verificação de integridade; nenhum modelo foi avaliado antes do congelamento.
+- **Deslocamento de composição (limitação):** o holdout tem 36% de skills `canonical` e 9% `other` (desenvolvimento: 21% e 21%), porque os donos concentrados ficam de fora.
 - Mesmas definições de alvos e atributos, mesmo código, **um único** modelo final (o selecionado na seção 5), uma única avaliação.
 - Estimativa com **bootstrap por conglomerado (dono)**, 2.000 reamostras. Critério de sucesso: limite inferior do IC95% do AUC > 0,5 e limite superior do IC95% da diferença de RMSLE para a média < 0.
 - Se o critério falhar, o resultado é reportado como tal.
