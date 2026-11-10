@@ -1,0 +1,54 @@
+{
+  "ridge_log": {
+    "cv_rmsle": 0.5860405436081869,
+    "params": {
+      "alpha": 330.94212837002
+    }
+  },
+  "knn_log": {
+    "cv_rmsle": 0.5939103983223303,
+    "params": {
+      "n_neighbors": 100,
+      "p": 2,
+      "weights": "uniform"
+    }
+  },
+  "decision_tree_log": {
+    "cv_rmsle": 0.5819119890826684,
+    "params": {
+      "max_depth": 17,
+      "min_samples_leaf": 57,
+      "min_samples_split": 15
+    }
+  },
+  "random_forest_log": {
+    "cv_rmsle": 0.5773411615811751,
+    "params": {
+      "max_depth": 13,
+      "max_features": "sqrt",
+      "min_samples_leaf": 1,
+      "n_estimators": 200
+    }
+  },
+  "gradient_boosting_log": {
+    "cv_rmsle": 0.573298549240486,
+    "params": {
+      "learning_rate": 0.185754279921205,
+      "loss": "squared_error",
+      "max_depth": 3,
+      "min_samples_leaf": 10,
+      "n_estimators": 181,
+      "subsample": 0.700479099464326
+    }
+  },
+  "hist_gradient_boosting_log": {
+    "cv_rmsle": 0.5788239863627082,
+    "params": {
+      "l2_regularization": 5.111333280420027,
+      "learning_rate": 0.05475502249245232,
+      "max_iter": 295,
+      "max_leaf_nodes": 12,
+      "min_samples_leaf": 53
+    }
+  }
+}

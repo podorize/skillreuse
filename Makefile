@@ -2,7 +2,7 @@
 SEED ?= 2027
 RES  := results
 
-.PHONY: data views benchmark evaluate report test paper clean-cache
+.PHONY: data views tune benchmark evaluate report test paper clean-cache
 
 data:           ## download (revisao fixa), amostra deterministica, divisao e alvo de contagem
 	uv run skillreuse download
@@ -10,10 +10,14 @@ data:           ## download (revisao fixa), amostra deterministica, divisao e al
 	uv run skillreuse features
 	uv run skillreuse target
 
-views:          ## Ridge: skill-only, repository-only e hybrid
+views:          ## Ridge nas 3 visoes + referencias constantes, 3x3 dobras, testes pareados
 	uv run skillreuse benchmark-views --candidate-features 10000 --top-k 500 \
-	  --views skill_only repository_only hybrid --models ridge_log --folds 3 --seed $(SEED) \
-	  --output-dir $(RES)/count_regression/selected_full_ridge
+	  --views skill_only repository_only hybrid --models dummy_median_log dummy_log ridge_log \
+	  --folds 3 --repeats 3 --seed $(SEED) --output-dir $(RES)/count_regression/views_repeated
+
+tune:           ## busca aninhada (3x3 externas, 12 candidatas) + referencias + testes pareados
+	uv run skillreuse tune --view repository_only --repeats 3 --folds 3 --inner-folds 3 \
+	  --n-iter 12 --seed $(SEED)
 
 benchmark:      ## 6 regressores, validacao agrupada (repository-only)
 	uv run skillreuse benchmark --views repository_only --folds 3 --seed $(SEED) \
