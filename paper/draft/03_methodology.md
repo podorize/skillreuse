@@ -62,7 +62,7 @@ The main metrics are the ROC AUC (classification) and the RMSLE (regression); th
 
 : Pre-specified hypotheses.
 
-Interpretation uses permutation importance of the clean RF on owner-grouped folds, per column and per block (the columns of a block are permuted together). It is associative; correlated attributes share importance.
+Interpretation uses permutation importance of the clean RF on owner-grouped folds, per column and per block (the columns of a block are permuted together), and out-of-fold partial dependence of the frozen models (trained on each training fold, with the curve computed on the validation rows; mean and standard deviation across folds) for the main attributes. Both are associative; correlated attributes share importance. For the binary task we also report the minority class (`cross_owner = 0`, content that exists under a single owner): its PR AUC against its prevalence and the performance at a decision threshold that maximizes the balanced accuracy on development out-of-fold predictions (3×3 folds). The threshold is fixed on development and then applied, unchanged, to the saved holdout predictions; this is a descriptive reading of the same predictions, not a new evaluation.
 
 ## 3.9 New holdout
 

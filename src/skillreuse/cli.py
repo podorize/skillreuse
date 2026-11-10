@@ -28,6 +28,7 @@ COMMANDS: dict[str, tuple[str, str, str]] = {
     "figures": ("skillreuse.figures", "figures_main", "figuras do relatorio"),
     "feature-eda": ("skillreuse.feature_eda", "feature_eda_main", "EDA dos atributos limpos"),
     "export-derived": ("skillreuse.owner", "export_derived_main", "tabelas derivadas pequenas"),
+    "interpretation": ("skillreuse.interpretation", "interpretation_main", "PDP e limiar"),
     "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
     "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
     "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),

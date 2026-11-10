@@ -3,7 +3,7 @@ SEED ?= 2027
 R    := results/owner
 V    := skill repo+catalog clean_full clean_full+shortcuts shortcuts_only
 
-.PHONY: quick-setup quick feature-eda derived data owner controls primary robustness importance final holdout figures test paper
+.PHONY: quick-setup quick interpretation feature-eda derived data owner controls primary robustness importance final holdout figures test paper
 
 quick-setup:    ## copia as tabelas derivadas (9 MB) para data/processed, sem baixar os dados brutos
 	mkdir -p data/processed
@@ -47,6 +47,9 @@ robustness:     ## limiares de donos, cap, classes de localizacao, alvo reposito
 
 importance:     ## importancia por permutacao (conjunto limpo)
 	uv run skillreuse owner-importance --exclude-owners-above 500 --repeats 2 --n-perm 3
+
+interpretation:  ## dependencia parcial (fora da amostra) e analise de limiar
+	uv run skillreuse interpretation
 
 final:          ## tuning aninhado e congelamento dos modelos (nao le o holdout)
 	OMP_NUM_THREADS=1 uv run skillreuse final-model --repeats 2 --folds 3 --inner-folds 3 --n-iter 6 --n-jobs 4

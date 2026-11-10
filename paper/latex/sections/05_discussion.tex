@@ -14,14 +14,20 @@ the Spearman of the regression model is 0.33.
 The decomposition by blocks answers RQ3. Skill (file structure) and
 repository (visibility and activity) contribute complementarily: in
 isolation each reaches an AUC of 0.65--0.67; together, 0.72 (H3a and
-H3b). Permutation importance associates cross-owner reuse mainly with
-\textbf{repository visibility} (stars, forks, recency of the last push),
-which is consistent with skills in more visible repositories being
-copied by other owners. The association admits more than one explanation
-(visibility that generates copies, or repositories valued for containing
-skills that were already copied), and the data do not separate them. The
-weight of the license and of the catalog size suggests an ecosystem
-component (catalogs and clones) that deserves its own investigation.
+H3b). Permutation importance and partial dependence associate
+cross-owner reuse mainly with \textbf{repository visibility} (stars and
+forks) and with \textbf{repositories whose last push is old}, which is
+consistent with skills in more visible repositories, and in repositories
+that have been there for longer, being copied by other owners. The
+association admits more than one explanation (visibility that generates
+copies, accumulated exposure time, or repositories valued for containing
+skills that were already copied), and the data do not separate them. In
+the regression, what stands out is the \textbf{absence of a license}
+and, for large catalogs, the number of skills in the repository; the
+first is unexpected and its mechanism is unknown (Section 4.5). At the
+operating point that maximizes balanced accuracy, the model recovers
+79\% of single-owner contents with a precision of 28\%: it ranks
+contents, but is not accurate enough for automated decisions.
 
 \subsection{Implications for using
 GitSkills}\label{implications-for-using-gitskills}

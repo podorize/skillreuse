@@ -22,6 +22,7 @@ make controls     # control with the original design (Section 4.2)
 make primary      # H1–H4 (Section 4.3), cap of 50 per owner
 make robustness   # owner thresholds, location classes, alternative target (4.4)
 make importance   # permutation importance (4.5)
+make interpretation  # partial dependence and threshold analysis (4.5, 4.7)
 ```
 
 `results/owner/primary/` contains `primary_hypotheses.csv`, the per-fold tables and the exploratory paired tests; `results/owner/robustness/` and `results/owner/models*/` hold each sensitivity, each with a `manifest.json`.
@@ -46,7 +47,8 @@ The frozen models are in `results/owner/final/final_config_*.json` and were comm
 | Control with the original design (4.2) | `results/controls/shortcut_summary.csv`, `shortcut_paired.csv` |
 | Views and hypotheses (4.3) | `results/owner/primary/{classification,regression}_summary.csv`, `primary_hypotheses.csv` |
 | Sensitivity (4.4) | `results/owner/figures/sensitivity_owner_limit.csv`, `results/owner/robustness/*` (including `log_skewed/`) |
-| Importance (4.5) | `results/owner/importance/*_importance.csv` |
+| Importance and direction (4.5) | `results/owner/importance/*_importance.csv`, `results/owner/interpretation/pdp_oof.csv` |
+| Threshold and minority class (4.7) | `results/owner/interpretation/threshold_results.json` |
 | Tuning (4.6) | `results/owner/final/*_nested_summary.csv`, `*_selection_tests.csv` |
 | Holdout (4.7) | `results/owner/holdout/holdout_results.json` |
 

@@ -21,7 +21,11 @@ owner-disjoint holdout, the Random Forest reaches an AUC of 0.731 (95\%
 CI 0.716--0.745) and the HistGradientBoosting reduces the RMSLE of
 \texttt{owner\_count} by 6\% relative to the mean (0.625 versus 0.664).
 Skill and repository contribute complementarily, and the signal is
-associated mainly with repository visibility.
+associated mainly with repository visibility (stars, forks), with older
+last pushes and, in the regression, with the absence of a license. At a
+decision threshold the model has a balanced accuracy of 0.66 and a
+precision of 0.28 for single-owner content, so it ranks rather than
+classifies.
 
 \textbf{Third}, the limit seems to be in the data and not in the models:
 six families tie and tuning does not help. The claims are associative
@@ -33,7 +37,8 @@ prior to reuse, in order to use attributes of all copies without
 leakage. (ii) Group near-identical copies to mitigate the fragmentation
 of the target by exact hash. (iii) Replicate with later GitSkills
 snapshots and study the temporal dynamics of diffusion. (iv) Investigate
-the license and the catalog size as indicators of catalog clones. (v)
-Evaluate text representations (for example, embeddings) within fixed
-location classes. (vi) Propose to the GitSkills maintainers indicators
-that separate the representative choice from the repository attributes.
+why repositories without a license host skills with more owners, and the
+role of catalog size. (v) Evaluate text representations (for example,
+embeddings) within fixed location classes. (vi) Propose to the GitSkills
+maintainers indicators that separate the representative choice from the
+repository attributes.

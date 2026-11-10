@@ -47,3 +47,16 @@ def test_holdout_is_owner_and_hash_disjoint_from_sample() -> None:
     assert data["hash_overlap_with_200k_sample"] == 0
     assert data["max_rows_per_owner"] <= data["cap_per_owner"]
     assert isinstance(pd.__version__, str)
+
+
+def test_threshold_selection_and_balanced_accuracy() -> None:
+    from skillreuse.interpretation import balanced_accuracy, choose_threshold, confusion
+
+    y = np.array([1] * 80 + [0] * 20)
+    prob = np.concatenate([np.linspace(0.7, 0.99, 80), np.linspace(0.4, 0.85, 20)])
+    best, table = choose_threshold(y, prob)
+    assert 0.4 <= best <= 0.95
+    assert table["balanced_accuracy"].max() >= balanced_accuracy(y, prob, 0.5)
+    conf = confusion(y, prob, best)
+    assert sum(conf.values()) == 100
+    assert balanced_accuracy(y, np.where(y == 1, 0.9, 0.1), 0.5) == 1.0

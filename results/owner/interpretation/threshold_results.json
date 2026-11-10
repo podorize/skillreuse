@@ -1,0 +1,36 @@
+{
+  "rule": "maximize balanced accuracy on development out-of-fold predictions",
+  "threshold": 0.8,
+  "dev_balanced_accuracy_at_threshold": 0.6630679430938965,
+  "dev_balanced_accuracy_at_0.5": 0.5059402093976596,
+  "dev_minority_prevalence": 0.19618789826876448,
+  "dev_minority_pr_auc_mean_over_repeats": 0.3668912131765018,
+  "dev_confusion_at_threshold": {
+    "true_cross_owner_pred_cross_owner": 28233,
+    "true_cross_owner_pred_single_owner": 14529,
+    "true_single_owner_pred_cross_owner": 3487,
+    "true_single_owner_pred_single_owner": 6950
+  },
+  "holdout": {
+    "balanced_accuracy": 0.6589825945721142,
+    "balanced_accuracy_ci95": [
+      0.6470240741352774,
+      0.6703650490711132
+    ],
+    "minority_prevalence": 0.19227539882451716,
+    "minority_pr_auc": 0.390276533354024,
+    "minority_pr_auc_ci95": [
+      0.36247133432544154,
+      0.41753193614051176
+    ],
+    "minority_precision": 0.2842881621098115,
+    "minority_recall": 0.793512164691204,
+    "confusion": {
+      "true_cross_owner_pred_cross_owner": 10595,
+      "true_cross_owner_pred_single_owner": 9607,
+      "true_single_owner_pred_cross_owner": 993,
+      "true_single_owner_pred_single_owner": 3816
+    },
+    "note": "threshold fixed on development; descriptive reading of the saved holdout predictions, not a new evaluation"
+  }
+}
