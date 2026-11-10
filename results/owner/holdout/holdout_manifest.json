@@ -1,0 +1,14 @@
+{
+  "generated_at_utc": "2026-11-10T16:43:59.158950+00:00",
+  "protocol": "paper/protocol.md secao 8",
+  "seed": "20261110",
+  "target_rows": 25000,
+  "cap_per_owner": 50,
+  "rows": 25011,
+  "owners": 10484,
+  "owner_overlap_with_sample_reused": 0,
+  "hash_overlap_with_200k_sample": 0,
+  "max_rows_per_owner": 37,
+  "sanity_cross_owner_prevalence": 0.8077246011754828,
+  "note": "prevalencia consultada apenas como verificacao de integridade; o modelo nao foi avaliado no holdout"
+}

@@ -82,10 +82,12 @@ def build_owner_targets(output: Path = OWNER_TARGETS) -> pd.DataFrame:
     return frame
 
 
-def build_context_features(output: Path = CONTEXT_FEATURES) -> pd.DataFrame:
-    """Atributos de contexto do repositorio representativo e do caminho (200 mil amostrados)."""
+def build_context_features(
+    output: Path = CONTEXT_FEATURES, sample_path: Path = DEFAULT_SAMPLE
+) -> pd.DataFrame:
+    """Atributos de contexto do repositorio representativo e do caminho."""
     sample = pq.read_table(
-        DEFAULT_SAMPLE,
+        sample_path,
         columns=["content_hash", "representative_repo_id", "representative_path", "repo_owner",
                  "repo_stars", "repo_forks", "repo_created_at", "repo_pushed_at", "name"],
     ).to_pandas()
@@ -124,6 +126,24 @@ def load_owner_frame(split_name: str = "train", *, need_text: bool = False) -> p
     context = pd.read_parquet(CONTEXT_FEATURES)
     frame = frame.merge(targets, on="content_hash", how="left", validate="1:1")
     frame = frame.merge(context, on="content_hash", how="left", validate="1:1")
+    frame["log_owner_count"] = np.log1p(frame["owner_count"].astype(float))
+    return frame
+
+
+def load_holdout_frame() -> pd.DataFrame:
+    """Quadro do holdout novo (mesmas colunas de ``load_owner_frame``)."""
+    from skillreuse.holdout import HOLDOUT_CONTEXT, HOLDOUT_FEATURES
+
+    frame = pd.read_parquet(HOLDOUT_FEATURES)
+    targets = pd.read_parquet(OWNER_TARGETS, columns=[
+        "content_hash", "repository_count", "owner_count", "cross_owner", "canonical_share",
+        "any_canonical"])
+    frame = frame.drop(columns=["repository_count"], errors="ignore")
+    frame = frame.merge(targets, on="content_hash", how="left", validate="1:1")
+    frame = frame.merge(pd.read_parquet(HOLDOUT_CONTEXT), on="content_hash", how="left",
+                        validate="1:1")
+    frame["count_target"] = frame["repository_count"].astype("int32")
+    frame["log_count_target"] = np.log1p(frame["repository_count"].astype(float))
     frame["log_owner_count"] = np.log1p(frame["owner_count"].astype(float))
     return frame
 
