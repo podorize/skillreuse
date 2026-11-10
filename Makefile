@@ -3,7 +3,7 @@ SEED ?= 2027
 R    := results/owner
 V    := skill repo+catalog clean_full clean_full+shortcuts shortcuts_only
 
-.PHONY: quick-setup quick interpretation feature-eda derived data owner controls primary robustness importance final holdout figures test paper
+.PHONY: html quick-setup quick interpretation feature-eda derived data owner controls primary robustness importance final holdout figures test paper
 
 quick-setup:    ## copia as tabelas derivadas (9 MB) para data/processed, sem baixar os dados brutos
 	mkdir -p data/processed
@@ -68,3 +68,6 @@ test:
 
 paper:          ## Markdown -> LaTeX (requer pandoc)
 	uv run python paper/build_latex.py
+
+html:           ## versao de leitura do relatorio em HTML unico (paper/report.html)
+	uv run python paper/build_html.py
