@@ -22,3 +22,6 @@ results/figures/
 # Saidas da reproducao rapida (`make quick`)
 results/owner/primary_quick/
 results/owner/holdout_repro/
+
+# Versao de leitura gerada (`python paper/build_html.py`)
+paper/report.html
