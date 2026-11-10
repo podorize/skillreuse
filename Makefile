@@ -1,8 +1,9 @@
-# Pipeline completo do relatorio. Requer `uv` e os dados em data/raw (ver `make data`).
+# Pipeline do relatorio. Requer `uv`; os dados vao para data/raw (~7 GB).
 SEED ?= 2027
-RES  := results
+R    := results/owner
+V    := skill repo+catalog clean_full clean_full+shortcuts shortcuts_only
 
-.PHONY: data owner primary views tune benchmark evaluate report test paper clean-cache
+.PHONY: data owner controls primary robustness importance final holdout figures test paper
 
 data:           ## download (revisao fixa), amostra deterministica, divisao e alvo de contagem
 	uv run skillreuse download
@@ -13,27 +14,36 @@ data:           ## download (revisao fixa), amostra deterministica, divisao e al
 owner:          ## alvo por donos, contexto, auditoria do representante e EDA
 	uv run skillreuse owner
 
-primary:        ## protocolo principal: H1-H4 com limite de 50 por dono (paper/protocol.md)
+controls:       ## controle com o desenho original (alvo repository_count)
+	uv run skillreuse controls --repeats 3 --folds 3 --seed $(SEED)
+
+primary:        ## protocolo principal: H1-H4 com limite de 50 por dono
 	uv run skillreuse primary
 
-views:          ## Ridge nas 3 visoes + referencias constantes, 3x3 dobras, testes pareados
-	uv run skillreuse benchmark-views --candidate-features 10000 --top-k 500 \
-	  --views skill_only repository_only hybrid --models dummy_median_log dummy_log ridge_log \
-	  --folds 3 --repeats 3 --seed $(SEED) --output-dir $(RES)/count_regression/views_repeated
+robustness:     ## limiares de donos, cap, classes de localizacao, alvo repository_count
+	uv run skillreuse owner-models --output-dir $(R)/models
+	uv run skillreuse owner-models --exclude-owners-above 500 --output-dir $(R)/models_excl_big_owners
+	uv run skillreuse owner-models --group-by repo --views skill repo+catalog clean_full clean_full+shortcuts --output-dir $(R)/models_repo_grouped
+	uv run skillreuse owner-models --exclude-owners-above 200 --views $(V) --output-dir $(R)/robustness/excl200
+	uv run skillreuse owner-models --exclude-owners-above 1000 --views $(V) --output-dir $(R)/robustness/excl1000
+	uv run skillreuse owner-models --cap-per-owner 50 --views $(V) --output-dir $(R)/robustness/cap50
+	for t in skills-dir other canonical; do uv run skillreuse owner-models --tier $$t --exclude-owners-above 500 --views skill repo+catalog clean_full --output-dir $(R)/robustness/tier_$$t; done
+	uv run skillreuse owner-models --task regression --regression-target repo --exclude-owners-above 500 --views $(V) --output-dir $(R)/robustness/target_repository_count
 
-tune:           ## busca aninhada (3x3 externas, 12 candidatas) + referencias + testes pareados
-	uv run skillreuse tune --view repository_only --repeats 3 --folds 3 --inner-folds 3 \
-	  --n-iter 12 --seed $(SEED)
+importance:     ## importancia por permutacao (conjunto limpo)
+	uv run skillreuse owner-importance --exclude-owners-above 500 --repeats 2 --n-perm 3
 
-benchmark:      ## 6 regressores, validacao agrupada (repository-only)
-	uv run skillreuse benchmark --views repository_only --folds 3 --seed $(SEED) \
-	  --output-dir $(RES)/discipline_benchmark/full_repository_only_20261109
+final:          ## tuning aninhado e congelamento dos modelos (nao le o holdout)
+	OMP_NUM_THREADS=1 uv run skillreuse final-model --repeats 2 --folds 3 --inner-folds 3 --n-iter 6 --n-jobs 4
 
-evaluate:       ## avaliacao externa dos candidatos congelados (ja executada uma vez)
-	uv run skillreuse evaluate --output-dir $(RES)/discipline_benchmark/final_repository_only
+holdout:        ## constroi o holdout disjunto por dono
+	uv run skillreuse holdout
 
-report:         ## tabelas e figuras do relatorio
-	uv run skillreuse report
+holdout-eval:   ## avaliacao UNICA no holdout (trava em results/owner/holdout/evaluation_lock.json)
+	uv run skillreuse holdout-eval
+
+figures:        ## figuras do relatorio
+	uv run skillreuse figures
 
 test:
 	uv run pytest

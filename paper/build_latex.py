@@ -46,7 +46,7 @@ def preprocess(markdown: str) -> str:
         shutil.copy2(source, FIGURE_DIR / output_name)
         return (
             "\n\\begin{figure}[!htbp]\n\\centering\n"
-            f"\\includegraphics[width=0.88\\linewidth]{{figures/{output_name}}}\n"
+            f"\\includegraphics[width=0.82\\linewidth]{{figures/{output_name}}}\n"
             f"\\caption{{{caption}}}\n"
             f"\\label{{fig:report-{figure_number}}}\n"
             "\\end{figure}\n"
@@ -90,6 +90,7 @@ def main() -> None:
         latex = convert(preprocess(text))
         if name == "08_appendix_ai_usage":
             latex = latex.replace("OpenAI Codex foi utilizado", "OpenAI Codex \\cite{openai_codex} foi utilizado", 1)
+            latex = latex.replace("o Claude Code (Anthropic) foi usado", "o Claude Code \\cite{claude_code} foi usado", 1)
         (PAPER / "sections" / f"{name}.tex").write_text(latex, encoding="utf-8")
 
     preamble = r"""\documentclass[12pt]{article}
@@ -106,7 +107,7 @@ def main() -> None:
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{Predição e explicabilidade da intensidade de reutilização de Agent Skills entre repositórios do GitHub\footnote{Dados e código: \protect\url{https://github.com/podorize/skillreuse}.}}
+\title{Reúso de Agent Skills entre donos do GitHub: previsibilidade e vieses de construção do GitSkills\footnote{Dados e código: \protect\url{https://github.com/podorize/skillreuse}.}}
 \author{Pedro Odorize\inst{1}}
 \address{Instituto de Informática -- Universidade Federal do Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brasil
@@ -118,7 +119,7 @@ def main() -> None:
 \begin{abstract}
 """
     body = [preamble, abstract(), r"\end{abstract}",
-            r"\noindent\textbf{Palavras-chave:} Agent Skills; reúso de software; mineração de repositórios; regressão; explicabilidade."]
+            r"\noindent\textbf{Palavras-chave:} Agent Skills; reúso de software; mineração de repositórios; vieses de construção; validação agrupada."]
     body.extend(f"\\input{{sections/{name}.tex}}" for name in SECTIONS)
     body.extend([r"\bibliographystyle{sbc}", r"\bibliography{references}", r"\appendix"])
     body.extend(f"\\input{{sections/{name}.tex}}" for name in APPENDICES)
