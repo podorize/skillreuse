@@ -17,7 +17,7 @@ make holdout-eval            # avaliação ÚNICA no holdout (já executada; tra
 make figures test
 ```
 
-`uv run skillreuse --help` lista os subcomandos. Python 3.12; sementes `20261009` (amostragem) e `2027` (experimentos); três dobras `StratifiedGroupKFold` por `representative_repo_id`.
+`uv run skillreuse --help` lista os subcomandos. Python 3.12; sementes `20261009` (amostragem) e `2027` (experimentos); validação 3×3 dobras `StratifiedGroupKFold` agrupadas por dono.
 
 ## Estrutura
 
