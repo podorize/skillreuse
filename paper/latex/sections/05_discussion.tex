@@ -32,20 +32,20 @@ The most solid contribution is methodological and answers RQ1. (1)
 \textbf{\texttt{location\_class} and \texttt{history\_fetched} are not
 legitimate predictors of reuse}: by construction, the representative's
 class grows with the number of copies (14\% → 92\%) and history inherits
-the dependence; in the first version of this study they made the
-``repository'' view look much more informative than it is. (2)
-\textbf{Counting repositories mixes diffusion with self-copying}; the
-number of owners is a more faithful target (a quarter of the reused
-contents have a single owner). (3) \textbf{Results depend on a few
-accounts}: the AUC varied from 0.615 to 0.747 with the treatment of
-owners with 500 to 1000 contents, so sensitivity to concentrated owners,
-or a cap per owner, should be standard practice. (4) \textbf{The
-representative describes an arbitrary copy}: among copies of the same
-class the choice is alphabetical, so repository attributes are those of
-one repository among several. Aggregates over all copies would be more
-informative but derive from the same occurrences that define the target;
-they should be treated as leakage in predictive studies, or computed
-only from information prior to reuse.
+the dependence; including them makes the ``repository'' view look much
+more informative than it is (Section 4.2). (2) \textbf{Counting
+repositories mixes diffusion with self-copying}; the number of owners is
+a more faithful target (a quarter of the reused contents have a single
+owner). (3) \textbf{Results depend on a few accounts}: the AUC varied
+from 0.615 to 0.747 with the treatment of owners with 500 to 1000
+contents, so sensitivity to concentrated owners, or a cap per owner,
+should be standard practice. (4) \textbf{The representative describes an
+arbitrary copy}: among copies of the same class the choice is
+alphabetical, so repository attributes are those of one repository among
+several. Aggregates over all copies would be more informative but derive
+from the same occurrences that define the target; they should be treated
+as leakage in predictive studies, or computed only from information
+prior to reuse.
 
 \subsection{Models and data limits}\label{models-and-data-limits}
 
@@ -84,8 +84,8 @@ uses the saved holdout predictions.
 \textbf{External.} The corpus is a July 2026 snapshot of public
 repositories. The holdout excludes concentrated owners by construction
 and has more \texttt{canonical} skills (36\% against 21\%) than
-development. The original test partition was consulted in the first
-version and supports no confirmatory claim. Near-identical variants of
+development. The original test partition was used in exploratory
+analyses and supports no confirmatory claim. Near-identical variants of
 the same skill may still lie on both sides of the split.
 
 \textbf{Interpretation and ethics.} Permutation importance and partial
