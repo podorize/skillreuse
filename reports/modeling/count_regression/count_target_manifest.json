@@ -1,0 +1,24 @@
+{
+  "generated_at_utc": "2026-11-09T17:28:40.779888+00:00",
+  "target": "repository_count conditional on reused=1",
+  "transformations": [
+    "count_target",
+    "log_count_target=log1p(repository_count)"
+  ],
+  "rows": 25918,
+  "groups": 7701,
+  "predictor_columns_checked": 44,
+  "view_predictor_counts": {
+    "skill_only": 36,
+    "repository_only": 8,
+    "hybrid": 44
+  },
+  "target_columns_excluded": [
+    "repository_count",
+    "count_target",
+    "log_count_target",
+    "reused",
+    "split_stratum"
+  ],
+  "next_step": "build grouped fold preprocessors and count-regression spot-check"
+}

@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "2026-11-09T19:26:23.087683+00:00",
+  "target": "repository_count conditional on reused=1",
+  "view": "hybrid",
+  "candidate_features": 10000,
+  "top_k_text": 500,
+  "ridge_alpha": 10.0,
+  "rows": 25918,
+  "groups": 7701,
+  "feature_count": 603,
+  "explanation_scale": "log1p(repository_count)",
+  "text_variant": "drop_artifacts",
+  "test_external_used": false,
+  "caveat": "global coefficients are provisional until stability analysis across folds"
+}

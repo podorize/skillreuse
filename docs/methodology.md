@@ -1,34 +1,25 @@
 # Metodologia
 
-## Perguntas de pesquisa
+## Pergunta de pesquisa
 
-Em que medida caracteristicas textuais, estruturais e contextuais permitem distinguir conteudos
-de `SKILL.md` observados em mais de um repositorio daqueles observados em apenas um? Entre os
-conteudos reutilizados, em que medida esses atributos permitem distinguir a intensidade da
-difusao observada?
+Entre as skills reutilizadas, em que medida caracteristicas textuais, estruturais e contextuais
+permitem prever a quantidade observada de repositorios que reutilizam cada skill?
 
 ## Unidade de analise
 
 Um conteudo distinto de `SKILL.md`, identificado por `content_hash`.
 
-## Alvos
+## Alvo definido
 
-`reused = 1` quando o mesmo hash aparece em pelo menos dois repositorios distintos; caso
-contrario, `reused = 0`.
+O alvo principal e `repository_count` entre skills com `reused = 1`. A modelagem considera a
+contagem observada na escala original e, quando apropriado, a transformacao `log1p` para reduzir
+o efeito da cauda longa. Modelos de contagem sobredispersa, como Binomial Negativa, sao candidatos
+prioritarios.
 
-O segundo alvo, `reuse_intensity`, e condicional a `reused = 1`:
-
-| Codigo | Faixa de `repository_count` | Estrato de divisao |
-|---:|---:|---|
-| ausente | 1 | `not_reused` |
-| 0 | 2 | `reuse_2` |
-| 1 | 3-4 | `reuse_3_4` |
-| 2 | 5-9 | `reuse_5_9` |
-| 3 | 10 ou mais | `reuse_10_plus` |
-
-A intensidade ausente representa a inaplicabilidade do segundo alvo, nunca uma quinta classe
-condicional. `repository_count` e `occurrence_count` nao sao atributos preditivos. O primeiro
-e mantido somente na tabela de alvos para auditoria.
+`reused` continua sendo usado para selecionar a populacao condicional, mas nao e um alvo da
+entrega principal. `reuse_intensity` permanece como variavel derivada para auditoria da EDA e nao
+integra o protocolo principal. `repository_count` e `occurrence_count` nunca sao atributos
+preditivos.
 
 ## Principios metodologicos
 
@@ -49,18 +40,18 @@ Nenhum repositorio representativo pode aparecer simultaneamente no treino e no t
 Essa divisao e usada somente para desenvolver o pipeline; a avaliacao final usa a divisao da
 amostra de 200 mil conteudos descrita abaixo.
 
-## Revisao da divisao externa para os dois alvos
+## Revisao da divisao externa para o alvo de contagem
 
-A divisao binaria original, com assinatura
+A divisao original, com assinatura
 `4ddc4b1b69302ef696d56c855ebc9d226bacc4599c56f5572f5bffba058bd8ae`,
-equilibrava `reused`, mas as quatro faixas positivas diferiam substancialmente entre treino e
-teste. Essa limitacao foi observada antes de qualquer treinamento de modelos. A divisao foi
-revista uma vez para avaliar ambos os alvos. A divisao original e preservada como artefato de
+equilibrava `reused`, mas a distribuicao da contagem positiva exigia auditoria adicional. Essa
+limitacao foi observada antes de qualquer treinamento de modelos. A divisao foi revista uma vez
+para preservar a prevalencia e a distribuicao condicional de reutilizacao. A divisao original e preservada como artefato de
 auditoria em `data/interim/prior_binary_split_assignments.parquet` e
 `reports/tables/prior_binary_feature_manifest.json`.
 
 A regra para escolher a nova divisao foi definida antes da geracao final: aplicar
-`StratifiedGroupKFold` sobre os cinco estratos, com cinco dobras, sementes `20261009` ate
+`StratifiedGroupKFold` sobre os cinco estratos, com cinco dobras candidatas, sementes `20261009` ate
 `20261020` (12 repeticoes), e grupos `representative_repo_id`. Entre os 60 candidatos, escolher
 o menor valor da soma de tres diferencas absolutas: fracao do teste em relacao a 20%, prevalencia
 binaria do teste em relacao a amostra e maior diferenca entre as quatro proporcoes de intensidade
@@ -84,25 +75,23 @@ O conjunto de teste revisado nao deve ser usado para selecao de atributos, escol
 ajuste de hiperparametros ou definicao do tratamento do desbalanceamento. Essas decisoes devem
 ser tomadas apenas no treino, por validacao cruzada agrupada.
 
-## Pre-processamento e experimentos iniciais (T4-T5)
+## Pre-processamento e experimentos
 
 Os pipelines combinam TF-IDF (unigramas e bigramas do conteudo) com atributos estruturais
-numericos e metadados categoricos do repositorio. Imputacao, escalonamento, categorias e
-vocabulario sao ajustados dentro de cada dobra, sem consultar a validacao daquela dobra. Alvos,
-contagens que os definem, identificadores e atribuicao de split sao excluidos explicitamente dos
-preditores. A representacao TF-IDF e aprendida em todo o treino da dobra e compartilhada pelos
-dois modelos; o classificador de intensidade e ajustado e avaliado somente nas linhas positivas.
+numericos e metadados categoricos do repositorio. Imputacao, escalonamento, categorias,
+vocabulario e selecao de termos sao ajustados dentro de cada dobra, sem consultar a validacao.
+Alvos, contagens que os definem, identificadores e atribuicao de split sao excluidos dos
+preditores.
 
-O primeiro modelo e regressao logistica, com comparacao pareada entre `class_weight=None` e
-`class_weight="balanced"`. Para a intensidade, usa-se `saga`, adequado a matrizes esparsas, com
-diagnostico explicito de convergencia. As matrizes transformadas por dobra sao persistidas e
-reutilizadas entre tentativas quando fonte e parametros coincidem. A validacao usa cinco dobras
-`StratifiedGroupKFold`, preservando
-`representative_repo_id` como grupo e os cinco estratos da tarefa. Para reutilizacao binaria,
-registram-se average precision, ROC-AUC, balanced accuracy, precisao, recall e F1 no limiar 0,5.
-Para intensidade, o ajuste e condicional a conteudos reutilizados e compara F1 macro/ponderado,
-balanced accuracy, acuracia e erro absoluto ordinal. As taxas de cada faixa sao registradas por
-dobra.
+O vocabulario textual sera gerado no treino de cada dobra com limites de 5.000, 10.000 e 20.000
+candidatos e selecao de 50, 100, 200 ou 500 termos. Para a contagem continua, a triagem
+univariada usa `f_regression` sobre `log1p(repository_count)`; ela tambem e refeita dentro de
+cada dobra. O pool historico de 211 termos nao participa do novo pipeline. As matrizes de cada
+configuracao serao versionadas para garantir reproducibilidade.
+
+A validacao agrupada usara `representative_repo_id` e registrara RMSLE como metrica principal,
+alem de MAE, erro em `log1p` e Spearman. O benchmark comparara representacoes `skill-only`,
+`repository-only` e `hybrid`, seguido de tuning dos modelos mais promissores.
 
 Os pesos sao uma ablaçao experimental, nao uma suposicao de melhoria. O teste externo conserva a
 distribuicao natural e nao participa da selecao do tratamento, limiar ou modelo. SMOTE e outras

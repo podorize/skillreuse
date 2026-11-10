@@ -1,0 +1,8 @@
+{
+  "method": "cluster bootstrap by representative repository",
+  "bootstrap_repeats": 20,
+  "feature_selection": "fixed at the full outer-training chi-square top-100 set",
+  "interpretation": "Coefficient and linear SHAP stability conditional on the selected features; does not estimate stability of text candidate generation or chi-square selection.",
+  "reference_rows": 1000,
+  "random_seed": 20261009
+}

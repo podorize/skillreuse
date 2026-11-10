@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-11-09T23:27:37.804850+00:00",
+  "protocol": "discipline benchmark; StratifiedGroupKFold; external test untouched",
+  "target_regression": "repository_count conditional on reused=1",
+  "target_classification": "split_stratum auxiliary only for Naive Bayes",
+  "views": [
+    "repository_only"
+  ],
+  "candidate_features": 10000,
+  "top_k_text": 500,
+  "folds": 3,
+  "random_seed": 2027,
+  "text_variant": "raw",
+  "regression_models": [
+    "ridge_log",
+    "knn_log",
+    "decision_tree_log",
+    "random_forest_log",
+    "gradient_boosting_log",
+    "hist_gradient_boosting_log"
+  ],
+  "naive_bayes_in_main_ms_protocol": false,
+  "rows": 25918,
+  "groups": 7701,
+  "diagnostic_subset": false
+}

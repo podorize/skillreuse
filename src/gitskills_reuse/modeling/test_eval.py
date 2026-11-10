@@ -85,7 +85,7 @@ def run_final_test_evaluation(
     features_path: Path = DEFAULT_FEATURES,
     targets_path: Path = DEFAULT_TARGETS,
     output_base: Path = DEFAULT_OUTPUT,
-    frozen_optimal_threshold: float = 0.21,
+    frozen_optimal_threshold: float = 0.18872562172994545,
     top_k_text: int = 100,
     random_seed: int = 20261009,
 ) -> dict[str, object]:
@@ -149,7 +149,7 @@ def run_final_test_evaluation(
 
     # 2. Pre-processamento e Selecao Textual Chi-2
     print(
-        "Iniciando TF-IDF nos 160.000 documentos de Treino (estimativa: ~14 min)...",
+        "Ajustando TF-IDF com vocabulario de ate 50.000 termos nos 160.000 documentos de treino; o tempo depende do hardware...",
         flush=True,
     )
     t_tfidf = time.monotonic()
@@ -165,7 +165,7 @@ def run_final_test_evaluation(
     txt_train_raw = vec.fit_transform(train_df["content"])
     print(f"TF-IDF Treino concluido em {time.monotonic() - t_tfidf:.1f}s", flush=True)
 
-    print("Vetorizando 40.000 documentos de Teste (estimativa: ~3 min)...", flush=True)
+    print("Transformando os 40.000 documentos de teste...", flush=True)
     t_trans = time.monotonic()
     txt_test_raw = vec.transform(test_df["content"])
     print(f"TF-IDF Teste concluido em {time.monotonic() - t_trans:.1f}s", flush=True)
@@ -202,8 +202,10 @@ def run_final_test_evaluation(
     print("=" * 50, flush=True)
 
     for cfg_name, X_tr, X_te in configs:
-        # A. Modelo Unweighted (Probabilidades Calibradas)
-        lr_none = LogisticRegression(max_iter=1000, class_weight=None, random_state=random_seed)
+        # Modelo sem pesos; isso nao implica calibracao das probabilidades.
+        lr_none = LogisticRegression(
+            solver="liblinear", max_iter=1000, class_weight=None, random_state=random_seed
+        )
         lr_none.fit(X_tr, y_train_binary)
         probs_none = lr_none.predict_proba(X_te)[:, 1]
         predictions_dict[f"{cfg_name}_unweighted"] = probs_none
@@ -235,7 +237,7 @@ def run_final_test_evaluation(
             }
         )
 
-        # Avaliacao no limiar congelado otimo t* = 0.21
+        # Sensitivity analysis at the threshold selected from grouped OOF predictions.
         pred_opt = probs_none >= frozen_optimal_threshold
         f1_opt = float(f1_score(y_test_binary, pred_opt, zero_division=0))
         prec_opt = float(precision_score(y_test_binary, pred_opt, zero_division=0))

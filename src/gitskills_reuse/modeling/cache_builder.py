@@ -1,17 +1,13 @@
-"""Construcao e persistencia do cache de matrizes esparsas pre-processadas.
-
-Permite reproducao instantanea (< 45 segundos) de todas as tabelas, metricas e
-figuras do artigo sem necessitar de re-tokenizacao pesada de 200.000 documentos.
-"""
+"""Construcao e persistencia de caches esparsos sem vocabulos herdados."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pyarrow.parquet as pq
 from scipy.sparse import hstack, save_npz
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -33,6 +29,7 @@ def build_and_save_cache(
     targets_path: Path = DEFAULT_TARGETS,
     cache_dir: Path = DEFAULT_CACHE_DIR,
     top_k_text: int = 100,
+    text_max_features: int = 10_000,
 ) -> None:
     """Extrai e persiste todas as matrizes esparsas pre-processadas de treino e teste."""
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -107,41 +104,32 @@ def build_and_save_cache(
     save_npz(cache_dir / "X_test_sr.npz", sr_test_sp)
     print(f"Salvo X_train_sr {sr_train_sp.shape} e X_test_sr {sr_test_sp.shape}", flush=True)
 
-    # 4. Vetorizacao Textual Direcionada com Termos Candidatos da Ablacao
-    print("\n4. Vetorizando texto com termos contratuais e selecao Chi-2...", flush=True)
-    imp_file = Path("reports/modeling/ablation/hybrid_screened/feature_importances.csv")
-    if imp_file.exists():
-        imp_df = pd.read_csv(imp_file)
-        candidate_terms = [
-            f.replace("text__", "")
-            for f in imp_df["feature"].unique()
-            if f.startswith("text__")
-        ]
-        print(
-            f"Utilizando {len(candidate_terms)} termos pre-selecionados da validacao cruzada.",
-            flush=True,
-        )
-        vec = TfidfVectorizer(
-            ngram_range=(1, 2),
-            vocabulary=candidate_terms,
-            sublinear_tf=True,
-            strip_accents="unicode",
-            dtype=np.float32,
-        )
-    else:
-        print("Arquivo de importancias nao encontrado; usando extracao padrao...", flush=True)
-        vec = TfidfVectorizer(
-            ngram_range=(1, 2),
-            min_df=5,
-            max_df=0.95,
-            max_features=10_000,
-            sublinear_tf=True,
-            strip_accents="unicode",
-            dtype=np.float32,
-        )
+    if text_max_features < 1:
+        raise ValueError("text_max_features deve ser positivo")
+    if top_k_text < 1 or top_k_text > text_max_features:
+        raise ValueError("top_k_text deve estar entre 1 e text_max_features")
+    print("\n4. Vetorizando texto e selecionando termos por Chi-2...", flush=True)
+    text_candidate_source = "outer-training TF-IDF vocabulary"
+    vec = TfidfVectorizer(
+        ngram_range=(1, 2),
+        min_df=5,
+        max_df=0.95,
+        max_features=text_max_features,
+        sublinear_tf=True,
+        strip_accents="unicode",
+        dtype=np.float32,
+    )
 
     t_txt = time.monotonic()
     txt_train_raw = vec.fit_transform(train_df["content"])
+    n_text_candidate_terms = len(vec.get_feature_names_out())
+    text_candidate_sha256 = hashlib.sha256(
+        "\n".join(vec.get_feature_names_out()).encode("utf-8")
+    ).hexdigest()
+    (cache_dir / "text_candidate_terms.json").write_text(
+        json.dumps(vec.get_feature_names_out().tolist(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     txt_test_raw = vec.transform(test_df["content"])
     print(f"Vetorizacao textual concluida em {time.monotonic() - t_txt:.1f}s", flush=True)
 
@@ -175,6 +163,10 @@ def build_and_save_cache(
     (cache_dir / "sr_feature_names.json").write_text(
         json.dumps(sr_names, indent=2) + "\n", encoding="utf-8"
     )
+    for split_name, split_df in (("train", train_df), ("test", test_df)):
+        split_df[["content_hash", "representative_repo_id"]].to_csv(
+            cache_dir / f"{split_name}_identifiers.csv", index=False
+        )
 
     manifest = {
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -183,6 +175,25 @@ def build_and_save_cache(
         "n_st_features": st_train_sp.shape[1],
         "n_sr_features": sr_train_sp.shape[1],
         "n_hybrid_features": X_train_hybrid.shape[1],
+        "text_candidate_mode": "outer_training_tfidf",
+        "text_candidate_source": text_candidate_source,
+        "n_text_candidate_terms": n_text_candidate_terms,
+        "text_candidate_sha256": text_candidate_sha256,
+        "text_vocab_sha256": text_candidate_sha256,
+        "tfidf_parameters": {
+            "ngram_range": [1, 2],
+            "min_df": 5,
+            "max_df": 0.95,
+            "max_features": text_max_features,
+            "sublinear_tf": True,
+            "strip_accents": "unicode",
+            "dtype": "float32",
+        },
+        "text_selection": f"top-{k_sel} chi-square terms selected using outer-training labels only",
+        "selected_text_terms_file": (
+            "text_candidate_terms.json (full candidate list); "
+            "hybrid_feature_names.json (selected features)"
+        ),
         "total_elapsed_seconds": round(time.monotonic() - t0, 2),
     }
     (cache_dir / "manifest.json").write_text(

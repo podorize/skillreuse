@@ -1,0 +1,7 @@
+threshold_rule,error_type,n_test_rows
+oof_max_f1,false_negative,817
+oof_max_f1,false_positive,24898
+oof_recall_ge_0.80,false_negative,885
+oof_recall_ge_0.80,false_positive,24244
+oof_recall_ge_0.90,false_negative,538
+oof_recall_ge_0.90,false_positive,28528

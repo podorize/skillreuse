@@ -1,0 +1,6 @@
+quantile,train_count
+P50,2.0
+P75,4.0
+P90,8.0
+P95,16.0
+P99,55.0

@@ -1,0 +1,175 @@
+\section{Introdução}\label{introduuxe7uxe3o}
+
+\subsection{Contexto e motivação}\label{contexto-e-motivauxe7uxe3o}
+
+A adoção de agentes baseados em Grandes Modelos de Linguagem (LLMs) na
+engenharia de software vem sendo acompanhada pelo surgimento de novos
+artefatos destinados a encapsular conhecimento operacional. Entre eles
+estão as \emph{Agent Skills}: diretórios portáveis que combinam
+metadados estruturados, instruções em linguagem natural e,
+eventualmente, scripts, referências e outros recursos. O arquivo
+\texttt{SKILL.md} funciona como o núcleo descritivo desse artefato,
+orientando o agente sobre como executar uma tarefa, quais restrições
+observar e quais recursos utilizar \cite{agentskills_spec}. Dessa forma,
+as skills ampliam a noção tradicional de reúso de software, pois
+permitem distribuir procedimentos e conhecimento de domínio sem depender
+exclusivamente de código executável ou de uma biblioteca com uma
+interface formal.
+
+O reúso de software é estudado há décadas como mecanismo para reduzir
+esforço de implementação, disseminar soluções e aumentar a produtividade
+dos desenvolvedores \cite{haefliger2008code,lopes2017dejavu}.
+Entretanto, a disseminação de Agent Skills apresenta características
+próprias. Parte relevante do comportamento do artefato é expressa em
+linguagem natural e interpretada por um LLM, enquanto sua distribuição
+ocorre em repositórios que podem possuir convenções, públicos e
+mecanismos de publicação distintos. Uma skill pode ser reutilizada
+porque sua especificação é clara e portável, mas também pode aparecer em
+vários repositórios por estar associada a um template, a um projeto
+popular ou a um processo automatizado de cópia. Essas possibilidades
+misturam propriedades do artefato e do contexto de distribuição,
+dificultando a interpretação da reutilização observada.
+
+Estudos recentes começaram a caracterizar esse ecossistema. O GitSkills
+disponibiliza um corpus em larga escala de ocorrências de skills, seus
+conteúdos e metadados de repositórios \cite{gitskills2027}. Outras
+pesquisas examinam defeitos de especificação e empacotamento
+\cite{zhang2026keepskillsreuse}, o efeito da inclusão de skills em
+tarefas de engenharia de software \cite{han2026sweskillsbench} e a
+evolução de prompts em aplicações baseadas em LLMs
+\cite{tafreshipour2025prompting}. Esses trabalhos fornecem bases
+importantes para compreender a construção, a qualidade e a utilidade de
+artefatos instrucionais, mas ainda há espaço para estudar uma questão
+complementar: quais características estão associadas à intensidade com
+que uma skill é replicada entre repositórios?
+
+Essa questão é relevante sob duas perspectivas. Para a autoria,
+evidências empíricas podem indicar quais propriedades estruturais e
+instrucionais merecem ser investigadas em ferramentas de apoio à criação
+e validação de skills. Para o ecossistema, a análise pode esclarecer se
+a disseminação observada contém sinal associado ao conteúdo da skill, ao
+repositório que a hospeda ou à combinação de ambos. A distinção é
+importante porque uma associação preditiva não implica que uma
+característica cause a reutilização, nem que a skill seja funcionalmente
+superior, mais útil ou adotada de forma independente.
+
+\subsection{Problema de pesquisa}\label{problema-de-pesquisa}
+
+Neste trabalho, operacionalizamos a reutilização como a presença de
+conteúdo idêntico de \texttt{SKILL.md} em múltiplos repositórios. Cada
+conteúdo distinto é identificado por \texttt{content\_hash}, e a
+intensidade de reutilização é medida pelo número de repositórios
+distintos que contêm esse conteúdo. O alvo principal é, portanto, uma
+contagem condicional às skills reutilizadas (\texttt{reused\ =\ 1}).
+Essa escolha permite investigar diretamente a escala observada de
+disseminação, ao mesmo tempo em que reconhece as limitações da medida:
+cópia exata não revela a intenção do desenvolvedor, não captura versões
+modificadas ou semanticamente equivalentes e não mede qualidade ou
+sucesso de execução.
+
+Para investigar o problema, construímos um pipeline reprodutível de
+aprendizado de máquina. O pipeline combina atributos estruturais da
+skill, características textuais extraídas por TF-IDF e variáveis
+contextuais do repositório. A avaliação utiliza divisão agrupada por
+\texttt{representative\_repo\_id}, de modo a evitar que o mesmo grupo de
+dependência apareça em treino e avaliação. Vocabulário, transformação,
+seleção de atributos e demais etapas ajustáveis são realizados dentro
+das dobras de validação, reduzindo o risco de vazamento de informação
+\cite{kaufman2012leakage,roberts2017cross}. Como o alvo tem cauda longa,
+o desempenho é analisado por RMSLE, MAE, correlação de Spearman e faixas
+de intensidade.
+
+O estudo compara as representações \emph{skill-only},
+\emph{repository-only} e \emph{hybrid} com Ridge nas mesmas dobras. Um
+benchmark distinto compara seis regressores com os mesmos atributos
+\texttt{repository-only}. A interpretação reúne indícios textuais
+exploratórios e importância e cenários de previsão para o Random Forest
+de repositório. Essas explicações são hipóteses dependentes do modelo,
+não efeitos causais. Modelos podem explorar padrões incidentais que
+refletem origem e visibilidade dos repositórios
+\cite{geirhos2020shortcut,lapuschkin2019unmasking}.
+
+\subsection{Objetivos e perguntas de
+pesquisa}\label{objetivos-e-perguntas-de-pesquisa}
+
+O objetivo geral é investigar, de forma reprodutível e interpretável,
+quais características observáveis estão associadas à intensidade de
+reutilização de Agent Skills entre repositórios.
+
+Os objetivos específicos são:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  construir um pipeline de regressão com controle explícito de
+  vazamento;
+\item
+  comparar modelos e representações de atributos sob validação agrupada;
+\item
+  analisar o desempenho na região central e na cauda da distribuição de
+  reutilização; e
+\item
+  examinar a consistência das associações nas dobras disponíveis e
+  interpretar seus limites.
+\end{enumerate}
+
+O trabalho busca responder às seguintes perguntas de pesquisa:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{RQ1 --- Previsibilidade da intensidade:} em que medida
+  características textuais, estruturais e contextuais permitem prever o
+  número de repositórios que reutilizam uma skill?
+\item
+  \textbf{RQ2 --- Origem do sinal preditivo:} qual é a contribuição
+  relativa das características da skill, do contexto do repositório e da
+  combinação entre ambos para a previsão da intensidade?
+\item
+  \textbf{RQ3 --- Explicabilidade e limites:} quais variáveis se
+  associam às previsões, com que consistência entre dobras, e quais são
+  os limites dessas associações diante da cauda e dos sinais
+  contextuais?
+\end{itemize}
+
+\subsection{Contribuições}\label{contribuiuxe7uxf5es}
+
+As contribuições são: (i) um pipeline reprodutível com controle
+explícito de vazamento para estudar a intensidade condicional de
+replicação; (ii) uma comparação crítica de modelos e representações,
+relacionando desempenho a seus vieses e às características dos dados; e
+(iii) uma auditoria da região central e da cauda, acompanhada de
+interpretações cautelosas dos atributos. Os resultados são evidência
+observacional de um snapshot do GitHub, não demonstração de causalidade,
+qualidade intrínseca ou adoção futura.
+
+Em termos concretos, o trabalho contribui com:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  um protocolo leakage-aware para modelar intensidade de reutilização
+  condicional;
+\item
+  um benchmark comparativo de modelos lineares, vizinhança, árvores e
+  ensembles;
+\item
+  uma análise das diferenças entre atributos da skill, contexto do
+  repositório e representação híbrida; e
+\item
+  uma avaliação cautelosa da importância dos atributos do repositório e
+  de indícios textuais exploratórios, com limites de interpretação
+  explícitos.
+\end{enumerate}
+
+\subsection{Organização do
+trabalho}\label{organizauxe7uxe3o-do-trabalho}
+
+O restante do relatório está organizado da seguinte forma. A Seção 2
+apresenta os trabalhos relacionados. A Seção 3 descreve os dados, o
+pré-processamento, os modelos e a validação. A Seção 4 apresenta os
+resultados. A Seção 5 discute o desempenho, a explicabilidade e as
+ameaças à validade. A Seção 6 apresenta as conclusões e os trabalhos
+futuros.

@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 from scipy.sparse import load_npz, save_npz
-from sklearn.exceptions import ConvergenceWarning
+from sklearn.exceptions import ConvergenceWarning, NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
@@ -137,6 +137,12 @@ def _source_signature(paths: list[Path]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _preprocessing_signature() -> str:
+    """Fingerprint the transformer code so cached fold matrices cannot mask schema changes."""
+    preprocessing_source = Path(__file__).with_name("preprocess.py")
+    return hashlib.sha256(preprocessing_source.read_bytes()).hexdigest()
+
+
 def _save_sparse(path: Path, matrix: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.stem + ".tmp.npz")
@@ -197,7 +203,7 @@ def run_cross_validation(
     frame: pd.DataFrame,
     *,
     output_dir: Path = DEFAULT_OUTPUT,
-    n_splits: int = 5,
+    n_splits: int = 3,
     random_seed: int = 20261009,
     use_text: bool = True,
     use_structural: bool = True,
@@ -222,14 +228,16 @@ def run_cross_validation(
     splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=random_seed)
     records: list[dict[str, object]] = []
     importance_records: list[dict[str, object]] = []
+    feature_count_by_fold: list[int] = []
     if cache_identity is None:
         identifiers = pd.util.hash_pandas_object(
             frame[["content_hash", "representative_repo_id", "split_stratum"]], index=False
         ).values.tobytes()
         cache_identity = hashlib.sha256(identifiers).hexdigest()
     cache_spec = {
-        "schema": 2,
+        "schema": 3,
         "source_signature": cache_identity,
+        "preprocessing_signature": _preprocessing_signature(),
         "ablation_name": ablation_name,
         "use_text": use_text,
         "use_structural": use_structural,
@@ -293,6 +301,13 @@ def run_cross_validation(
             f"({'cache' if cache_hit else 'vetorizada'}); treinando classificadores...",
             flush=True,
         )
+        feature_count_by_fold.append(int(train_matrix.shape[1]))
+        try:
+            feature_names = transformer.get_feature_names_out()
+            if len(feature_names) != train_matrix.shape[1]:
+                feature_names = None
+        except NotFittedError:
+            feature_names = None
 
         for class_weight in (None, "balanced"):
             binary_model = LogisticRegression(
@@ -311,6 +326,7 @@ def run_cross_validation(
                     "ablation": ablation_name,
                     "task": "binary_reuse",
                     "fold": fold,
+                    "feature_count": int(train_matrix.shape[1]),
                     "class_weight": class_weight or "none",
                     "train_rows": len(train_idx),
                     "validation_rows": len(valid_idx),
@@ -323,20 +339,18 @@ def run_cross_validation(
                 }
             )
 
-            if hasattr(transformer, "get_feature_names_out"):
-                feature_names = transformer.get_feature_names_out()
-                if len(feature_names) == train_matrix.shape[1]:
-                    for fname, coef in zip(feature_names, binary_model.coef_[0]):
-                        importance_records.append(
-                            {
-                                "ablation": ablation_name,
-                                "task": "binary_reuse",
-                                "fold": fold,
-                                "class_weight": class_weight or "none",
-                                "feature": fname,
-                                "coefficient": float(coef),
-                            }
-                        )
+            if feature_names is not None:
+                for fname, coef in zip(feature_names, binary_model.coef_[0]):
+                    importance_records.append(
+                        {
+                            "ablation": ablation_name,
+                            "task": "binary_reuse",
+                            "fold": fold,
+                            "class_weight": class_weight or "none",
+                            "feature": fname,
+                            "coefficient": float(coef),
+                        }
+                    )
 
             positive_train_mask = y_binary[train_idx] == 1
             positive_valid_mask = y_binary[valid_idx] == 1
@@ -365,6 +379,7 @@ def run_cross_validation(
                     "ablation": ablation_name,
                     "task": "conditional_intensity",
                     "fold": fold,
+                    "feature_count": int(train_matrix.shape[1]),
                     "class_weight": class_weight or "none",
                     "train_rows": len(intensity_train_idx),
                     "validation_rows": len(intensity_valid_idx),
@@ -381,21 +396,19 @@ def run_cross_validation(
                 }
             )
 
-            if hasattr(transformer, "get_feature_names_out"):
-                feature_names = transformer.get_feature_names_out()
-                if len(feature_names) == train_matrix.shape[1]:
-                    for class_idx in range(len(intensity_model.coef_)):
-                        for fname, coef in zip(feature_names, intensity_model.coef_[class_idx]):
-                            importance_records.append(
-                                {
-                                    "ablation": ablation_name,
-                                    "task": f"conditional_intensity_class_{class_idx}",
-                                    "fold": fold,
-                                    "class_weight": class_weight or "none",
-                                    "feature": fname,
-                                    "coefficient": float(coef),
-                                }
-                            )
+            if feature_names is not None:
+                for class_idx in range(len(intensity_model.coef_)):
+                    for fname, coef in zip(feature_names, intensity_model.coef_[class_idx]):
+                        importance_records.append(
+                            {
+                                "ablation": ablation_name,
+                                "task": f"conditional_intensity_class_{class_idx}",
+                                "fold": fold,
+                                "class_weight": class_weight or "none",
+                                "feature": fname,
+                                "coefficient": float(coef),
+                            }
+                        )
 
         pd.DataFrame(records).to_csv(output_dir / "cross_validation_folds.partial.csv", index=False)
 
@@ -443,10 +456,12 @@ def run_cross_validation(
         "random_seed": random_seed,
         "rows_used": len(frame),
         "external_test_rows_used": 0,
+        "feature_count_by_fold": feature_count_by_fold,
         "converged_fits": int(fold_results["converged"].sum()),
         "total_fits": int(len(fold_results)),
         "cache_key": cache_key,
         "cache_directory": str(cache_dir),
+        "preprocessing_signature": cache_spec["preprocessing_signature"],
         "group_column": "representative_repo_id",
         "results_file": str(output_dir / "cross_validation_folds.csv"),
         "summary_file": str(output_dir / "cross_validation_summary.csv"),
@@ -501,7 +516,7 @@ def main() -> None:
     parser.add_argument("--features", type=Path, default=DEFAULT_FEATURES)
     parser.add_argument("--targets", type=Path, default=DEFAULT_TARGETS)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--folds", type=int, default=5)
+    parser.add_argument("--folds", type=int, default=3)
     parser.add_argument("--seed", type=int, default=20261009)
     parser.add_argument("--max-features", type=int, default=50_000)
     parser.add_argument("--min-df", type=int, default=5)

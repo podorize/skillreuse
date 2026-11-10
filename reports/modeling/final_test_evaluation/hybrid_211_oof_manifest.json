@@ -1,0 +1,13 @@
+{
+  "generated_at_utc": "2026-10-28T15:12:45.464832+00:00",
+  "protocol": "StratifiedGroupKFold on external training split; external test untouched",
+  "n_splits": 3,
+  "random_seed": 20261009,
+  "rows": 160000,
+  "candidate_terms": 211,
+  "candidate_terms_sha256": "ead3ed854410a052f2226393554b9026f6bac3b7404dc3c0458b06b5ae8f8ae4",
+  "candidate_terms_source": "reports/modeling/ablation/hybrid_screened/feature_importances.csv",
+  "candidate_selection_caveat": "The fixed 211-term pool was summarized from prior grouped-CV feature-importances artifacts. These OOF scores are aligned to the saved final feature pipeline but are not a fully nested estimate independent of candidate-pool selection.",
+  "oof_predictions_file": "reports/modeling/final_test_evaluation/hybrid_211_oof_predictions.csv",
+  "runtime_seconds": 1173.99
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-17T20:13:58.983841+00:00",
+  "generated_at_utc": "2026-10-27T20:15:47.417152+00:00",
   "protocol": "StratifiedGroupKFold on external training split; test split untouched",
   "ablation": "structure_and_repo",
   "use_text": false,
@@ -20,10 +20,11 @@
   "external_test_rows_used": 0,
   "converged_fits": 12,
   "total_fits": 12,
-  "cache_key": "e4f60f66949d6783a0bcd8cc9a4534802bfb38e6786fc687c6ba88e6e29c1d88",
-  "cache_directory": "reports/modeling/ablation/structure_and_repo/cache/e4f60f66949d6783a0bcd8cc9a4534802bfb38e6786fc687c6ba88e6e29c1d88",
+  "cache_key": "9fdb7d2bce2479a92132547d3d4f59718a108083bc34cb9cbcacb55a3f795585",
+  "cache_directory": "reports/modeling/ablation/structure_and_repo/cache/9fdb7d2bce2479a92132547d3d4f59718a108083bc34cb9cbcacb55a3f795585",
+  "preprocessing_signature": "cb791d26a8b7405645ffb3b5499c8b16f41d59c10a3b6b522aba01425660db58",
   "group_column": "representative_repo_id",
   "results_file": "reports/modeling/ablation/structure_and_repo/cross_validation_folds.csv",
   "summary_file": "reports/modeling/ablation/structure_and_repo/cross_validation_summary.csv",
-  "runtime_seconds": 205.46
+  "runtime_seconds": 64.73
 }

@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-11-09T19:26:29.160215+00:00",
+  "input": "reports/modeling/count_regression/explainability_hybrid_masked/global_feature_importance.csv",
+  "text_terms": 500,
+  "artifact_counts": {
+    "url_artifact": 0,
+    "date_artifact": 0,
+    "numeric_artifact": 0,
+    "identifier_artifact": 0,
+    "artifact_any": 0
+  },
+  "artifact_fraction": {
+    "url_artifact": 0.0,
+    "date_artifact": 0.0,
+    "numeric_artifact": 0.0,
+    "identifier_artifact": 0.0,
+    "artifact_any": 0.0
+  },
+  "interpretation": "artifact flags are audit indicators, not proof of leakage"
+}

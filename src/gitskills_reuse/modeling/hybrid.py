@@ -83,7 +83,7 @@ def run_hybrid_evaluation(
         )
         if not sr_candidates:
             raise FileNotFoundError("Cache de structure_and_repo nao encontrado.")
-        sr_cache_dir = sr_candidates[0].parent
+        sr_cache_dir = max(sr_candidates, key=lambda path: path.stat().st_mtime).parent
 
     if text_cache_dir is None:
         txt_candidates = list(
@@ -91,7 +91,7 @@ def run_hybrid_evaluation(
         )
         if not txt_candidates:
             raise FileNotFoundError("Cache de text_only nao encontrado.")
-        text_cache_dir = txt_candidates[0].parent
+        text_cache_dir = max(txt_candidates, key=lambda path: path.stat().st_mtime).parent
 
     fold_records: list[dict[str, object]] = []
     importance_records: list[dict[str, object]] = []
@@ -160,7 +160,9 @@ def run_hybrid_evaluation(
         # 1. Regressao Logistica (Balanced e None)
         for cw in ["balanced", "none"]:
             cw_param = "balanced" if cw == "balanced" else None
-            lr = LogisticRegression(max_iter=1000, class_weight=cw_param, random_state=random_seed)
+            lr = LogisticRegression(
+                solver="liblinear", max_iter=1000, class_weight=cw_param, random_state=random_seed
+            )
             lr.fit(X_train_sp, y_binary[train_idx])
             probs = lr.predict_proba(X_valid_sp)[:, 1]
             preds = probs >= 0.5
@@ -229,7 +231,9 @@ def run_hybrid_evaluation(
         for cw in ["balanced", "none"]:
             cw_param = "balanced" if cw == "balanced" else None
             lr_int = LogisticRegression(
-                max_iter=1000,
+                solver="saga",
+                max_iter=5_000,
+                tol=1e-3,
                 class_weight=cw_param,
                 random_state=random_seed,
             )

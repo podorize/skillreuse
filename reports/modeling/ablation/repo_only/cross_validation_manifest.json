@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-13T19:33:09.230656+00:00",
+  "generated_at_utc": "2026-10-27T20:14:24.795647+00:00",
   "protocol": "StratifiedGroupKFold on external training split; test split untouched",
   "ablation": "repo_only",
   "use_text": false,
@@ -20,10 +20,11 @@
   "external_test_rows_used": 0,
   "converged_fits": 12,
   "total_fits": 12,
-  "cache_key": "dac67cb18978023c5c7d67ee9fb11f917d904eeeef73952954773318dc34337a",
-  "cache_directory": "reports/modeling/ablation/repo_only/cache/dac67cb18978023c5c7d67ee9fb11f917d904eeeef73952954773318dc34337a",
+  "cache_key": "f21342f8da7d8d4291b5442fe8277a6b05d6c5c2b1f616df0f1734b87c439243",
+  "cache_directory": "reports/modeling/ablation/repo_only/cache/f21342f8da7d8d4291b5442fe8277a6b05d6c5c2b1f616df0f1734b87c439243",
+  "preprocessing_signature": "cb791d26a8b7405645ffb3b5499c8b16f41d59c10a3b6b522aba01425660db58",
   "group_column": "representative_repo_id",
   "results_file": "reports/modeling/ablation/repo_only/cross_validation_folds.csv",
   "summary_file": "reports/modeling/ablation/repo_only/cross_validation_summary.csv",
-  "runtime_seconds": 25.39
+  "runtime_seconds": 19.4
 }

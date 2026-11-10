@@ -25,7 +25,7 @@
 \maketitle
 
 \begin{abstract}
-As Large Language Model (LLM) coding agents proliferate, modular skill specifications (\texttt{SKILL.md} files) have emerged as the primary mechanism for encapsulating natural-language instructions, tool definitions, and operational workflows. Yet, because skills spread by direct folder copying without a package manager or central registry, the factors governing their cross-repository adoption remain uncharacterized. This paper investigates the GitSkills dataset, addressing MSR Mining Challenge Directions 3 (Reuse without a package manager) and 4 (Software metrics for natural-language instructions). Using a strict grouped partition across 200,000 skills from 72,376 repositories with zero repository overlap between training ($N=160,000$) and an external test set ($N=40,000$), we analyze multimodal predictors of reuse. We uncover that non-linear tree ensembles suffer from severe shortcut learning under random splits (inflating to 0.85 ROC-AUC by memorizing continuous repository variables), yet collapse under grouped evaluation. In contrast, $L_2$-regularized linear models with supervised $\chi^2$ text screening achieve robust generalization (0.6188 on the blind test set of 14,568 unseen repositories). Calibrated threshold optimization ($t^* = 0.21$) boosts operational $F_1$ by $+372\%$. Explainability analyses reveal the ``Three Pillars of Skill Reuse'': structural canonicity ($+87\%$), modern component ecosystems, and formal prompt specification contracts. Finally, valid frontmatter syntax ($+224\%$) enables the model to recover 49.82\% of viral skills ($\ge 10$ repositories) in unfamiliar codebases.
+As Large Language Model (LLM) coding agents proliferate, modular skill specifications (\texttt{SKILL.md} files) have emerged as the primary mechanism for encapsulating natural-language instructions, tool definitions, and operational workflows. Yet, because skills spread by direct folder copying without a package manager or central registry, the characteristics associated with their cross-repository replication remain uncharacterized. This paper investigates the GitSkills dataset, addressing MSR Mining Challenge Directions 3 (Reuse without a package manager) and 4 (Software metrics for natural-language instructions). Using a strict grouped partition across 200,000 skills from 72,376 repositories with zero repository overlap between training ($N=160,000$) and an external test set ($N=40,000$), we analyze multimodal predictors of exact-content replication. We show that non-linear tree ensembles suffer from severe shortcut learning under random splits (inflating to 0.85 ROC-AUC by memorizing continuous repository variables), yet collapse under grouped evaluation. In contrast, regularized linear models generalize reliably (0.6246 ROC-AUC and 0.2179 average precision on the blind test set of 14,568 unseen repositories). Tuning decision thresholds via out-of-fold predictions ($t^* = 0.073$) elevates test recall to $87.39\%$ ($F_1 = 0.3057$), though precision remains modest ($18.53\%$) against a $16.20\%$ baseline prevalence. For conditional replication intensity ($\ge 10$ repositories), the model recovers $52.18\%$ of viral skills ($F_1 = 0.3312$). Attributions indicate that structural canonicity, host ecosystems, and explicit behavioral specifications correlate with replication, though feature associations are observational and do not imply skill quality or causality.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -97,8 +97,8 @@ We evaluated 6 ablation configurations on the training split (Fig.~\ref{fig:abla
 
 Unsupervised high-dimensional text proved noisy ($\pm 0.1221$ std). However, screening the top 100 terms via supervised univariate $\chi^2$ computed strictly within each training fold eliminated noise, yielding the project's champion model.
 
-\subsection{Calibration \& Decision Threshold Tuning ($t^* = 0.21$)}
-The natural unweighted model achieves clean probability calibration, as quantified by Brier score loss \cite{brier1950verification} ($\mathbf{0.1323}$), confirming that predicted probabilities reflect empirical likelihoods \cite{niculescu2005predicting}. Due to the $16.20\%$ positive prevalence, default classification ($t = 0.50$) misses $95.6\%$ of reused skills ($F_1 = 0.0794$). Applying cost-sensitive decision theory \cite{elkan2001foundations} and class imbalance adjustments \cite{tantithamthavorn2020code}, sweeping 86 out-of-fold thresholds on the 160k training set identified $t^* = 0.21$ as the optimal operating threshold, elevating $F_1$ to $\mathbf{0.3754}$ ($+372\%$ relative gain) with $46.56\%$ recall. This threshold was frozen prior to test evaluation.
+\subsection{Calibration \& Grouped Out-of-Fold Threshold Tuning ($t^* = 0.073$)}
+The natural unweighted model achieves low Brier score loss \cite{brier1950verification} ($0.1431$), reflecting empirical probability alignment \cite{niculescu2005predicting}. However, due to the $16.20\%$ positive prevalence, default classification ($t = 0.50$) misses $95.2\%$ of replicated skills ($F_1 = 0.0750$, recall $4.77\%$). Applying cost-sensitive decision theory \cite{elkan2001foundations} and class imbalance adjustments \cite{tantithamthavorn2020code}, we select operating thresholds strictly using grouped out-of-fold (OOF) predictions on the 160k training set. The threshold maximizing OOF $F_1$ is $t^* = 0.0730$ (OOF recall $84.42\%$, precision $18.75\%$, $F_1 = 0.3069$). Operating thresholds targeting 80\% ($t=0.0761$) and 90\% ($t=0.0567$) OOF recall were also extracted strictly from training data prior to held-out evaluation.
 
 \begin{figure}[!htbp]
     \centering
@@ -126,7 +126,7 @@ Inspecting standardized Odds Ratios ($\text{OR} = e^\beta$) and game-theoretic S
 These large Odds Ratios reflect near-complete empirical separation under $L_2$ regularization: terms like ``objective'' and ``rules constraints'' appear almost exclusively in reused templates rather than ad-hoc singletons. Rather than establishing direct causality, these contractual headers serve as reliable discriminative signatures of modular engineering practices, establishing clear personas, bounded objectives, explicit constraints, and few-shot input/output examples.
 
 \subsection{Drivers of Massive Viral Diffusion (RQ2)}
-Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class3_drivers}) reveals the differentiators of ecosystem-wide diffusion:
+On the held-out test partition of 6,479 replicated skills, the class-balanced logistic model achieves macro-$F_1$ 0.2704 and balanced accuracy 0.3553. For the highest stratum ($\ge 10$ repos), the model attains recall of $52.18\%$ and $F_1 = 0.3312$ (precision $24.26\%$). While modest aggregate performance warrants caution, key predictive associations emerge (Fig.~\ref{fig:class3_drivers}):
 \begin{itemize}
     \item \textbf{Valid Metadata Syntax}: Valid YAML frontmatter (\texttt{frontmatter\_valid}) yields $\text{OR} = 3.24$ ($+224\%$ odds of viral diffusion). Automated agent orchestrators systematically discard unparseable headers.
     \item \textbf{Operational Boundary Definitions}: Viral skills explicitly declare execution boundaries, captured by \texttt{text\_\_limitations} ($\text{OR} = 2.28$) and \texttt{text\_\_provides step} ($\text{OR} = 1.83$).
@@ -141,9 +141,9 @@ Analyzing conditional intensity for Class 3 ($\ge 10$ repos, Fig.~\ref{fig:class
 \end{figure}
 
 \subsection{Hypothesis Space Exploration \& Unified XAI Decomposition}
-To guarantee that the solution space was exhausted under computational constraints, we benchmarked five diverse inductive biases across 3-Fold \texttt{StratifiedGroupKFold} on the 160k training set: Logistic L2 ($0.6644 \pm 0.0686$ ROC-AUC), ElasticNet ($0.6588$), a 2-layer MLP neural network ($0.6578$), constrained GBDT ($0.5887$), and a Heterogeneous Blend ($0.50 \cdot \text{Linear} + 0.25 \cdot \text{GBDT} + 0.25 \cdot \text{MLP}$) attaining the project-wide peak of $\mathbf{0.6841 \pm 0.0613}$ ROC-AUC.
+To guarantee that the solution space was exhausted under computational constraints, we benchmarked five diverse inductive biases across 3-Fold \texttt{StratifiedGroupKFold} on the 160k training set: Logistic L2 ($0.6661 \pm 0.0656$ ROC-AUC; PR-AUC $0.2804$), ElasticNet ($0.6588 \pm 0.0622$), a 2-layer MLP neural network ($0.6578 \pm 0.0700$), constrained GBDT ($0.5887 \pm 0.1135$), and a Heterogeneous Blend ($0.50 \cdot \text{Linear} + 0.25 \cdot \text{GBDT} + 0.25 \cdot \text{MLP}$) attaining the peak development score of $\mathbf{0.6849 \pm 0.0602}$ ROC-AUC (PR-AUC $0.2986$).
 
-By the game-theoretic Shapley Additivity Axiom \cite{shapley1953value,lundberg2017unified}, the ensemble attribution decomposes identically as $\phi_i(\text{Blend}) = 0.50 \phi_i(\text{Linear}) + 0.25 \phi_i(\text{Tree}) + 0.25 \phi_i(\text{MLP})$. Evaluating the attribution rankings reveals Breiman's Rashomon Effect \cite{breiman2001statistical} (Spearman $r_s = 0.5041$ between Linear and GBDT). Nevertheless, the Three Pillars remain universally invariant across all four inductive lenses: canonical paths, ecosystem stature, and prompt contracts consistently dominate the top ranks. Because the consensus Blend attribution correlates at $r_s = 0.9650$ with the Linear model, Occam's Razor decisively justifies deploying regularized logistic regression in developer-facing tooling, preserving exact closed-form Odds Ratios ($e^\beta$) and sub-millisecond inference.
+By the game-theoretic Shapley Additivity Axiom \cite{shapley1953value,lundberg2017unified}, the ensemble attribution decomposes identically as $\phi_i(\text{Blend}) = 0.50 \phi_i(\text{Linear}) + 0.25 \phi_i(\text{Tree}) + 0.25 \phi_i(\text{MLP})$. Evaluating the attribution rankings reveals Breiman's Rashomon Effect \cite{breiman2001statistical} (Spearman $r_s = 0.5041$ between Linear and GBDT). Nevertheless, key attributes remain invariant across inductive lenses: canonical paths, ecosystem stature, and prompt contracts consistently dominate the top ranks. Because the consensus Blend attribution correlates at $r_s = 0.9650$ with the Linear model, Occam's Razor decisively justifies deploying regularized logistic regression in developer-facing tooling, preserving exact closed-form Odds Ratios ($e^\beta$) and sub-millisecond inference.
 
 \begin{table}[t]
 \centering
@@ -154,13 +154,11 @@ By the game-theoretic Shapley Additivity Axiom \cite{shapley1953value,lundberg20
 \toprule
 \textbf{Model} & \textbf{Thresh.} & \textbf{ROC-AUC} & \textbf{PR-AUC} & \textbf{$F_1$} & \textbf{Recall} \\
 \midrule
-\texttt{structure\_only} & $0.50$ & $0.6035$ & $0.2210$ & $0.0154$ & $0.79\%$ \\
-\texttt{structure\_only} & $0.21^*$ & $0.6035$ & $0.2210$ & $0.2667$ & $29.97\%$ \\
-\texttt{structure\_and\_repo} & $0.50$ & $0.6120$ & $0.2033$ & $0.0565$ & $3.86\%$ \\
-\texttt{structure\_and\_repo} & $0.21^*$ & $0.6120$ & $0.2033$ & $0.2887$ & $35.93\%$ \\
-\textbf{\texttt{hybrid\_screened}} & $0.50$ & $0.6211$ & $0.2149$ & $0.0727$ & $4.63\%$ \\
-\textbf{\texttt{hybrid\_screened}} & $\mathbf{0.21^*}$ & $\mathbf{0.6211}$ & $\mathbf{0.2149}$ & $\mathbf{0.2967}$ & $\mathbf{36.67\%}$ \\
-\texttt{hybrid\_screened} (Bal) & $0.50$ & $0.6269$ & $0.2178$ & $0.3264$ & $50.76\%$ \\
+\texttt{structure\_only} & $0.50$ & $0.6034$ & $\mathbf{0.2210}$ & $0.0151$ & $0.77\%$ \\
+\texttt{structure\_and\_repo} & $0.50$ & $0.6134$ & $0.2044$ & $0.0565$ & $3.86\%$ \\
+\texttt{hybrid\_screened} & $0.50$ & $\mathbf{0.6246}$ & $0.2179$ & $0.0750$ & $4.77\%$ \\
+\texttt{hybrid\_screened} & $\mathbf{0.073^*}$ & $\mathbf{0.6246}$ & $0.2179$ & $\mathbf{0.3057}$ & $\mathbf{87.39\%}$ \\
+\texttt{hybrid\_screened} (Bal) & $0.50$ & $0.6281$ & $0.2195$ & $0.3267$ & $50.78\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -174,22 +172,22 @@ By the game-theoretic Shapley Additivity Axiom \cite{shapley1953value,lundberg20
     \hfill
     \begin{subfigure}[b]{0.48\columnwidth}
         \includegraphics[width=\textwidth]{figures/final_test_confusion_matrix.png}
-        \caption{Confusion matrix ($t^* = 0.21$).}
+        \caption{Confusion matrix ($t^* = 0.073$).}
     \end{subfigure}
     \caption{Blind external evaluation on 40,000 instances from 14,568 foreign repos.}
     \label{fig:blind_test_plots}
 \end{figure}
 
 \subsection{Blind External Evaluation (40,000 Test Instances)}
-Evaluating the frozen pipeline on 40,000 instances from 14,568 unseen repositories (Table~\ref{tab:blind_test}, Fig.~\ref{fig:blind_test_plots}) confirms our findings:
+Evaluating the frozen pipeline on 40,000 instances from 14,568 unseen repositories (Table~\ref{tab:blind_test}, Fig.~\ref{fig:blind_test_plots}) confirms key empirical trade-offs:
 \begin{itemize}
-    \item \textbf{Generalization and Multimodal Value}: On 14,568 untouched external repositories, the hybrid model achieved $\mathbf{0.6211}$ ROC-AUC ($0.6706 \pm 0.0633$ CV). While text yields a modest quantitative gain over tabular repo metrics ($+0.0091$ ROC-AUC over \texttt{structure\_and\_repo}), modeling natural-language prompt tokens is qualitatively indispensable: it provides the only actionable semantic guidance (Pillar 3) for skill authors, whereas external repository stars and commit histories are beyond an author's direct control.
-    \item \textbf{Threshold Impact}: The frozen threshold ($t^* = 0.21$) elevated test $F_1$ from $0.0727$ to $\mathbf{0.2967}$ ($+308\%$ relative gain over $t=0.50$ baseline), recovering \textbf{2,376 true positive reused skills} with $78.16\%$ specificity ($26,200$ true negatives).
-    \item \textbf{Viral Recovery}: On conditional intensity, the model achieved Class 3 Recall of $\mathbf{49.52\%}$ ($F_1 = 0.3163$). The classifier successfully flags half of all massively diffused skills in completely foreign repositories.
+    \item \textbf{Generalization and Multimodal Value}: On 14,568 untouched external repositories, the unweighted hybrid model achieved $\mathbf{0.6246}$ ROC-AUC and $\mathbf{0.2179}$ PR-AUC. While the hybrid model attains the highest ROC-AUC among unweighted ablations, the \texttt{structure\_only} baseline achieves higher average precision ($0.2210$), demonstrating that multimodal expansion does not uniformly dominate all ranking metrics.
+    \item \textbf{Sensitivity Trade-offs}: The OOF-selected threshold ($t^* = 0.073$) elevated test recall from $4.77\%$ to $\mathbf{87.39\%}$ ($F_1 = 0.3057$), recovering $5,662$ true positives. However, test precision remains modest at $18.53\%$, producing $24,898$ false positives against the $16.20\%$ baseline prevalence. An error audit reveals that three of the top five linear contributions overlap between true and false positives, showing that global feature attributions cannot be treated as reliable explanations for individual positive predictions.
+    \item \textbf{Viral Recovery}: Under conditional intensity modeling, the balanced hybrid model achieved Class 3 Recall of $\mathbf{52.18\%}$ ($F_1 = 0.3312$).
 \end{itemize}
 
 \section{Implications for Practice and Tooling}
-Our champion model ($\text{ROC-AUC}=0.6211$, Specificity=$78.16\%$) is not intended as an autonomous binary gatekeeper, but rather as: (1)~an \emph{Authoring Linter} embedded in developer IDEs (e.g., VS Code extensions) that provides pre-commit warnings when a skill lacks standard paths, valid schemas, or contractual boundaries; and (2)~an \emph{Ecosystem Quality Prior} for skill retrieval engines (Learning-to-Rank), boosting well-specified, modular skills in decentralized community catalogs.
+Our hybrid model ($\text{ROC-AUC}=0.6246$, $\text{PR-AUC}=0.2179$) is not intended as an autonomous binary gatekeeper, but rather as: (1)~an \emph{Authoring Linter} embedded in developer IDEs (e.g., VS Code extensions) that provides pre-commit warnings when a skill lacks standard paths, valid schemas, or contractual boundaries; and (2)~an \emph{Ecosystem Prior} for skill retrieval engines, incorporating observable replication signals into decentralized catalogs.
 
 Based on our findings, we formulate four actionable guidelines for agent skill creators:
 \begin{enumerate}
