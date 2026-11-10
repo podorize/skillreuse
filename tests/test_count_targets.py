@@ -1,13 +1,13 @@
 import pandas as pd
 
-from gitskills_reuse.modeling.count_benchmark import run_pilot
-from gitskills_reuse.modeling.count_explain import explain_ridge
-from gitskills_reuse.modeling.count_targets import (
+from skillreuse.benchmark import run_pilot
+from skillreuse.explain import explain_ridge
+from skillreuse.models import (
+    normalize_text,
     target_summary,
     validate_target_exclusion,
     validate_target_views,
 )
-from gitskills_reuse.modeling.text_variants import normalize_text
 
 
 def sample_count_frame() -> pd.DataFrame:

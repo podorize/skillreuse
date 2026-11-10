@@ -1,3 +1,0 @@
-,view,model,macro_f1,macro_f1,balanced_accuracy,balanced_accuracy
-,,,mean,std,mean,std
-0,hybrid,multinomial_nb,0.20095462585632076,0.14861466901478024,0.299,0.08937001734362594

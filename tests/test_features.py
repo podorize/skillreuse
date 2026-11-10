@@ -1,6 +1,6 @@
 import pandas as pd
 
-from gitskills_reuse.features.build import (
+from skillreuse.features import (
     extract_markdown_features,
     make_grouped_split,
     split_fingerprint,

@@ -2,7 +2,7 @@ import hashlib
 
 import duckdb
 
-from gitskills_reuse.data.full import select_deterministic_hashes
+from skillreuse.data import select_deterministic_hashes
 
 
 def test_deterministic_hash_selection_is_stable_and_natural(tmp_path) -> None:

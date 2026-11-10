@@ -6,28 +6,15 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 
-# Dados e modelos podem ser grandes ou ter licencas proprias.
+# Dados: grandes e reconstruiveis pelo pipeline (`make data`).
 data/raw/*
 data/interim/*
 data/processed/*
-models/*
+!data/*/.gitkeep
 
-# Preserve os diretorios no Git.
-!data/raw/.gitkeep
-!data/interim/.gitkeep
-!data/processed/.gitkeep
-!models/.gitkeep
-
-# Resultados reproduziveis gerados pelo pipeline.
-reports/figures/*
-reports/tables/*
-!reports/figures/.gitkeep
-!reports/tables/.gitkeep
-reports/modeling/**/cache/
-*.npz
-cache_sparse.tar.gz
-work/
-
-# Excecao para permitir a replicacao ultrarrapida no Colab e peer review (< 65 MB total, max 17 MB/arq)
-!data/processed/cache_sparse/
-!data/processed/cache_sparse/*
+# Tabelas geradas: versionar apenas manifestos e tabelas do alvo citados no relatorio.
+results/tables/*
+!results/tables/*manifest.json
+!results/tables/target_eda_*.csv
+!results/tables/full_reuse_distribution.csv
+results/figures/

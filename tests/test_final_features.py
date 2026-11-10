@@ -1,6 +1,6 @@
 import pandas as pd
 
-from gitskills_reuse.features.final import (
+from skillreuse.features import (
     EXTRACTION_COLUMNS,
     IDENTIFIER_COLUMNS,
     RAW_FEATURE_COLUMNS,

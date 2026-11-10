@@ -1,2 +1,0 @@
-index,candidate_features,top_k_text,view,model,rmsle_mean,rmsle_std,mae_mean,mae_std,mae_log1p_mean,mae_log1p_std,spearman_mean,spearman_std
-0,10000,500,repository_only,poisson,0.6729541912044473,0.00848910135736605,4.105001313479996,0.1569414535534961,0.5431347266541048,0.009352076597465286,0.2683428742349725,0.026059584589839577
