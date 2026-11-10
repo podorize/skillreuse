@@ -2,13 +2,19 @@
 SEED ?= 2027
 RES  := results
 
-.PHONY: data views tune benchmark evaluate report test paper clean-cache
+.PHONY: data owner primary views tune benchmark evaluate report test paper clean-cache
 
 data:           ## download (revisao fixa), amostra deterministica, divisao e alvo de contagem
 	uv run skillreuse download
 	uv run skillreuse build
 	uv run skillreuse features
 	uv run skillreuse target
+
+owner:          ## alvo por donos, contexto, auditoria do representante e EDA
+	uv run skillreuse owner
+
+primary:        ## protocolo principal: H1-H4 com limite de 50 por dono (paper/protocol.md)
+	uv run skillreuse primary
 
 views:          ## Ridge nas 3 visoes + referencias constantes, 3x3 dobras, testes pareados
 	uv run skillreuse benchmark-views --candidate-features 10000 --top-k 500 \
