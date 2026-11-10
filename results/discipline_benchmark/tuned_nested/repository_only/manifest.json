@@ -1,0 +1,65 @@
+{
+  "generated_at_utc": "2026-11-10T13:38:56.988201+00:00",
+  "protocol": "nested CV: repeated StratifiedGroupKFold (outer) + RandomizedSearchCV with grouped inner folds; external test not read",
+  "view": "repository_only",
+  "models": [
+    "ridge_log",
+    "knn_log",
+    "decision_tree_log",
+    "random_forest_log",
+    "gradient_boosting_log",
+    "hist_gradient_boosting_log"
+  ],
+  "repeats": 3,
+  "outer_folds": 3,
+  "inner_folds": 3,
+  "n_iter": 12,
+  "outer_seeds": [
+    2027,
+    2028,
+    2029
+  ],
+  "search_random_state": 2027,
+  "scoring": "neg RMSE on log1p(count) (equals RMSLE)",
+  "search_spaces": {
+    "ridge_log": {
+      "alpha": "<scipy.stats._distn_infrastructure.rv_continuous_frozen object at 0x11a8a1190>"
+    },
+    "knn_log": {
+      "n_neighbors": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x101d69070>",
+      "weights": "['uniform', 'distance']",
+      "p": "[1, 2]"
+    },
+    "decision_tree_log": {
+      "max_depth": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x11f2b98e0>",
+      "min_samples_leaf": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca24ad0>",
+      "min_samples_split": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7d430>"
+    },
+    "random_forest_log": {
+      "n_estimators": "[100, 200, 300]",
+      "max_depth": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7d250>",
+      "min_samples_leaf": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7d3a0>",
+      "max_features": "['sqrt', 0.5, 1.0]"
+    },
+    "gradient_boosting_log": {
+      "n_estimators": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7d520>",
+      "learning_rate": "<scipy.stats._distn_infrastructure.rv_continuous_frozen object at 0x12ca7d6d0>",
+      "max_depth": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7d940>",
+      "subsample": "<scipy.stats._distn_infrastructure.rv_continuous_frozen object at 0x12ca7da30>",
+      "min_samples_leaf": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7dbe0>",
+      "loss": "['squared_error', 'huber']"
+    },
+    "hist_gradient_boosting_log": {
+      "learning_rate": "<scipy.stats._distn_infrastructure.rv_continuous_frozen object at 0x12ca7dca0>",
+      "max_iter": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7dfd0>",
+      "max_leaf_nodes": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7e0c0>",
+      "min_samples_leaf": "<scipy.stats._distn_infrastructure.rv_discrete_frozen object at 0x12ca7e330>",
+      "l2_regularization": "<scipy.stats._distn_infrastructure.rv_continuous_frozen object at 0x12ca7e630>"
+    }
+  },
+  "rows": 25918,
+  "groups": 7701,
+  "best_model_by_nested_rmsle": "gradient_boosting_log",
+  "diagnostic_subset": false,
+  "runtime_seconds": 1883.7
+}

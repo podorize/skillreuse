@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from scipy.sparse import hstack
 from scipy.stats import spearmanr
 from sklearn.dummy import DummyRegressor
@@ -67,6 +68,10 @@ def _fit_predict(
 ) -> np.ndarray:
     if model_name == "dummy_log":
         model = DummyRegressor(strategy="mean")
+        model.fit(x_train, np.log1p(y_train))
+        return np.expm1(model.predict(x_valid))
+    if model_name == "dummy_median_log":
+        model = DummyRegressor(strategy="median")
         model.fit(x_train, np.log1p(y_train))
         return np.expm1(model.predict(x_valid))
     if model_name == "ridge_log":
@@ -328,6 +333,103 @@ def run_pilot(
     }
     return folds_df, {"summary": summary, "manifest": manifest}
 
+def subset_frame(frame: pd.DataFrame, max_rows: int | None) -> pd.DataFrame:
+    """Subconjunto deterministico e estratificado, apenas para diagnosticos rapidos."""
+    if max_rows is None:
+        return frame
+    if max_rows < 1:
+        raise ValueError("max_rows deve ser positivo")
+    return (
+        frame.sort_values(["split_stratum", "content_hash"])
+        .groupby("split_stratum", group_keys=False)
+        .head(max(1, max_rows // frame["split_stratum"].nunique()))
+        .head(max_rows)
+        .reset_index(drop=True)
+    )
+
+
+def _holm(p_values: list[float]) -> list[float]:
+    """Correcao de Holm-Bonferroni para uma familia de comparacoes."""
+    order = np.argsort(p_values)
+    adjusted = np.empty(len(p_values))
+    running = 0.0
+    for rank, idx in enumerate(order):
+        running = max(running, (len(p_values) - rank) * p_values[idx])
+        adjusted[idx] = min(1.0, running)
+    return adjusted.tolist()
+
+
+def paired_test_table(
+    folds: pd.DataFrame,
+    pairs: list[tuple[str, str]],
+    *,
+    label: str,
+    metrics: tuple[str, ...] = ("rmsle", "mae"),
+) -> pd.DataFrame:
+    """Comparacao pareada por (repeticao, dobra) entre configuracoes ``a`` e ``b``.
+
+    ``mean_diff = media(a - b)``: negativo significa que ``a`` tem erro menor. Como as
+    repeticoes reutilizam as mesmas observacoes, os escores nao sao independentes; por isso
+    o teste t usa a correcao de Nadeau-Bengio (variancia * (1/J + n_valid/n_treino)). O
+    Wilcoxon pareado e informado como complemento e tende a ser otimista nesse arranjo.
+    """
+    ratio = float((folds["validation_rows"] / folds["train_rows"]).mean())
+    rows: list[dict[str, object]] = []
+    for metric in metrics:
+        wide = folds.pivot_table(index=["repeat", "fold"], columns=label, values=metric)
+        block: list[dict[str, object]] = []
+        for a, b in pairs:
+            diff = (wide[a] - wide[b]).dropna().to_numpy()
+            n = len(diff)
+            mean = float(diff.mean())
+            var = float(diff.var(ddof=1)) if n > 1 else float("nan")
+            se = float(np.sqrt((1.0 / n + ratio) * var)) if n > 1 else float("nan")
+            if n < 2:
+                p_nb = 1.0
+            elif se == 0.0:  # diferenca constante entre as dobras
+                p_nb = 0.0 if mean != 0.0 else 1.0
+            else:
+                p_nb = float(2 * stats.t.sf(abs(mean / se), n - 1))
+            crit = float(stats.t.ppf(0.975, n - 1)) if n > 1 else float("nan")
+            try:
+                p_w = float(stats.wilcoxon(diff).pvalue)
+            except ValueError:
+                p_w = 1.0
+            block.append(
+                {
+                    "a": a,
+                    "b": b,
+                    "metric": metric,
+                    "n_pairs": n,
+                    "mean_diff_a_minus_b": mean,
+                    "ci95_low": mean - crit * se,
+                    "ci95_high": mean + crit * se,
+                    "a_better_share": float(np.mean(diff < 0)),
+                    "p_wilcoxon": p_w,
+                    "p_nadeau_bengio": p_nb,
+                }
+            )
+        adjusted = _holm([float(r["p_nadeau_bengio"]) for r in block])
+        for row, adj in zip(block, adjusted, strict=True):
+            row["p_nb_holm"] = adj
+        rows.extend(block)
+    return pd.DataFrame(rows)
+
+
+def view_pairs(configs: list[str]) -> list[tuple[str, str]]:
+    """Pares relevantes: mesmo modelo em visoes distintas e cada modelo contra as referencias."""
+    pairs: list[tuple[str, str]] = []
+    for i, a in enumerate(configs):
+        view_a, model_a = a.split("|")
+        for b in configs[i + 1 :]:
+            view_b, model_b = b.split("|")
+            if model_a == model_b and "dummy" not in model_a:
+                pairs.append((a, b))
+            elif view_a == view_b and ("dummy" in model_a) != ("dummy" in model_b):
+                pairs.append((a, b) if "dummy" not in model_a else (b, a))
+    return pairs
+
+
 def views_parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
@@ -338,6 +440,7 @@ def views_parse_args() -> argparse.Namespace:
         "--models", nargs="+", default=["ridge_log"]
     )
     parser.add_argument("--folds", type=int, default=3)
+    parser.add_argument("--repeats", type=int, default=1, help="repeticoes com sementes seed+r")
     parser.add_argument("--seed", type=int, default=2027)
     parser.add_argument("--text-variant", choices=("raw", "drop_artifacts"), default="raw")
     parser.add_argument(
@@ -350,41 +453,59 @@ def views_parse_args() -> argparse.Namespace:
 
 def views_main() -> None:
     args = views_parse_args()
-    frame = load_count_frame()
-    if args.max_rows is not None:
-        if args.max_rows < 1:
-            raise ValueError("max_rows deve ser positivo")
-        frame = (
-            frame.sort_values(["split_stratum", "content_hash"])
-            .groupby("split_stratum", group_keys=False)
-            .head(max(1, args.max_rows // frame["split_stratum"].nunique()))
-            .head(args.max_rows)
-            .reset_index(drop=True)
+    frame = subset_frame(load_count_frame(), args.max_rows)
+    parts: list[pd.DataFrame] = []
+    manifest: dict[str, object] = {}
+    for repeat in range(args.repeats):
+        part, artifacts = run_pilot(
+            frame,
+            candidate_features=tuple(args.candidate_features),
+            top_k=tuple(args.top_k),
+            views=tuple(args.views),
+            models=tuple(args.models),
+            folds=args.folds,
+            random_seed=args.seed + repeat,
+            text_variant=args.text_variant,
         )
-    folds_df, artifacts = run_pilot(
-        frame,
-        candidate_features=tuple(args.candidate_features),
-        top_k=tuple(args.top_k),
-        views=tuple(args.views),
-        models=tuple(args.models),
-        folds=args.folds,
-        random_seed=args.seed,
-        text_variant=args.text_variant,
+        part.insert(0, "repeat", repeat + 1)
+        parts.append(part)
+        manifest = artifacts["manifest"]
+    folds_df = pd.concat(parts, ignore_index=True)
+    group_cols = ["candidate_features", "top_k_text", "view", "model"]
+    metric_columns = ["rmsle", "mae", "mae_log1p", "spearman"]
+    summary = folds_df.groupby(group_cols, as_index=False)[metric_columns].agg(["mean", "std"])
+    summary.columns = ["_".join(p for p in c if p).rstrip("_") for c in summary.columns]
+    manifest.update(
+        {
+            "repeats": args.repeats,
+            "seeds": [args.seed + r for r in range(args.repeats)],
+            "diagnostic_subset": args.max_rows is not None,
+            "subset_note": (
+                "deterministic capped subset for pipeline diagnostics"
+                if args.max_rows is not None
+                else "full reused training subset"
+            ),
+        }
     )
-    artifacts["manifest"]["diagnostic_subset"] = args.max_rows is not None
-    artifacts["manifest"]["subset_note"] = (
-        "deterministic capped subset for pipeline diagnostics"
-        if args.max_rows is not None
-        else "full reused training subset"
+    # testes pareados entre visoes (mesmo modelo) e contra a referencia constante
+    folds_df["config"] = folds_df["view"] + "|" + folds_df["model"]
+    pairs = view_pairs(sorted(folds_df["config"].unique()))
+    paired = paired_test_table(
+        folds_df[folds_df["top_k_text"] == folds_df["top_k_text"].iloc[0]],
+        pairs,
+        label="config",
     )
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    folds_df.to_csv(args.output_dir / "count_regression_pilot_folds.csv", index=False)
-    artifacts["summary"].to_csv(args.output_dir / "count_regression_pilot_summary.csv", index=False)
-    (args.output_dir / "count_regression_pilot_manifest.json").write_text(
-        json.dumps(artifacts["manifest"], indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    folds_df.drop(columns="config").to_csv(
+        args.output_dir / "count_regression_pilot_folds.csv", index=False
     )
-    print(artifacts["summary"].to_string(index=False))
-    print(json.dumps(artifacts["manifest"], indent=2, ensure_ascii=False))
+    summary.to_csv(args.output_dir / "count_regression_pilot_summary.csv", index=False)
+    paired.to_csv(args.output_dir / "paired_tests.csv", index=False)
+    (args.output_dir / "count_regression_pilot_manifest.json").write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    print(summary.to_string(index=False))
+    print(paired.to_string(index=False))
 
 
 # ==========================================================================
@@ -402,16 +523,15 @@ REGRESSION_MODELS = (
     "hist_gradient_boosting_log",
 )
 
-def _fit_regressor(name: str, x_train: object, y_log: np.ndarray) -> object:
-    dense = name != "ridge_log"
-    fit_x = x_train.toarray() if dense and hasattr(x_train, "toarray") else x_train
+def default_regressor(name: str) -> object:
+    """Regressor com os hiperparametros fixos do benchmark original (sem busca)."""
     models = {
-        "ridge_log": Ridge(alpha=10.0),
-        "knn_log": KNeighborsRegressor(n_neighbors=25, weights="distance", n_jobs=-1),
-        "decision_tree_log": DecisionTreeRegressor(
+        "ridge_log": lambda: Ridge(alpha=10.0),
+        "knn_log": lambda: KNeighborsRegressor(n_neighbors=25, weights="distance", n_jobs=-1),
+        "decision_tree_log": lambda: DecisionTreeRegressor(
             max_depth=12, min_samples_leaf=5, random_state=2027
         ),
-        "random_forest_log": RandomForestRegressor(
+        "random_forest_log": lambda: RandomForestRegressor(
             n_estimators=100,
             max_depth=12,
             min_samples_leaf=3,
@@ -419,15 +539,21 @@ def _fit_regressor(name: str, x_train: object, y_log: np.ndarray) -> object:
             n_jobs=-1,
             random_state=2027,
         ),
-        "gradient_boosting_log": GradientBoostingRegressor(
+        "gradient_boosting_log": lambda: GradientBoostingRegressor(
             n_estimators=100, max_depth=3, learning_rate=0.05, loss="huber", random_state=2027
         ),
-        "hist_gradient_boosting_log": HistGradientBoostingRegressor(
+        "hist_gradient_boosting_log": lambda: HistGradientBoostingRegressor(
             max_iter=150, max_leaf_nodes=31, learning_rate=0.05, l2_regularization=1.0,
             random_state=2027,
         ),
     }
-    model = models[name]
+    return models[name]()
+
+
+def _fit_regressor(name: str, x_train: object, y_log: np.ndarray) -> object:
+    dense = name != "ridge_log"
+    fit_x = x_train.toarray() if dense and hasattr(x_train, "toarray") else x_train
+    model = default_regressor(name)
     model.fit(fit_x, y_log)
     return model
 
@@ -547,17 +673,7 @@ def benchmark_parse_args() -> argparse.Namespace:
 
 def benchmark_main() -> None:
     args = benchmark_parse_args()
-    frame = load_count_frame()
-    if args.max_rows is not None:
-        if args.max_rows < 1:
-            raise ValueError("max_rows deve ser positivo")
-        frame = (
-            frame.sort_values(["split_stratum", "content_hash"])
-            .groupby("split_stratum", group_keys=False)
-            .head(max(1, args.max_rows // frame["split_stratum"].nunique()))
-            .head(args.max_rows)
-            .reset_index(drop=True)
-        )
+    frame = subset_frame(load_count_frame(), args.max_rows)
     regression, manifest = run_benchmark(
         frame,
         views=tuple(args.views),
