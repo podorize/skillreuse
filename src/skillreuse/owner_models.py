@@ -31,7 +31,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from skillreuse.benchmark import _metrics, default_regressor, paired_test_table
+from skillreuse.benchmark import _holm, _metrics, default_regressor, paired_test_table
 from skillreuse.models import STRUCTURAL_NUMERIC_FEATURES
 from skillreuse.owner import load_owner_frame
 
@@ -391,3 +391,92 @@ def importance_main() -> None:
         summary = summary.sort_values("mean", ascending=False)
         summary.to_csv(args.output_dir / f"{task}_importance.csv", index=False)
         print(summary.head(15).round(4).to_string(index=False))
+
+
+# ---------------------------------------------------------------------------
+# Protocolo principal: hipoteses pre-especificadas e correcao de Holm
+# ---------------------------------------------------------------------------
+
+PRIMARY_CAP = 50
+HYPOTHESES = [
+    ("H1", "classification", "clean_full|random_forest", "dummy_prior", "neg_roc_auc",
+     "atributos limpos preveem reuso entre donos (AUC > 0,5)"),
+    ("H2", "regression", "clean_full|random_forest_log", "dummy_mean_log", "rmsle",
+     "atributos limpos reduzem o RMSLE de owner_count frente a media de log1p"),
+    ("H3a", "classification", "clean_full|random_forest", "repo+catalog|random_forest",
+     "neg_roc_auc", "a skill acrescenta ao repositorio e catalogo (AUC)"),
+    ("H3b", "classification", "clean_full|random_forest", "skill|random_forest",
+     "neg_roc_auc", "repositorio e catalogo acrescentam a skill (AUC)"),
+    ("H4", "regression", "clean_full+shortcuts|random_forest_log", "clean_full|random_forest_log",
+     "rmsle", "os atalhos de coleta acrescentam aos atributos limpos (RMSLE)"),
+]
+
+
+def evaluate_hypotheses(results: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    rows: list[pd.DataFrame] = []
+    for hid, task, a, b, metric, text in HYPOTHESES:
+        df = results[task].copy()
+        df = df[df["subset"] == "all"]
+        if task == "classification":
+            df["neg_roc_auc"] = -df["roc_auc"]
+        table = paired_test_table(df, [(a, b)], label="config", metrics=(metric,))
+        col = "roc_auc" if task == "classification" else "rmsle"
+        mean_a = float(df[df["config"] == a][col].mean())
+        mean_b = float(df[df["config"] == b][col].mean())
+        table.insert(0, "hypothesis", hid)
+        table["description"] = text
+        table["score_a"] = mean_a
+        table["score_b"] = mean_b
+        rows.append(table)
+    out = pd.concat(rows, ignore_index=True)
+    out["p_holm_family"] = _holm(out["p_nadeau_bengio"].tolist())
+    out["reject_h0_at_0.05"] = out["p_holm_family"] < 0.05
+    return out.drop(columns=["p_nb_holm"])
+
+
+def primary_parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Protocolo principal (paper/protocol.md)")
+    parser.add_argument("--cap-per-owner", type=int, default=PRIMARY_CAP)
+    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--folds", type=int, default=3)
+    parser.add_argument("--seed", type=int, default=2027)
+    parser.add_argument("--output-dir", type=Path, default=Path("results/owner/primary"))
+    return parser.parse_args()
+
+
+def primary_main() -> None:
+    args = primary_parse_args()
+    ns = argparse.Namespace(
+        tier=None, exclude_owners_above=None, cap_per_owner=args.cap_per_owner,
+        max_rows=None, seed=args.seed,
+    )
+    frame = _prepare(ns)
+    views = list(VIEWS)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    results: dict[str, pd.DataFrame] = {}
+    for task in ("regression", "classification"):
+        folds_df, overlap = run(
+            frame, task=task, views=views, group_by="owner", repeats=args.repeats,
+            folds=args.folds, seed=args.seed,
+        )
+        results[task] = folds_df
+        folds_df.to_csv(args.output_dir / f"{task}_folds.csv", index=False)
+        overlap.to_csv(args.output_dir / f"{task}_name_overlap.csv", index=False)
+        summarize(folds_df, task).to_csv(args.output_dir / f"{task}_summary.csv", index=False)
+        paired(folds_df, task, views).to_csv(args.output_dir / f"{task}_paired_exploratory.csv",
+                                             index=False)
+    hypotheses = evaluate_hypotheses(results)
+    hypotheses.to_csv(args.output_dir / "primary_hypotheses.csv", index=False)
+    (args.output_dir / "manifest.json").write_text(json.dumps({
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "protocol": "paper/protocol.md",
+        "cap_per_owner": args.cap_per_owner,
+        "rows": int(len(frame)),
+        "owners": int(frame["repo_owner"].nunique()),
+        "repeats": args.repeats, "folds": args.folds,
+        "seeds": [args.seed + r for r in range(args.repeats)],
+        "hypotheses": [h[0] for h in HYPOTHESES],
+        "family_correction": "Holm over the hypotheses, Nadeau-Bengio p-values",
+        "external_test_read": False,
+    }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(hypotheses.drop(columns=["description"]).round(4).to_string(index=False))

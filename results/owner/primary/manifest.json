@@ -1,0 +1,23 @@
+{
+  "generated_at_utc": "2026-11-10T16:24:05.807246+00:00",
+  "protocol": "paper/protocol.md",
+  "cap_per_owner": 50,
+  "rows": 17733,
+  "owners": 7128,
+  "repeats": 3,
+  "folds": 3,
+  "seeds": [
+    2027,
+    2028,
+    2029
+  ],
+  "hypotheses": [
+    "H1",
+    "H2",
+    "H3a",
+    "H3b",
+    "H4"
+  ],
+  "family_correction": "Holm over the hypotheses, Nadeau-Bengio p-values",
+  "external_test_read": false
+}

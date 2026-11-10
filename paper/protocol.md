@@ -1,162 +1,105 @@
-# Fase 0 - Protocolo de pesquisa
+# Protocolo principal da pesquisa (v1.0)
 
-## Estado do protocolo
+**Estado:** definido em 10/11/2026, depois de uma fase exploratória no desenvolvimento. Este documento fixa o que é **confirmatório** (hipóteses H1–H4, um único modelo final, um holdout novo) e o que é **exploratório**. Decisões tomadas depois de ver resultados estão marcadas como *dependentes dos dados* (seção 9).
 
-Versao: 0.5  
-Status: Ridge híbrido selecionado provisoriamente; auditoria textual concluída e subestimação da cauda identificada.
+## 1. Pergunta e posicionamento
 
-## Pergunta de pesquisa
+Quais características observáveis de uma skill e do seu repositório estão associadas à difusão de seu conteúdo **entre donos** no GitHub, e quanto dessa previsibilidade é artefato da construção do dataset?
 
-Quais caracteristicas observaveis de uma skill estao associadas a maior intensidade de
-reutilizacao como artefato de engenharia de software?
+Duas contribuições, nesta ordem:
 
-A pesquisa deve distinguir caracteristicas da skill, contexto do repositorio e sinais textuais.
-As conclusoes sao associativas e preditivas; nao serao apresentadas como efeitos causais.
+1. **Metodológica:** a escolha do representante no GitSkills (melhor classe de localização, depois ordem alfabética de repositório e caminho) torna `location_class` e `history_fetched` função do número de cópias; o alvo `repository_count` mistura difusão com autocópia; poucos donos concentram a amostra.
+2. **Preditiva (modesta e testada com cuidado):** com atributos livres desses artefatos, há sinal para o reúso entre donos.
 
-## Unidade de analise e grupos
+Os resultados são **associações observacionais**; não há afirmação causal nem de qualidade da skill.
 
-- Unidade de analise: uma skill identificada por `content_hash`.
-- Grupo de dependencia: `representative_repo_id`.
-- Nenhum grupo pode ser dividido entre treino, validacao e teste.
-- O teste externo congelado permanece intocado ate a avaliacao final.
+## 2. Dados e população
 
-## Alvo definido
+- Fonte: GitSkills, revisão Hugging Face `ebab17454a7c236f8f26b183567f1a126f42e3f8` (coleta de julho de 2026; referência temporal fixa em 2026-07-20).
+- Amostra: 200.000 conteúdos (`md5(content_hash || ':20261009')`); divisão externa original agrupada por repositório: 160.000 desenvolvimento / 40.000 teste.
+- Unidade: conteúdo distinto de `SKILL.md` (`content_hash`).
+- **População de estudo:** conteúdos com `repository_count >= 2` (reutilizados). Desenvolvimento: 25.918 conteúdos de 7.128 donos.
+- **Limite por dono (principal):** no máximo **50 conteúdos por dono do repositório representativo**, escolhidos pela ordem de `content_hash` (determinística). Resulta em 17.733 conteúdos. Sensibilidades: sem limite, exclusão de donos com >200, >500 e >1000 linhas.
+- A partição externa original **está consumida** (foi consultada e 17% de suas linhas têm donos presentes no desenvolvimento). Nenhuma afirmação confirmatória se apoia nela (seção 8).
 
-O alvo principal e `repository_count` entre skills com `reused = 1`. A pergunta operacional e:
+## 3. Alvos
 
-> quais caracteristicas estao associadas a uma maior quantidade observada de repositorios que
-> reutilizam uma skill?
+| Papel | Alvo | Definição |
+|---|---|---|
+| **Principal (classificação)** | `cross_owner` | `owner_count >= 2`, com `owner_count` = donos distintos que contêm o mesmo conteúdo (todas as ocorrências brutas) |
+| Secundário (regressão) | `log1p(owner_count)` | métrica RMSLE |
+| Sensibilidade | `log1p(repository_count)` | alvo antigo |
 
-O alvo sera modelado na escala de contagem e, como alternativa de treinamento, na escala
-`log1p(repository_count)`. Modelos de contagem com sobredispersao, especialmente Binomial
-Negativa quando disponiveis, serao considerados. A classificacao ordinal nao faz parte do
-protocolo principal.
+Justificativa: `repository_count` conta autocópia (28% das skills reutilizadas têm todas as cópias em um único dono) e é limite inferior da população (a busca do GitHub é parcial).
 
-RMSLE e a metrica principal de selecao. MAE na escala original, MAE na escala logaritmica e
-Spearman serao metricas secundarias. A escolha foi registrada depois da EDA, que encontrou forte
-assimetria e razao variancia/media aproximadamente igual a 22.
+## 4. Atributos
 
-## Regras de leakage
+**Principais (limpos, 52 colunas):**
 
-- `repository_count`, `reused`, `reuse_intensity` e `split_stratum` nunca entram como features.
-- Identificadores e atributos derivados do resultado nao entram como features.
-- TF-IDF, imputacao, escalonamento, codificacao e selecao de features sao ajustados somente no
-  treino de cada dobra.
-- Nenhuma decisao de modelo, hiperparametro, limite textual ou limiar usa o teste externo.
-- Todos os algoritmos usam as mesmas divisoes e seeds dentro de uma comparacao.
-
-## Representacoes candidatas
-
-- `skill-only`: texto e atributos estruturais da skill;
-- `repository-only`: atributos contextuais do repositorio;
-- `hybrid`: combinacao dos dois blocos.
-
-## Grid textual exploratorio
-
-- candidatos TF-IDF: 5.000, 10.000 e 20.000;
-- termos selecionados: 50, 100, 200 e 500;
-- selecao e vocabulário refeitos dentro de cada dobra;
-- para o alvo contínuo, a triagem univariada usa `f_regression` sobre `log1p(repository_count)`;
-- o pool historico de 211 termos nao participa do novo pipeline.
-
-## Avaliacao
-
-As metricas da regressao de contagem sao:
-
-- principal: RMSLE;
-- secundarias: MAE na escala original, MAE em `log1p`, Spearman e deviance de contagem quando
-  aplicavel.
-
-## Explicabilidade
-
-A explicabilidade sera aplicada depois da escolha da formulacao e do melhor modelo. Serao
-avaliadas importancia global, explicacoes locais e estabilidade por dobra e bootstrap. Nenhuma
-feature sera descrita como robusta apenas por aparecer em uma unica execucao.
-
-## Reprodutibilidade
-
-Cada experimento deve registrar:
-
-- configuracao completa;
-- seed;
-- divisao dos grupos;
-- assinatura do pre-processamento;
-- origem dos dados;
-- versoes do ambiente;
-- artefatos gerados;
-- metricas e tempo de execucao.
-
-## Uso do teste externo na trilha da disciplina
-
-O benchmark final da disciplina utilizou a particao externa atual para comparar os dois candidatos
-selecionados (`repository-only`). Essa avaliacao e valida para o relatorio da disciplina, mas
-consome o status de teste cego dessa particao. Portanto, os resultados nao devem ser reutilizados
-como avaliacao final independente do artigo MSR. A trilha MSR devera reservar uma nova particao
-externa ou uma coleta temporal independente antes de qualquer afirmacao de generalizacao final.
-
-## Proximo gate
-
-O grid diagnóstico foi seguido por uma confirmação completa da configuração selecionada
-(10.000 candidatos, 500 termos) em 25.918 skills reutilizadas. O Ridge em `log1p` é o candidato
-atual; Poisson, Tweedie e SGD foram inferiores ou instáveis. A explicabilidade inicial mostrou
-termos estáveis relacionados a fragmentos editoriais. A remoção de datas, números, URLs e
-identificadores alterou pouco o RMSLE (0,568 para 0,570 no híbrido). A auditoria por quantis,
-contudo, encontrou subestimação em 100% dos casos acima do P95. O próximo gate é comparar pesos,
-calibração e modelos de contagem sobredispersa antes do congelamento e do teste externo.
-
-
----
-
-# Dicionario de dados
-
-Versao de desenvolvimento: amostra oficial do GitSkills no commit
-`fff3df93beeee51a5444450891751f143e38da3e`.
-
-## Tabelas de origem
-
-| Tabela | Linhas na amostra | Unidade |
+| Bloco | n | Conteúdo |
 |---|---:|---|
-| `artifacts` | 29.786 | ocorrencia de um arquivo `SKILL.md` |
-| `repos` | 11.841 | repositorio GitHub |
-| `artifact_siblings` | 47.829 | entrada na pasta de uma skill representativa |
-| `mining_runs` | 7 | execucao do processo de coleta |
+| `skill` | 34 | estrutura do SKILL.md (tamanho, títulos, listas, blocos de código, links, front matter, scripts/referências, pasta) e `filename` |
+| `repo` | 8 | `log1p` de estrelas e forks, `repo_is_fork`, idade, recência do push, dias ativos, linguagem, licença |
+| `catalog` | 2 | `log1p` do número de skills no repositório e indicador ≥10 |
+| `path` | 8 | profundidade, raiz, `template`, `plugin`, `vendor`, `docs`, `pkg`, diretório de outra ferramenta |
 
-## Tabela analitica `skills_target.parquet`
+**Atalhos (analisados como achado, fora dos modelos principais):** `location_class`, `history_fetched`, `commit_count`, `.claude` no caminho. Dependem da regra de escolha do representante (auditoria em `results/owner/audit_by_*`).
 
-Cada linha representa um conteudo distinto, identificado pelo hash Git do arquivo.
+Nunca são preditores: `repository_count`, `owner_count`, `occurrence_count`, `canonical_share`, `any_canonical`, estratos e partição.
 
-| Campo | Origem | Descricao | Uso planejado |
+Pré-processamento (sempre ajustado no treino de cada dobra): mediana + indicador de ausência + escala (sem média) para numéricos; categoria constante + one-hot (`min_frequency=10`) para categóricos.
+
+## 5. Modelos e validação
+
+- **Modelo principal:** Random Forest (regressão: 100 árvores, `max_depth=12`, `min_samples_leaf=3`, `max_features=sqrt`; classificação: 300 árvores com os mesmos limites; `random_state=2027`).
+- Referências lineares: Ridge (`alpha=10`) e regressão logística (`C=1`).
+- Baselines: prevalência (classificação), média e mediana de `log1p` (regressão).
+- **Validação:** 3 repetições × 3 dobras `StratifiedGroupKFold`, **agrupadas por dono**, estratificadas por faixa de `owner_count`; sementes 2027, 2028, 2029; mesmas partições para todos os modelos. Nenhum dono aparece em treino e validação de uma mesma dobra.
+- **Sensibilidade ao `name`:** por dobra, fração das linhas de validação com `name` visto no treino e métricas no subconjunto sem sobreposição.
+- **Modelos extras e tuning** (etapa posterior): busca aninhada (`RandomizedSearchCV`) no desenvolvimento, com seleção entre famílias pelo AUC médio aninhado. Só o modelo selecionado vai ao holdout.
+
+## 6. Métricas
+
+- Principais: **AUC-ROC** (classificação) e **RMSLE** (regressão).
+- Secundárias: AUC-PR, Brier, log-loss, MAE, MAE em `log1p`, Spearman.
+- Incerteza: diferença pareada por (repetição, dobra), IC95% e **teste t com correção de Nadeau–Bengio** (as repetições reutilizam os mesmos dados). O Wilcoxon pareado é complementar, não decide.
+
+## 7. Hipóteses pré-especificadas (família com correção de Holm, α = 0,05)
+
+| ID | Hipótese (contra a alternativa de ausência de efeito) | Tarefa | Comparação |
 |---|---|---|---|
-| `content_hash` | `artifacts.file_sha` | hash exato do conteudo | identificador da instancia |
-| `occurrence_count` | derivado | numero de ocorrencias do hash | auditoria, nunca feature |
-| `repository_count` | derivado | repositorios distintos contendo o hash | construcao do alvo |
-| `reused` | derivado | indica `repository_count >= 2` | alvo principal |
-| `reuse_intensity` | derivado | 0: 2 repositorios; 1: 3-4; 2: 5-9; 3: 10+; ausente se `reused=0` | alvo condicional |
-| `split_stratum` | derivado | cinco estratos usados para selecionar a divisao externa | controle experimental |
-| `representative_repo_id` | `artifacts.repo_full_name` | repositorio da copia representativa | agrupamento e contexto |
-| `representative_path` | `artifacts.path` | caminho da copia representativa | auditoria |
-| `content` | `artifacts.content` | texto integral da copia representativa | features textuais |
-| `frontmatter_valid` | `artifacts` | validade do YAML inicial | feature estrutural |
-| `name`, `description` | `artifacts` | campos extraidos do front matter | features textuais |
-| `body_chars` | `artifacts` | tamanho do corpo em caracteres | feature estrutural |
-| `sibling_count`, `sibling_bytes` | `artifacts` | composicao da pasta representativa | features estruturais |
-| `has_scripts`, `has_references` | `artifacts` | presenca de materiais auxiliares | features estruturais |
-| `repo_stars`, `repo_language` | `repos` | contexto da copia representativa | experimento secundario |
+| H1 | os atributos limpos preveem reúso entre donos | classificação | AUC `clean_full` RF contra prevalência (0,5) |
+| H2 | os atributos limpos reduzem o RMSLE de `owner_count` | regressão | RF `clean_full` contra média de `log1p` |
+| H3a | a skill acrescenta ao repositório e catálogo | classificação | `clean_full` contra `repo+catalog` (AUC) |
+| H3b | repositório e catálogo acrescentam à skill | classificação | `clean_full` contra `skill` (AUC) |
+| H4 | os atalhos acrescentam aos atributos limpos (achado metodológico) | regressão | `clean_full+shortcuts` contra `clean_full` (RMSLE) |
 
-`occurrence_count` e `repository_count` sao excluidos das features porque definem ou revelam o
-alvo. A composicao da pasta e os metadados descrevem a copia representativa, nao uma origem
-historica comprovada.
+Todo o resto é **exploratório**: reportar IC e p nominal, sem declarar significância.
 
-## Dados finais
+Executar: `make primary` → `results/owner/primary/primary_hypotheses.csv`.
 
-`final_modeling_sample.parquet` contem 200 mil conteudos selecionados deterministicamente da
-populacao completa. `final_targets.parquet` contem os dois alvos, a contagem usada para cria-los
-e o estrato de divisao. `final_structured_features.parquet` contem os identificadores, o alvo
-binario, a divisao treino/teste, os atributos estruturais e os atributos textuais agregados.
-O alvo de intensidade deve ser unido pela chave `content_hash` apenas no momento da modelagem,
-sem entrar na matriz de atributos. O texto integral nao e duplicado nessa segunda tabela e deve
-ser lido da amostra de modelagem somente quando um experimento textual exigir.
+## 8. Confirmação em holdout novo
 
-`final_split_assignments.parquet` e a fonte autoritativa da divisao externa final. Ela contem
-os identificadores, os dois alvos, o estrato e o split. Nenhum valor de
-`representative_repo_id` pode ocorrer simultaneamente em treino e teste.
+A fase acima é **exploratória para fins confirmatórios**, pois os resultados foram vistos antes de fixar o protocolo. A confirmação exige um holdout nunca consultado:
+
+- Conteúdos fora dos 200.000 amostrados (≈1,68 milhão) com `repository_count >= 2`, **donos disjuntos** dos donos do desenvolvimento, com o mesmo limite de 50 conteúdos por dono.
+- Mesmas definições de alvos e atributos, mesmo código, **um único** modelo final (o selecionado na seção 5), uma única avaliação.
+- Estimativa com **bootstrap por conglomerado (dono)**, 2.000 reamostras. Critério de sucesso: limite inferior do IC95% do AUC > 0,5 e limite superior do IC95% da diferença de RMSLE para a média < 0.
+- Se o critério falhar, o resultado é reportado como tal.
+
+## 9. Decisões dependentes dos dados (transparência)
+
+1. O **limite de 50 por dono** foi escolhido depois de ver que o AUC varia de 0,615 a 0,747 conforme o limiar de exclusão (poucos donos com 500–1000 linhas dominam o resultado). Escolher outro valor altera as estimativas; a sensibilidade (25/50/100, sem limite, limiares) é obrigatória no relatório.
+2. A escolha de `cross_owner` como alvo principal e de `clean_full` como visão principal veio da fase exploratória.
+3. Os atalhos foram excluídos depois de a auditoria mostrar que a probabilidade de o representante ser `canonical` sobe de 14% (2 repositórios) para 92% (>50) enquanto a fração real de cópias em `canonical` fica entre 5% e 13%.
+
+## 10. Interpretação e limites
+
+- Importância por permutação em dobras agrupadas por dono (`skillreuse owner-importance`); correlação entre atributos limita a leitura individual.
+- Os atributos descrevem **uma cópia** (o representante) de cada conteúdo; agregados sobre todas as cópias dependeriam das mesmas ocorrências que definem o alvo (vazamento) e não são usados.
+- Cópia exata não captura versões modificadas; `owner_count` é limite inferior; o snapshot é de julho de 2026.
+- A atribuição de dono usa a conta do repositório; organizações e contas de uma mesma pessoa podem ser distintas.
+
+## 11. Dicionário de dados
+
+Ver `results/owner/` (EDA, auditoria) e `results/owner/primary/manifest.json`. Colunas originais: tabela `artifacts` e `repos` do GitSkills (arXiv:2608.10906).
