@@ -28,7 +28,7 @@ The general objective is to investigate, reproducibly, which observable characte
 
 1. An **audit of the GitSkills representative**: we recover its rule (97.2% agreement) and show that location and history depend on the number of copies.
 2. A **protocol** for modeling cross-owner reuse, with an owner-based target, a per-owner cap, grouped validation, pre-specified hypotheses with Holm correction and confirmation on a new holdout.
-3. Evidence of a **modest and robust predictive signal**, decomposed into blocks (skill, repository, catalog, path) and confirmed on unseen data: AUC 0.73 for cross-owner reuse.
+3. Evidence of a **modest predictive signal**, with a stable RMSLE gain across protocol variations, decomposed into blocks (skill, repository, catalog, path) and confirmed on unseen data: AUC 0.73 for cross-owner reuse.
 4. A **reproducible package** that records the data revision, seeds, partitions and a lock that prevents reusing the holdout.
 
 ## 1.5 Organization

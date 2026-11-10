@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Agent skills are copied between repositories without a central registry, and the GitSkills dataset documents this diffusion at scale. We investigate whether observable characteristics of a skill and of its repository are associated with reuse across distinct GitHub owners, and how much of this predictability is an artifact of how the dataset was built. The rule that selects the representative copy of each content makes its location class depend on the number of copies: the probability that the representative sits in `.claude/skills/` rises from 14% (2 repositories) to 92% (more than 50), while the actual share of copies in that folder stays between 5% and 13%. In addition, 28% of reused skills exist under a single owner, and a few accounts concentrate the sample. With attributes free of these artifacts, owner-grouped validation, nested tuning and a new owner-disjoint holdout (25,011 skills from 10,484 owners), a Random Forest reaches an AUC of 0.73 (95% CI 0.72–0.75) for cross-owner reuse, and a HistGradientBoosting model reduces the RMSLE of the number of owners by 6% relative to the mean baseline (0.625 versus 0.664). The signal is modest, robust to protocol variations, and comes from skill and repository attributes in a complementary way; it is associative, not causal.
+Agent skills are copied between repositories without a central registry, and the GitSkills dataset documents this diffusion at scale. We investigate whether observable characteristics of a skill and of its repository are associated with reuse across distinct GitHub owners, and how much of this predictability is an artifact of how the dataset was built. The rule that selects the representative copy of each content makes its location class depend on the number of copies: the probability that the representative sits in `.claude/skills/` rises from 14% (2 repositories) to 92% (more than 50), while the actual share of copies in that folder stays between 5% and 13%. In addition, 28% of reused skills exist under a single owner, and a few accounts concentrate the sample. With attributes free of these artifacts, owner-grouped validation, nested tuning and a new owner-disjoint holdout (25,011 skills from 10,484 owners), a Random Forest reaches an AUC of 0.73 (95% CI 0.72–0.75) for cross-owner reuse, and a HistGradientBoosting model reduces the RMSLE of the number of owners by 6% relative to the mean baseline (0.625 versus 0.664). The signal is modest and associative, not causal: the RMSLE gain is stable across protocol variations, whereas the AUC is sensitive to how concentrated owners are treated; skill and repository attributes contribute complementarily (an exploratory finding).
 
 ## Contents
 
@@ -28,7 +28,7 @@ Agent skills are copied between repositories without a central registry, and the
    3.8 Metrics, inference and interpretation  
    3.9 New holdout
 4. **Results**
-   4.1 The target and owner concentration  
+   4.1 The target, the features and owner concentration  
    4.2 Selection bias of the representative  
    4.3 Main protocol  
    4.4 Robustness  

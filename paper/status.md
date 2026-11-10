@@ -14,6 +14,7 @@
 ## Relatório (`paper/draft`, em inglês; versão em português em `paper/draft_pt`)
 
 - Seções 1–6 e apêndices A–B reescritos com a nova narrativa (viés de construção + sinal modesto confirmado).
+- Reprodução rápida (`make quick`, tabelas derivadas em `data/derived/`) e notebook do Colab atualizados; EDA dos atributos incluída (Seção 4.1).
 - **Pendente:** compilar o LaTeX no Overleaf e conferir o limite de 20 páginas (a estimativa por contagem de palavras é de cerca de 20 páginas incluindo referências); revisão visual; conferência final das referências; preparar a apresentação (01/12) e as duas revisões por pares (24–30/11).
 
 ## Prazos (CMP263)

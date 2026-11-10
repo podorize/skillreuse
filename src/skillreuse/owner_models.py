@@ -29,7 +29,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 
 from skillreuse.benchmark import _holm, _metrics, default_regressor, paired_test_table
 from skillreuse.models import STRUCTURAL_NUMERIC_FEATURES
@@ -58,10 +58,22 @@ REG_MODELS = ("ridge_log", "random_forest_log")
 CLF_MODELS = ("logistic", "random_forest")
 
 
-def _preprocessor(columns: list[str]) -> ColumnTransformer:
-    numeric = [c for c in columns if c not in CATEGORICAL]
+def _log1p_clip(x: object) -> np.ndarray:
+    return np.log1p(np.clip(np.asarray(x, dtype=float), 0, None))
+
+
+def _preprocessor(columns: list[str], log_cols: list[str] | None = None) -> ColumnTransformer:
+    """``log_cols``: numericas assimetricas que recebem ``log1p`` (so para modelos lineares)."""
+    log_cols = [c for c in (log_cols or []) if c in columns]
+    numeric = [c for c in columns if c not in CATEGORICAL and c not in log_cols]
     categorical = [c for c in columns if c in CATEGORICAL]
     blocks: list[tuple[str, object, list[str]]] = []
+    if log_cols:
+        blocks.append(("num_log", Pipeline([
+            ("impute", SimpleImputer(strategy="median", add_indicator=True)),
+            ("log", FunctionTransformer(_log1p_clip)),
+            ("scale", StandardScaler(with_mean=False)),
+        ]), log_cols))
     if numeric:
         blocks.append(("num", Pipeline([
             ("impute", SimpleImputer(strategy="median", add_indicator=True)),
@@ -129,10 +141,15 @@ def _subsets(train: pd.DataFrame, valid: pd.DataFrame) -> dict[str, np.ndarray]:
 
 def run(
     frame: pd.DataFrame, *, task: str, views: list[str], group_by: str, repeats: int,
-    folds: int, seed: int, reg_target: str = "owner",
+    folds: int, seed: int, reg_target: str = "owner", log_skewed: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     records: list[dict[str, object]] = []
     overlap: list[dict[str, object]] = []
+    log_cols: list[str] | None = None
+    if log_skewed:
+        from skillreuse.feature_eda import skewed_columns
+
+        log_cols = skewed_columns(frame)
     for repeat, fold, train, valid in _folds(frame, group_by, repeats, folds, seed):
         subsets = _subsets(train, valid)
         overlap.append({
@@ -160,7 +177,7 @@ def run(
             preds["dummy_prior"] = dummy.predict_proba(valid[["filename"]])[:, 1]
         for view in views:
             columns = VIEWS[view]
-            pre = _preprocessor(columns)
+            pre = _preprocessor(columns, log_cols)
             x_train = pre.fit_transform(train[columns])
             x_valid = pre.transform(valid[columns])
             names = REG_MODELS if task == "regression" else CLF_MODELS
@@ -245,6 +262,8 @@ def owner_models_parse_args() -> argparse.Namespace:
     parser.add_argument("--tier", choices=("canonical", "skills-dir", "other"), default=None,
                         help="restringe a uma classe de localizacao do representante")
     parser.add_argument("--regression-target", choices=("owner", "repo"), default="owner")
+    parser.add_argument("--log-skewed", action="store_true",
+                        help="log1p nas numericas assimetricas (afeta so os modelos lineares)")
     parser.add_argument("--max-rows", type=int, default=None)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     return parser.parse_args()
@@ -278,7 +297,7 @@ def owner_models_main() -> None:
         folds_df, overlap = run(
             frame, task=task, views=args.views, group_by=args.group_by,
             repeats=args.repeats, folds=args.folds, seed=args.seed,
-            reg_target=args.regression_target,
+            reg_target=args.regression_target, log_skewed=args.log_skewed,
         )
         summary = summarize(folds_df, task)
         folds_df.to_csv(args.output_dir / f"{task}_folds.csv", index=False)
@@ -301,6 +320,7 @@ def owner_models_main() -> None:
         "cap_per_owner": args.cap_per_owner,
         "tier": args.tier,
         "regression_target": args.regression_target,
+        "log_skewed": args.log_skewed,
         "views": {v: VIEWS[v] for v in args.views},
         "targets": {"regression": "log1p(owner_count)", "classification": "owner_count >= 2"},
         "runtime_seconds": round(time.monotonic() - started, 1),

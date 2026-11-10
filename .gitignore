@@ -18,3 +18,7 @@ results/tables/*
 !results/tables/target_eda_*.csv
 !results/tables/full_reuse_distribution.csv
 results/figures/
+
+# Saidas da reproducao rapida (`make quick`)
+results/owner/primary_quick/
+results/owner/holdout_repro/

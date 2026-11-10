@@ -3,7 +3,15 @@ SEED ?= 2027
 R    := results/owner
 V    := skill repo+catalog clean_full clean_full+shortcuts shortcuts_only
 
-.PHONY: data owner controls primary robustness importance final holdout figures test paper
+.PHONY: quick-setup quick feature-eda derived data owner controls primary robustness importance final holdout figures test paper
+
+quick-setup:    ## copia as tabelas derivadas (9 MB) para data/processed, sem baixar os dados brutos
+	mkdir -p data/processed
+	cp -n data/derived/*.parquet data/processed/
+
+quick: quick-setup  ## reproducao rapida (~6 min): protocolo principal (1 repeticao) e holdout em outro diretorio
+	uv run skillreuse primary --repeats 1 --output-dir results/owner/primary_quick
+	uv run skillreuse holdout-eval --output-dir results/owner/holdout_repro
 
 data:           ## download (revisao fixa), amostra deterministica, divisao e alvo de contagem
 	uv run skillreuse download
@@ -13,6 +21,12 @@ data:           ## download (revisao fixa), amostra deterministica, divisao e al
 
 owner:          ## alvo por donos, contexto, auditoria do representante e EDA
 	uv run skillreuse owner
+
+feature-eda:    ## EDA dos atributos (ausentes, assimetria, colinearidade, equilibrio)
+	uv run skillreuse feature-eda
+
+derived:        ## regenera as tabelas pequenas de data/derived a partir de data/processed
+	uv run skillreuse export-derived
 
 controls:       ## controle com o desenho original (alvo repository_count)
 	uv run skillreuse controls --repeats 3 --folds 3 --seed $(SEED)
@@ -28,6 +42,7 @@ robustness:     ## limiares de donos, cap, classes de localizacao, alvo reposito
 	uv run skillreuse owner-models --exclude-owners-above 1000 --views $(V) --output-dir $(R)/robustness/excl1000
 	uv run skillreuse owner-models --cap-per-owner 50 --views $(V) --output-dir $(R)/robustness/cap50
 	for t in skills-dir other canonical; do uv run skillreuse owner-models --tier $$t --exclude-owners-above 500 --views skill repo+catalog clean_full --output-dir $(R)/robustness/tier_$$t; done
+	uv run skillreuse owner-models --cap-per-owner 50 --log-skewed --views skill clean_full --output-dir $(R)/robustness/log_skewed
 	uv run skillreuse owner-models --task regression --regression-target repo --exclude-owners-above 500 --views $(V) --output-dir $(R)/robustness/target_repository_count
 
 importance:     ## importancia por permutacao (conjunto limpo)

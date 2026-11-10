@@ -38,7 +38,7 @@ Counting owners removes self-copying among repositories of the same account. Cou
 
 : Feature blocks. The main models use the first four (52 columns, the *clean* view); shortcuts enter only as a finding.
 
-The shortcuts depend on the representative rule and are kept out of the main models. The attributes describe the representative, not all copies; aggregating them over all copies would depend on the same occurrences that define the target and was avoided. Imputation (median with missing indicator), scaling and encoding (one-hot, `min_frequency=10`) are fitted within each fold.
+The shortcuts depend on the representative rule and are kept out of the main models. The attributes describe the representative, not all copies; aggregating them over all copies would depend on the same occurrences that define the target and was avoided. Imputation (median with missing indicator), scaling and encoding (one-hot, `min_frequency=10`) are fitted within each fold. The decisions about transformations (`log1p` for linear models only), redundant columns, constant columns and class balance follow from the feature EDA of Section 4.1. We apply no resampling to the 80/20 class imbalance of `cross_owner`: the main metrics (ROC AUC, Brier score, log-loss) are threshold-free, and PR AUC is always read against the prevalence.
 
 ## 3.6 Validation and per-owner cap
 
