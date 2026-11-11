@@ -17,7 +17,7 @@ We therefore define the target in terms of owners. The main target is **cross-ow
 ## 1.3 Objectives and research questions
 
 * **RQ1 — Construction biases:** to what extent do the representative-selection rule, self-copying and owner concentration confound the target and the attributes of GitSkills?
-* **RQ2 — Predictability:** with attributes free of these artifacts, can cross-owner reuse and the number of owners be predicted better than baselines, and is the estimate confirmed on an owner-disjoint holdout?
+* **RQ2 — Predictability:** after excluding the identified construction-dependent shortcuts, can cross-owner reuse and the number of owners be predicted better than baselines, and is the estimate confirmed on an owner-disjoint holdout?
 * **RQ3 — Origin of the signal:** what is the contribution of skill, repository and catalog attributes, which variables are associated with the predictions, and in which direction?
 
 ## 1.4 Contributions
