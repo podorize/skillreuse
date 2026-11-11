@@ -132,6 +132,14 @@ fold we also measure the share of validation rows whose front-matter
 overlap (a joint owner--\texttt{name} grouping forms a component with
 64\% of the rows and was discarded).
 
+\textbf{Target population.} The reported AUC does not characterize the
+whole ecosystem. It describes performance under an owner-balanced
+sampling protocol: contents with at least two repositories, each owner
+contributing at most 50 contents to validation (an unweighted cap, not a
+reweighting), and, for the holdout, owners with at most 37 contents
+each. Skills of heavily concentrated owners are underrepresented by
+design, and no weighting scheme restores their share of the ecosystem.
+
 \subsection{Models, baselines and
 tuning}\label{models-baselines-and-tuning}
 
@@ -180,9 +188,11 @@ The holdout gathers contents outside the 200,000 sampled, with
 appear among the reused skills of the sample (development and original
 test), with the same cap of 50: 25,011 contents from 10,484 owners,
 sharing no owners or contents with the sample (at most 37 contents per
-owner). Only the prevalence of \texttt{cross\_owner} (80.8\%) was
-inspected, as an integrity check. The chosen models are trained on the
-whole development set and evaluated \textbf{once}, with CIs by owner
-bootstrap (2,000 resamples). Success requires the lower AUC bound above
-0.5 and the upper bound of the RMSLE difference to the baseline below
-zero; a lock prevents re-evaluation without explicit declaration.
+owner, so the cap of 50 does not actually bind in the holdout; its
+balance comes from the exclusion of concentrated owners). Only the
+prevalence of \texttt{cross\_owner} (80.8\%) was inspected, as an
+integrity check. The chosen models are trained on the whole development
+set and evaluated \textbf{once}, with CIs by owner bootstrap (2,000
+resamples). Success requires the lower AUC bound above 0.5 and the upper
+bound of the RMSLE difference to the baseline below zero; a lock
+prevents re-evaluation without explicit declaration.
