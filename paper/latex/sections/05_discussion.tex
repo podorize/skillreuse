@@ -67,11 +67,18 @@ the hyperparameter search did not help (default RF 0.716 against 0.701
 searched). The linear models trail the forests by 0.02--0.04 AUC even
 after \texttt{log1p}, but with intervals that include zero: the evidence
 is of a tie within the resolution of 6 outer folds, not of proven
-equivalence. When families with such different inductive biases reach
-similar performance, the limit usually lies in the data: the attributes
-describe one copy, and the target is an exact count of hashes that
-ignores modified copies. Relevant gains will probably require new
-information (relations among copies, time), not more flexible models.
+equivalence. Under the families and the tuning budget evaluated (6 outer
+folds, 6 candidates per search, reduced for computational cost),
+increasing model flexibility did not consistently improve performance.
+The limited resolution of the comparison means that small real
+differences may go undetected, and the data do not show that
+substantially better performance is impossible with more careful model
+selection, other architectures, more extensive optimization or
+alternative representations. A plausible reading is that the attributes
+describe one copy and the target is an exact count of hashes that
+ignores modified copies, so new information (relations among copies,
+time, richer representations) may be a more promising direction than
+more flexible models, but this remains a hypothesis.
 
 \subsection{Threats to validity and
 limitations}\label{threats-to-validity-and-limitations}
