@@ -125,7 +125,7 @@ def main() -> None:
 \sloppy
 
 \title{Cross-owner reuse of agent skills on GitHub: predictability and construction biases of GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
-\author{Pedro Odorize\inst{1}}
+\author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
   \email{pedro.odorize@inf.ufrgs.br}
