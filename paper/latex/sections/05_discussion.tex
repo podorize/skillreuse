@@ -89,12 +89,17 @@ the holdout is confirmatory. (ii) The cap of 50 per owner is
 data-dependent. (iii) Tuning used 2 repetitions of 3 folds and 6
 candidates, fewer than planned. (iv) With 9 non-independent scores, the
 Nadeau--Bengio test is approximate, and Holm p-values depend on the
-family size. (v) The catalog and path blocks come from the
-representative's repository and path and may be partly affected by the
-preference for standard locations; that the path barely helps and that
-the signal persists within each location class reduces, but does not
-eliminate, this risk. (vi) The threshold analysis is descriptive: it
-uses the saved holdout predictions.
+family size. (v) \textbf{Residual selection effects:} excluding the
+shortcuts does not remove the influence of the representative rule,
+which still decides which repository supplies stars, forks, license,
+last push and the catalog and path attributes, and the number of copies
+may influence that selection; a robustness check with a representative
+chosen independently of location would require attributes of alternative
+copies and was not feasible here. The catalog and path blocks may be
+partly affected by the preference for standard locations; that the path
+barely helps and that the signal persists within each location class
+reduces, but does not eliminate, this risk. (vi) The threshold analysis
+is descriptive: it uses the saved holdout predictions.
 
 \textbf{External.} The corpus is a July 2026 snapshot of public
 repositories. The holdout excludes concentrated owners by construction

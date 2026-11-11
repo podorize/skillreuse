@@ -15,16 +15,20 @@ single owner and a few accounts concentrate the sample, so counting
 repositories overstates diffusion and performance depends on a few
 owners (AUC from 0.615 to 0.747 with the treatment).
 
-\textbf{Second}, free of these artifacts, the attributes predict
-cross-owner reuse with a modest signal confirmed on new data: on the
-owner-disjoint holdout, the Random Forest reaches an AUC of 0.731 (95\%
-CI 0.716--0.745), and the HistGradientBoosting reduces the RMSLE of
-\texttt{owner\_count} by 6\% relative to the mean (0.625 against 0.664).
-Skill and repository contribute complementarily, and the signal is
-associated with stars and forks, with older last pushes and, in the
-regression, with the absence of a license. At a decision threshold the
-balanced accuracy is 0.66 and the precision for single-owner content is
-0.28: the model ranks rather than classifies.
+\textbf{Second}, after excluding the identified construction-dependent
+shortcuts, the attributes predict cross-owner reuse with a modest signal
+confirmed on new data: on the owner-disjoint holdout, the Random Forest
+reaches an AUC of 0.731 (95\% CI 0.716--0.745), and the
+HistGradientBoosting reduces the RMSLE of \texttt{owner\_count} by 6\%
+relative to the mean (0.625 against 0.664). Skill and repository
+contribute complementarily, and the signal is associated with stars and
+forks, with older last pushes and, in the regression, with the absence
+of a license. At a decision threshold the balanced accuracy is 0.66 and
+the precision for single-owner content is 0.28: the model ranks rather
+than classifies. The exclusion does not remove every effect of the
+representative rule: it still determines which repository supplies
+stars, forks, license, last push and path, and the number of copies may
+influence that selection, so residual selection effects remain possible.
 
 \textbf{Third}, the limit seems to be in the data and not in the models:
 six families tie and tuning does not help. The claims are associative
@@ -32,14 +36,16 @@ and cross-sectional: attributes and target share one snapshot, so the
 results do not evaluate prospective prediction of future reuse, and they
 identify neither what makes a skill more or less copied nor its quality.
 
-\textbf{Future work.} (i) Evaluate prospective prediction with
-attributes dated before the copies appear (for example, repository state
-at an earlier snapshot). (ii) Model at the copy level, with information
-prior to reuse, to use attributes of all copies without leakage. (iii)
-Group near-identical copies to mitigate the fragmentation of the target
-by exact hash. (iv) Replicate with later snapshots and study the
-temporal dynamics of diffusion. (v) Investigate why repositories without
-a license host skills with more owners. (vi) Evaluate text
-representations within fixed location classes. (vii) Propose to the
-GitSkills maintainers indicators that separate the representative choice
-from repository attributes.
+\textbf{Future work.} (i) Test robustness to the selection rule by
+choosing the representative independently of location preferences, which
+requires attributes of alternative copies. (ii) Evaluate prospective
+prediction with attributes dated before the copies appear (for example,
+repository state at an earlier snapshot). (iii) Model at the copy level,
+with information prior to reuse, to use attributes of all copies without
+leakage. (iv) Group near-identical copies to mitigate the fragmentation
+of the target by exact hash. (v) Replicate with later snapshots and
+study the temporal dynamics of diffusion. (vi) Investigate why
+repositories without a license host skills with more owners. (vii)
+Evaluate text representations within fixed location classes. (viii)
+Propose to the GitSkills maintainers indicators that separate the
+representative choice from repository attributes.

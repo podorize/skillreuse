@@ -35,18 +35,21 @@ that the representative sits in \texttt{.claude/skills/} rises from 14\%
 (2 repositories) to 92\% (more than 50), while the actual share of
 copies in that folder stays between 5\% and 13\%. In addition, about a
 quarter of the reused skills (24.7\% in the full population) exist under
-a single owner, and a few accounts concentrate the sample. With
-attributes free of these artifacts, owner-grouped validation, nested
-tuning and a new owner-disjoint holdout (25,011 skills from 10,484
-owners), a Random Forest reaches an AUC of 0.73 (95\% CI 0.72--0.75) for
-cross-owner reuse, and a HistGradientBoosting model reduces the RMSLE of
-the number of owners by 6\% relative to the mean baseline (0.625 versus
-0.664). The signal is modest, associative and cross-sectional
-(attributes and target come from the same snapshot, so this is not a
-prospective prediction of future reuse): the RMSLE gain is stable across
-protocol variations, whereas the AUC is sensitive to how concentrated
-owners are treated; skill and repository attributes contribute
-complementarily (an exploratory finding).
+a single owner, and a few accounts concentrate the sample. After
+excluding the identified construction-dependent shortcuts, with
+owner-grouped validation, nested tuning and a new owner-disjoint holdout
+(25,011 skills from 10,484 owners), a Random Forest reaches an AUC of
+0.73 (95\% CI 0.72--0.75) for cross-owner reuse, and a
+HistGradientBoosting model reduces the RMSLE of the number of owners by
+6\% relative to the mean baseline (0.625 versus 0.664). The signal is
+modest, associative and cross-sectional (attributes and target come from
+the same snapshot, so this is not a prospective prediction of future
+reuse): the RMSLE gain is stable across protocol variations, whereas the
+AUC is sensitive to how concentrated owners are treated; skill and
+repository attributes contribute complementarily (an exploratory
+finding). The representative rule still decides which copy supplies the
+repository and path attributes, so residual selection effects cannot be
+ruled out.
 
 \end{abstract}
 
