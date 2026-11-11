@@ -53,7 +53,14 @@ VIEWS: dict[str, list[str]] = {
     "clean_full": CLEAN_FULL,
     "clean_full+shortcuts": CLEAN_FULL + SHORTCUTS,
     "shortcuts_only": SHORTCUTS,
+    # ablacao: o modelo completo sem exatamente um bloco (so na analise de RQ3)
+    "minus_skill": REPO + CATALOG + PATH,
+    "minus_repo": SKILL + CATALOG + PATH,
+    "minus_catalog": SKILL + REPO + PATH,
+    "minus_path": SKILL + REPO + CATALOG,
 }
+ABLATION_VIEWS = ("minus_skill", "minus_repo", "minus_catalog", "minus_path")
+DEFAULT_VIEWS = [v for v in VIEWS if v not in ABLATION_VIEWS]
 REG_MODELS = ("ridge_log", "random_forest_log")
 CLF_MODELS = ("logistic", "random_forest")
 
@@ -251,7 +258,7 @@ def owner_models_parse_args() -> argparse.Namespace:
     parser.add_argument("--task", choices=("regression", "classification", "both"),
                         default="both")
     parser.add_argument("--group-by", choices=("owner", "repo"), default="owner")
-    parser.add_argument("--views", nargs="+", default=list(VIEWS))
+    parser.add_argument("--views", nargs="+", default=DEFAULT_VIEWS)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--folds", type=int, default=3)
     parser.add_argument("--seed", type=int, default=2027)
@@ -471,7 +478,7 @@ def primary_main() -> None:
         max_rows=None, seed=args.seed,
     )
     frame = _prepare(ns)
-    views = list(VIEWS)
+    views = list(DEFAULT_VIEWS)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     results: dict[str, pd.DataFrame] = {}
     for task in ("regression", "classification"):
@@ -500,3 +507,78 @@ def primary_main() -> None:
         "external_test_read": False,
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(hypotheses.drop(columns=["description"]).round(4).to_string(index=False))
+
+
+def owner_overlap_main() -> None:
+    """Fracao das linhas de validacao com algum dono de ocorrencia tambem presente no treino.
+
+    A validacao agrupa pelo dono do repositorio representativo; o alvo, porem, conta todos os
+    donos do conteudo. Mede-se quanto isso deixa de garantir disjuncao total de donos.
+    """
+    from skillreuse.owner import _connect
+
+    parser = argparse.ArgumentParser(description=owner_overlap_main.__doc__)
+    parser.add_argument("--cap-per-owner", type=int, default=PRIMARY_CAP)
+    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--folds", type=int, default=3)
+    parser.add_argument("--seed", type=int, default=2027)
+    parser.add_argument("--output-dir", type=Path, default=Path("results/owner/primary"))
+    args = parser.parse_args()
+    ns = argparse.Namespace(tier=None, exclude_owners_above=None,
+                            cap_per_owner=args.cap_per_owner, max_rows=None, seed=args.seed)
+    frame = _prepare(ns)
+    con = _connect()
+    hashes = frame[["content_hash"]].drop_duplicates()
+    con.register("h", hashes)
+    occ = con.sql(
+        "select distinct o.file_sha as content_hash, o.owner from o "
+        "join h on h.content_hash = o.file_sha"
+    ).df()
+    owners = occ.groupby("content_hash")["owner"].agg(frozenset).to_dict()
+    rows = []
+    for repeat, fold, train, valid in _folds(frame, "owner", args.repeats, args.folds, args.seed):
+        train_owners = set().union(*(owners[h] for h in train["content_hash"]))
+        shared = [bool(owners[h] & train_owners) for h in valid["content_hash"]]
+        only_rep = [h for h in valid["content_hash"] if len(owners[h]) > 1]
+        rows.append({
+            "repeat": repeat, "fold": fold, "validation_rows": len(valid),
+            "share_with_shared_occurrence_owner": sum(shared) / len(valid),
+            "multi_owner_rows": len(only_rep),
+        })
+    out = pd.DataFrame(rows)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    out.to_csv(args.output_dir / "occurrence_owner_overlap.csv", index=False)
+    print(out.round(4).to_string(index=False))
+    print("mean share:", round(float(out["share_with_shared_occurrence_owner"].mean()), 4))
+
+    # holdout: donos de todas as ocorrencias contra os donos do desenvolvimento
+    import pyarrow.parquet as pq
+
+    from skillreuse.models import DEFAULT_SAMPLE
+
+    holdout = pd.read_parquet("data/processed/holdout_sample.parquet",
+                              columns=["content_hash"])
+    dev = pq.read_table(DEFAULT_SAMPLE, columns=["content_hash", "repository_count",
+                                                 "repo_owner"]).to_pandas()
+    dev = dev[dev["repository_count"] >= 2]
+    con.register("ho", holdout)
+    con.register("dev", dev[["content_hash"]])
+    ho_owners = con.sql(
+        "select distinct o.file_sha as h, o.owner from o join ho on ho.content_hash = o.file_sha"
+    ).df().groupby("h")["owner"].agg(set)
+    dev_all = set(con.sql(
+        "select distinct o.owner from o join dev on dev.content_hash = o.file_sha"
+    ).df()["owner"])
+    dev_rep = set(dev["repo_owner"].dropna())
+    summary = {
+        "holdout_rows": int(len(ho_owners)),
+        "share_any_occurrence_owner_in_dev_representative_owners":
+            float(ho_owners.map(lambda x: bool(x & dev_rep)).mean()),
+        "share_any_occurrence_owner_in_dev_occurrence_owners":
+            float(ho_owners.map(lambda x: bool(x & dev_all)).mean()),
+        "cv_mean_share_shared_occurrence_owner":
+            float(out["share_with_shared_occurrence_owner"].mean()),
+    }
+    target = args.output_dir / "occurrence_owner_overlap.json"
+    target.write_text(json.dumps(summary, indent=2) + "\n")
+    print(summary)

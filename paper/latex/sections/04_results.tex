@@ -3,45 +3,41 @@
 \textbf{Roadmap.} Sections 4.1--4.2 answer RQ1 (dataset construction
 introduces identifiable biases); 4.3 and 4.7 answer RQ2 (a modest
 predictive signal remains under the clean protocol, first on
-development, then on the holdout); 4.5 answers RQ3 (skill and repository
-attributes carry complementary information, and which variables are
-associated with the predictions); 4.4 and 4.6 are robustness and
-model-selection checks, and the conclusions are conditional on the
-sampling and validation choices described in Section 3.
+development, then on the holdout); 4.3 and 4.5 answer RQ3 (skill and
+repository attributes carry complementary information, per block
+ablation, and which variables are associated with the predictions); 4.4
+and 4.6 are robustness and model-selection checks, and the conclusions
+are conditional on the sampling and validation choices described in
+Section 3.
 
 \subsection{The target, the features and owner
 concentration}\label{the-target-the-features-and-owner-concentration}
 
 In development (25,918 reused contents from 7,128 owners),
 \texttt{owner\_count} mirrors \texttt{repository\_count}: mean 4.50
-against 5.08, median 2 in both, P95 15 against 16, maximum 379 against
-390, variance-to-mean ratio 23.1 against 22.1. The difference is at the
-base: \textbf{28.0\%} of the contents have \texttt{owner\_count\ =\ 1}
-(24.7\% in the full population: 75,733 of 306,088), so self-copying
-accounts for 11\% of the total mass of \texttt{repository\_count} in
-development. A few owners concentrate the sample: the five largest
-account for 11.9\%, 4.7\%, 3.5\%, 2.2\% and 2.2\% of the contents
-(24.5\% together; identifiers omitted), and the largest and the fourth
-have on average 2.0 repositories but only 1.0 owner per content. In
-addition, 17.2\% of the contents have no front-matter \texttt{name}, and
-20.1\% share it with another content, a sign of variants of the same
+against 5.08, median 2 in both, P95 15 against 16. The difference is at
+the base: \textbf{28.0\%} of the contents have
+\texttt{owner\_count\ =\ 1} (24.7\% in the full population: 75,733 of
+306,088), so self-copying accounts for 11\% of the total mass of
+\texttt{repository\_count} in development. A few owners concentrate the
+sample: the five largest account for 24.5\% of the contents together
+(11.9\% the largest; identifiers omitted), and the largest and the
+fourth have on average 2.0 repositories but only 1.0 owner per content.
+In addition, 17.2\% of the contents have no front-matter \texttt{name},
+and 20.1\% share it with another content, a sign of variants of the same
 skill.
 
 \textbf{Features.} The clean view has 52 columns (49 numeric, 3
 categorical) that expand to 112 after preprocessing. Missing values are
 rare (13 columns, at most 0.2\%) and imputed by the training median with
-an indicator; one column (\texttt{repo\_is\_fork}) is constant and was
-kept as harmless. Twenty-five numeric columns have skewness above 2 (for
-example \texttt{sibling\_count} 116, \texttt{sibling\_bytes} 63, reduced
-to 1.6 and 0.5 by \texttt{log1p}); since trees are invariant to monotone
-transformations, we apply \texttt{log1p} only in a sensitivity analysis
-for linear models (Section 4.4). Eight pairs of columns have
-\textbar \ensuremath{\rho}\textbar{} \textgreater{} 0.95 (for example
-\texttt{body\_chars} and \texttt{text\_char\_count}, 0.998); we kept
+an indicator. Twenty-five numeric columns have skewness above 2; since
+trees are invariant to monotone transformations, we apply \texttt{log1p}
+only in a sensitivity analysis for linear models (Section 4.4). Eight
+pairs of columns have \textbar \ensuremath{\rho}\textbar{} \textgreater{} 0.95; we kept
 them, since trees tolerate redundancy, and read the importance of
-redundant columns with caution. No dimensionality reduction was applied.
-Finally, \texttt{cross\_owner} is positive for 80.4\% of the development
-contents (80.8\% in the holdout), and we do not resample.
+redundant columns with caution. Finally, \texttt{cross\_owner} is
+positive for 80.4\% of the development contents (80.8\% in the holdout),
+and we do not resample.
 
 \subsection{Selection bias of the
 representative}\label{selection-bias-of-the-representative}
@@ -108,7 +104,7 @@ categories) gave 0.584.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\linewidth]{figures/report_eda_owner_and_selection.png}
+\includegraphics[width=0.7\linewidth]{figures/report_eda_owner_and_selection.png}
 \caption{Distributions of repositories and owners (left) and effect of the representative rule (right)}
 \label{fig:report-1}
 \end{figure}
@@ -220,12 +216,24 @@ Nadeau--Bengio variance correction); the p-values are Holm-adjusted over
 H1--H4. All five comparisons are rejected after Holm correction, and
 none of the conclusions depends on the adjustment alone, since every
 interval excludes zero. There is a real but modest signal (AUC 0.72, a
-6\% RMSLE reduction). Skill and repository contribute
-\textbf{complementarily}: each block alone sits at AUC 0.65--0.67 and
-the combination at 0.72 (H3a, H3b). The shortcuts add to the regression
-(H4) but alone do not predict cross-owner reuse (AUC 0.50): their
-regression gain comes from correlation with the number of copies, not
-from cross-owner reuse.
+6\% RMSLE reduction). The combination of blocks outperforms each view
+alone, which sit at AUC 0.65--0.67 against 0.72 (H3a, H3b); but these
+views differ from the full set by more than one block, so they do not
+isolate individual contributions. An exploratory ablation removes
+exactly one block from the full clean set (Random Forest, same folds;
+unadjusted 95\% intervals). In classification, removing the skill block
+lowers the AUC by 0.044 {[}0.010; 0.079{]} and removing the repository
+block by 0.054 {[}0.034; 0.074{]}; removing the catalog (0.004
+{[}\ensuremath{-}0.013; 0.021{]}) or the path (0.000 {[}\ensuremath{-}0.006; 0.007{]}) changes it
+little. In regression, removing any block raises the RMSLE slightly:
+skill by 0.011 {[}0.004; 0.017{]}, catalog by 0.008 {[}0.003; 0.012{]},
+path by 0.005 {[}0.001; 0.009{]} and repository by 0.006 {[}\ensuremath{-}0.007;
+0.019{]}. The evidence therefore supports complementary information from
+skill and repository attributes in classification, with a larger unique
+contribution from the repository, but only small, uneven contributions
+in regression. The shortcuts add to the regression (H4) but alone do not
+predict cross-owner reuse (AUC 0.50): their regression gain comes from
+correlation with the number of copies, not from cross-owner reuse.
 
 \subsection{Robustness}\label{robustness}
 
@@ -277,19 +285,18 @@ data-dependent choice.
 
 Other checks. (i) Fixing the location class and training within each one
 (owners with more than 500 contents excluded), the clean RF still beats
-the baseline: \texttt{canonical} (5,439 contents) RMSLE \ensuremath{-}0.141, AUC
-0.714; \texttt{skills-dir} (10,721) \ensuremath{-}0.013, 0.672; \texttt{other}
-(3,810) \ensuremath{-}0.011, 0.828. (ii) With \texttt{repository\_count} as target,
-the gain is the same (\ensuremath{-}0.031 against \ensuremath{-}0.030). (iii) Only 18.8\% of
-validation rows have a \texttt{name} seen in training, and the gain
-persists without them (RMSLE \ensuremath{-}0.039 against \ensuremath{-}0.041; AUC 0.726 against
-0.716). (iv) Repository-grouped validation, without the cap, gave no
-larger estimates than owner-grouped validation (RMSLE 0.657 against
-0.655; AUC 0.735 against 0.747). (v) Applying \texttt{log1p} to the 25
-skewed columns improves the linear models only slightly (logistic AUC
-0.680 \ensuremath{\rightarrow} 0.691; Ridge RMSLE 0.694 \ensuremath{\rightarrow} 0.690) and leaves the forests
-unchanged; the forest's advantage over the linear model remains
-indistinguishable from zero (AUC +0.023, 95\% CI {[}\ensuremath{-}0.012; 0.058{]}).
+the baseline: \(\Delta\)RMSLE (model \ensuremath{-} baseline) is \ensuremath{-}0.141 for
+\texttt{canonical} (5,439 contents; AUC 0.714), \ensuremath{-}0.013 for
+\texttt{skills-dir} (10,721; AUC 0.672) and \ensuremath{-}0.011 for \texttt{other}
+(3,810; AUC 0.828). (ii) With \texttt{repository\_count} as target, the
+gain is the same (\(\Delta\)RMSLE \ensuremath{-}0.031 against \ensuremath{-}0.030). (iii) Only
+18.8\% of validation rows have a \texttt{name} seen in training, and the
+gain persists without them (\(\Delta\)RMSLE \ensuremath{-}0.039 against \ensuremath{-}0.041; AUC
+0.726 against 0.716). (iv) Repository-grouped validation gave no larger
+estimates than owner-grouped validation (AUC 0.735 against 0.747). (v)
+Applying \texttt{log1p} to skewed columns improves the linear models
+only slightly (logistic AUC 0.680 \ensuremath{\rightarrow} 0.691) and leaves the forests
+unchanged.
 
 \subsection{Interpretation}\label{interpretation}
 
@@ -311,7 +318,7 @@ should not be read as separate effects.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\linewidth]{figures/report_pdp.png}
+\includegraphics[width=0.7\linewidth]{figures/report_pdp.png}
 \caption{Out-of-fold partial dependence of the frozen models: classification RF (top) and regression HistGB (bottom); bands are \ensuremath{\pm}1 standard deviation across folds, dashed lines the mean observed prediction}
 \label{fig:report-2}
 \end{figure}
@@ -331,10 +338,9 @@ development contents, median of zero stars) host skills with 6.6 owners
 on average, against 3.7 for MIT, and the model predicts 1.48 against
 1.29--1.30 for \texttt{log1p(owner\_count)} for any license; they also
 have more \texttt{canonical} skills (34\% against 24\%). This is an
-exploratory finding, not an explanation of reuse. We do not know the
-mechanism: it may reflect repositories created automatically or by
-installers, and the data do not separate this from an effect of the
-missing license itself.
+exploratory finding, not an explanation of reuse: the mechanism is
+unknown, and it may reflect repositories created automatically or by
+installers rather than an effect of the missing license.
 
 \subsection{Model selection and
 tuning}\label{model-selection-and-tuning}
@@ -380,26 +386,24 @@ equivalence. The search did not beat the default configuration (RF:
 holdout}\label{confirmation-on-the-holdout}
 
 The frozen models were evaluated once on 25,011 contents from 10,484
-owners disjoint from development.
+owners, disjoint from development by representative owner.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1190}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1667}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2619}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1905}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2619}}@{}}
-\caption{Single evaluation on the holdout.}\tabularnewline
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2985}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1791}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3881}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1343}}@{}}
+\caption{Single evaluation on the holdout (95\% CI by owner bootstrap;
+HistGB is HistGradientBoosting).}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Task
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Model
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Result
+Performance
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Baseline
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-95\% CI (owner bootstrap)
 \end{minipage} \\
 \midrule\noalign{}
 \endfirsthead
@@ -409,27 +413,28 @@ Task
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Model
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Result
+Performance
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Baseline
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-95\% CI (owner bootstrap)
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\texttt{cross\_owner} & Random Forest & AUC \textbf{0.731}; PR AUC
-0.913; Brier 0.140; log-loss 0.444 & 0.5; 0.808; 0.155; 0.490 & AUC
-{[}0.716; 0.745{]}; PR AUC {[}0.905; 0.921{]} \\
-\texttt{log1p(owner\_count)} & HistGradientBoosting & RMSLE
-\textbf{0.625}; Spearman 0.330 & 0.664 (mean of \texttt{log1p}) &
-difference \ensuremath{-}0.038 {[}\ensuremath{-}0.044; \ensuremath{-}0.032{]} \\
+Classification (\texttt{cross\_owner}) & Random Forest & AUC
+\textbf{0.731} {[}0.716; 0.745{]} & 0.500 \\
+Regression (\texttt{log1p(owner\_count)}) & HistGB & RMSLE
+\textbf{0.625} & 0.664 \\
 \end{longtable}
+
+Secondary metrics. Classification: PR AUC 0.913 {[}0.905; 0.921{]}
+(baseline 0.808), Brier score 0.140 (0.155), log-loss 0.444 (0.490).
+Regression: Spearman 0.330; RMSLE difference to the baseline \ensuremath{-}0.038
+{[}\ensuremath{-}0.044; \ensuremath{-}0.032{]}.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\linewidth]{figures/report_holdout_roc_calibration.png}
+\includegraphics[width=0.7\linewidth]{figures/report_holdout_roc_calibration.png}
 \caption{ROC curve, calibration and precision--recall curve of the single-owner (minority) class for the RF on the holdout}
 \label{fig:report-3}
 \end{figure}

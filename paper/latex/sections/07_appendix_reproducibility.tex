@@ -9,8 +9,8 @@ verified). Python 3.12, \texttt{pyproject.toml} and \texttt{uv.lock}.
 Seeds: sampling \texttt{20261009}; validation 2027--2029; holdout
 \texttt{20261110}; bootstrap 2027. The 200,000-content sample is
 deterministic
-(\texttt{md5(content\_hash\ \textbar{}\textbar{}\ \textquotesingle{}:20261009\textquotesingle{})}),
-not a simple random sample. Code and data tables:
+(\texttt{md5(content\_hash\ \textbar{}\textbar{}\ \textquotesingle{}:20261009\textquotesingle{})}).
+Code and data tables:
 \href{https://github.com/podorize/skillreuse}{github.com/podorize/skillreuse}.
 
 \textbf{Quick reproduction (about 5 minutes, no 6.5 GB download).}
@@ -24,11 +24,11 @@ directory; the holdout numbers reproduce exactly. A Colab notebook is in
 
 \begin{verbatim}
 uv sync
-make data owner feature-eda       # download, sample, owner targets, audit, EDA (4.1--4.2)
-make controls primary robustness  # target-`repository_count` control, H1--H4, sensitivities (4.2--4.4)
-make importance interpretation    # permutation importance, partial dependence, threshold (4.5, 4.7)
-make final holdout                # nested tuning and freezing (4.6); holdout construction (3.9)
-make holdout-eval                 # single evaluation (4.7)
+make data owner feature-eda
+make controls primary robustness
+make importance interpretation
+make final holdout
+make holdout-eval
 \end{verbatim}
 
 The frozen models are in
@@ -38,19 +38,16 @@ evaluation (git tag \texttt{frozen-before-holdout}).
 \texttt{results/owner/holdout/evaluation\_lock.json} and refuses to run
 again without \texttt{-\/-allow-reevaluation}; any re-evaluation must be
 declared. Every table and figure maps to a CSV or JSON under
-\texttt{results/owner/} (and \texttt{results/controls/} for the
-\texttt{repository\_count} control), each directory with a
-\texttt{manifest.json}; the targets of \texttt{make} name the step that
-produces each one. \texttt{make\ test} runs the 40 tests (excluded
-attributes, path patterns, paired tests and Holm, owner bootstrap,
-holdout disjointness, threshold selection).
+\texttt{results/owner/} (and \texttt{results/controls/}), each directory
+with a \texttt{manifest.json}. \texttt{make\ robustness} also runs the
+block ablation, and \texttt{skillreuse\ owner-overlap} and
+\texttt{skillreuse\ fork-audit} reproduce the checks on owner separation
+(Sections 3.6, 3.9) and forks (Section 5.4). \texttt{make\ test} runs
+the tests.
 
 \textbf{Deviations and limits.} Tuning used 2\ensuremath{\times}3 folds and 6 candidates
 (planned 3\ensuremath{\times}3 and 12) for computational cost, on a machine with 8 GB of
-memory. Numerical results may vary in the last digits across library
-versions. Earlier exploratory results (target
-\texttt{repository\_count}, original external test) remain in the
-repository (\texttt{results/count\_regression},
-\texttt{results/discipline\_benchmark}) only as history and support no
-conclusion of this report. The protocol document
-\texttt{paper/protocol.md} is in Portuguese.
+memory. Earlier exploratory results (\texttt{results/count\_regression},
+\texttt{results/discipline\_benchmark}) remain in the repository only as
+history. The protocol document \texttt{paper/protocol.md} is in
+Portuguese.

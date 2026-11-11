@@ -1,0 +1,6 @@
+{
+  "holdout_rows": 25011,
+  "share_any_occurrence_owner_in_dev_representative_owners": 0.5077765783055456,
+  "share_any_occurrence_owner_in_dev_occurrence_owners": 0.6832193834712726,
+  "cv_mean_share_shared_occurrence_owner": 0.7345054137504062
+}
