@@ -12,6 +12,8 @@ We operationalize reuse as the presence of identical `SKILL.md` content (same `c
 
 We therefore define the target in terms of owners. The main target is **cross-owner reuse** (`cross_owner`: the content appears under two or more owners) and, secondarily, the number of owners (`owner_count`); the attributes exclude the variables that depend on the representative rule, which are analyzed as a finding. The evaluation uses owner-grouped validation, a per-owner cap, nested tuning and pre-specified hypotheses, and confirmation is done on a **new holdout, disjoint by owner**, evaluated once. Because the protocol was fixed after an exploratory phase, we distinguish what is confirmatory from what is exploratory. Conclusions are observational associations \cite{shmueli2010explain}: we claim neither causality nor skill quality.
 
+**Scope of the prediction.** This study evaluates whether observable attributes can discriminate between skills with different levels of *observed* cross-owner replication in a fixed repository snapshot. It does not evaluate the prospective prediction of future reuse: attributes and target come from the same July 2026 snapshot, so a repository's stars, forks and last-push date may have been measured after some or all of the copying had already happened. The problem is cross-sectional, not prospective.
+
 ## 1.3 Objectives and research questions
 
 * **RQ1 — Construction biases:** to what extent do the representative-selection rule, self-copying and owner concentration confound the target and the attributes of GitSkills?

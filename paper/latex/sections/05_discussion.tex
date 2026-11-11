@@ -25,6 +25,19 @@ the regression, what stands out is the \textbf{absence of a license}
 and, for large catalogs, the number of skills in the repository; the
 mechanism of the first is unknown (Section 4.5).
 
+\textbf{Cross-sectional, not prospective.} Attributes and labels come
+from the same July 2026 snapshot. Stars, forks and last-push date were
+measured after some or all observed copying could have occurred, so the
+association with stars and forks may reflect copies that raised
+visibility as much as visibility that attracted copies, and an old last
+push may reflect accumulated exposure time. The results therefore show
+that attributes discriminate between skills with different levels of
+observed replication; they do not show that these attributes would have
+predicted reuse before it happened. This is not target leakage in the
+conventional sense (no attribute is computed from the target), but it
+separates our problem from prospective prediction, which would require
+attributes dated before the copies appear.
+
 \subsection{Implications for using
 GitSkills}\label{implications-for-using-gitskills}
 
@@ -63,11 +76,13 @@ information (relations among copies, time), not more flexible models.
 \subsection{Threats to validity and
 limitations}\label{threats-to-validity-and-limitations}
 
-\textbf{Construct.} The number of owners approximates independent
-adoption, but accounts may represent the same person or organization,
-and GitHub search counts forks only if they have more stars than the
-parent. Counts are lower bounds, the exact hash misses variants, and
-reuse by copying does not indicate use, quality or usefulness.
+\textbf{Construct and temporal.} The study is cross-sectional (Section
+5.1): it does not assess prospective prediction of future reuse. The
+number of owners approximates independent adoption, but accounts may
+represent the same person or organization, and GitHub search counts
+forks only if they have more stars than the parent. Counts are lower
+bounds, the exact hash misses variants, and reuse by copying does not
+indicate use, quality or usefulness.
 
 \textbf{Internal.} (i) H1--H4 were fixed after exploratory results; only
 the holdout is confirmatory. (ii) The cap of 50 per owner is
