@@ -90,7 +90,7 @@ def test_primary_hypotheses_numbers() -> None:
         exp += [f"{row['score_a']:.3f}", f"{row['score_b']:.3f}"]
         assert row["p_holm_family"] < 0.05, row["hypothesis"]
     check(text(), exp)
-    assert "All hypotheses are rejected after Holm correction" in text()
+    assert "All five comparisons are rejected after Holm correction" in text()
 
 
 def test_sensitivity_numbers() -> None:

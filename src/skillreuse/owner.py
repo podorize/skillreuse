@@ -355,3 +355,32 @@ def export_derived(output: Path = DERIVED_DIR) -> dict[str, int]:
 
 def export_derived_main() -> None:
     print(json.dumps(export_derived(), indent=2))
+
+
+def fork_audit_main(argv: list[str] | None = None) -> None:
+    """Quantifica ocorrencias em forks e o efeito sobre cross_owner (populacao completa)."""
+    del argv
+    con = duckdb.connect()
+    con.sql("pragma threads=6; pragma memory_limit='5GB'")
+    row = con.sql(
+        "with o as (select a.file_sha, a.repo_full_name,"
+        " split_part(a.repo_full_name,'/',1) as owner,"
+        " coalesce(r.is_fork, false) as is_fork"
+        f" from read_parquet('{RAW_ARTIFACTS}') a"
+        " left join read_parquet('data/raw/gitskills-full/repos/*.parquet') r"
+        " on r.full_name = a.repo_full_name),"
+        " c as (select file_sha, count(distinct repo_full_name) rc, count(distinct owner) oc,"
+        " count(distinct case when not is_fork then owner end) oc_nofork from o group by 1)"
+        " select (select sum(is_fork::int) from o) as fork_occurrences,"
+        " (select count(distinct repo_full_name) from o where is_fork) as fork_repositories,"
+        " (select count(*) from o) as occurrences,"
+        " sum((rc >= 2)::int) as contents_ge2,"
+        " sum((oc >= 2)::int) filter (where rc >= 2) as cross_owner,"
+        " sum((oc >= 2 and oc_nofork < 2)::int) filter (where rc >= 2)"
+        " as cross_owner_lost_without_forks"
+        " from c"
+    ).df().iloc[0]
+    out = OUTPUT_DIR / "fork_audit.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({k: int(v) for k, v in row.items()}, indent=2) + "\n")
+    print(row.to_string())

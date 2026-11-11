@@ -163,13 +163,14 @@ The main metrics are ROC AUC (classification) and RMSLE (regression);
 the secondary ones are PR AUC, Brier score, log-loss, MAE and Spearman.
 Comparisons are paired by (repetition, fold), with 95\% CIs and a t-test
 with the \textbf{Nadeau--Bengio correction} for repeated samples. Five
-pre-specified hypotheses form a family corrected by Holm
-(\(\alpha=0.05\)); all other comparisons are exploratory: \textbf{H1}
-the clean attributes predict cross-owner reuse (AUC against 0.5);
-\textbf{H2} they reduce the RMSLE of \texttt{owner\_count} (clean RF
-against the mean of \texttt{log1p}); \textbf{H3a/H3b} skill adds to
-repository+catalog and vice versa (AUC); \textbf{H4} the shortcuts add
-to the clean attributes (RMSLE).
+hypotheses, formulated after the exploratory phase and before the
+confirmation, form a family corrected by Holm (\(\alpha=0.05\)); all
+other comparisons are exploratory: \textbf{H1} the clean attributes
+predict cross-owner reuse (AUC against 0.5); \textbf{H2} they reduce the
+RMSLE of \texttt{owner\_count} (clean RF against the mean of
+\texttt{log1p}); \textbf{H3a/H3b} skill adds to repository+catalog and
+vice versa (AUC); \textbf{H4} the shortcuts add to the clean attributes
+(RMSLE).
 
 Interpretation uses permutation importance of the clean RF on
 owner-grouped folds (per column and per block) and out-of-fold partial
