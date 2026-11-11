@@ -1,5 +1,7 @@
 # 4. Results
 
+**Roadmap.** Sections 4.1–4.2 answer RQ1 (dataset construction introduces identifiable biases); 4.3 and 4.7 answer RQ2 (a modest predictive signal remains under the clean protocol, first on development, then on the holdout); 4.5 answers RQ3 (skill and repository attributes carry complementary information, and which variables are associated with the predictions); 4.4 and 4.6 are robustness and model-selection checks, and the conclusions are conditional on the sampling and validation choices described in Section 3.
+
 ## 4.1 The target, the features and owner concentration
 
 In development (25,918 reused contents from 7,128 owners), `owner_count` mirrors `repository_count`: mean 4.50 against 5.08, median 2 in both, P95 15 against 16, maximum 379 against 390, variance-to-mean ratio 23.1 against 22.1. The difference is at the base: **28.0%** of the contents have `owner_count = 1` (24.7% in the full population: 75,733 of 306,088), so self-copying accounts for 11% of the total mass of `repository_count` in development. A few owners concentrate the sample: the five largest account for 11.9%, 4.7%, 3.5%, 2.2% and 2.2% of the contents (24.5% together; identifiers omitted), and the largest and the fourth have on average 2.0 repositories but only 1.0 owner per content. In addition, 17.2% of the contents have no front-matter `name`, and 20.1% share it with another content, a sign of variants of the same skill.
@@ -53,7 +55,7 @@ With the shortcuts out, 17,733 contents (cap of 50 per owner) and owner-grouped 
 
 : Pre-specified hypotheses on development (exploratory until the confirmation of Section 4.7).
 
-All hypotheses are rejected after Holm correction. There is a real but modest signal (AUC 0.72, a 6% RMSLE reduction). Skill and repository contribute **complementarily**: each block alone sits at AUC 0.65–0.67 and the combination at 0.72 (H3a, H3b). The shortcuts add to the regression (H4) but alone do not predict cross-owner reuse (AUC 0.50): their regression gain comes from correlation with the number of copies, not from cross-owner reuse.
+The 95% intervals are unadjusted (paired differences with the Nadeau–Bengio variance correction); the p-values are Holm-adjusted over H1–H4. All five comparisons are rejected after Holm correction, and none of the conclusions depends on the adjustment alone, since every interval excludes zero. There is a real but modest signal (AUC 0.72, a 6% RMSLE reduction). Skill and repository contribute **complementarily**: each block alone sits at AUC 0.65–0.67 and the combination at 0.72 (H3a, H3b). The shortcuts add to the regression (H4) but alone do not predict cross-owner reuse (AUC 0.50): their regression gain comes from correlation with the number of copies, not from cross-owner reuse.
 
 ## 4.4 Robustness
 
@@ -93,14 +95,14 @@ The partial dependence shows the **direction** of the model's response, and may 
 
 : Nested validation (mean of 6 outer owner-grouped folds; 6 candidates per search).
 
-By the pre-specified rule we froze the default RF (classification) and the default HistGradientBoosting (regression). **The families tie:** the RF against the runner-up (searched Gradient Boosting) differs by 0.012 AUC (95% CI [−0.003; 0.026]), and in regression the HistGB differs from the searched Gradient Boosting by −0.001 [−0.027; 0.024]. Only the tree (and, with less evidence, the default KNN) falls behind, and in classification even these differences do not survive Holm correction (p between 0.06 and 0.13). The search did not beat the default configuration (RF: 0.716 against 0.701).
+By the pre-specified rule we froze the default RF (classification) and the default HistGradientBoosting (regression). **Under the evaluated configurations, the families are not clearly separated:** the RF against the runner-up (searched Gradient Boosting) differs by 0.012 AUC (95% CI [−0.003; 0.026]), and in regression the HistGB differs from the searched Gradient Boosting by −0.001 [−0.027; 0.024]. Only the tree (and, with less evidence, the default KNN) falls behind, and in classification even these differences do not survive Holm correction (p between 0.06 and 0.13). Intervals here are unadjusted 95% intervals; Holm adjusts only the p-values, within the family of comparisons of the best configuration against all others and the baseline. Non-significance reflects the limited resolution of 6 outer folds and does not establish equivalence. The search did not beat the default configuration (RF: 0.716 against 0.701).
 
 ## 4.7 Confirmation on the holdout
 
 The frozen models were evaluated once on 25,011 contents from 10,484 owners disjoint from development.
 
 | Task | Model | Result | Baseline | 95% CI (owner bootstrap) |
-|---|---|---:|---:|---|
+|-----|-------|-----------|--------|-----------|
 | `cross_owner` | Random Forest | AUC **0.731**; PR AUC 0.913; Brier 0.140; log-loss 0.444 | 0.5; 0.808; 0.155; 0.490 | AUC [0.716; 0.745]; PR AUC [0.905; 0.921] |
 | `log1p(owner_count)` | HistGradientBoosting | RMSLE **0.625**; Spearman 0.330 | 0.664 (mean of `log1p`) | difference −0.038 [−0.044; −0.032] |
 

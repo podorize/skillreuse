@@ -48,7 +48,7 @@ GitSkills}\label{implications-for-using-gitskills}
 The most solid contribution is methodological and answers RQ1. (1)
 \textbf{\texttt{location\_class} and \texttt{history\_fetched} are not
 legitimate predictors of reuse}: by construction, the representative's
-class grows with the number of copies (14\% → 92\%) and history inherits
+class grows with the number of copies (14\% \ensuremath{\rightarrow} 92\%) and history inherits
 the dependence; including them makes the ``repository'' view look much
 more informative than it is (Section 4.2). (2) \textbf{Counting
 repositories mixes diffusion with self-copying}; the number of owners is
@@ -66,16 +66,17 @@ prior to reuse.
 
 \subsection{Models and data limits}\label{models-and-data-limits}
 
-The six families are statistically indistinguishable in both tasks, and
-the hyperparameter search did not help (default RF 0.716 against 0.701
-searched). The linear models trail the forests by 0.02--0.04 AUC even
-after \texttt{log1p}, but with intervals that include zero: the evidence
-is of a tie within the resolution of 6 outer folds, not of proven
-equivalence. Under the families and the tuning budget evaluated (6 outer
-folds, 6 candidates per search, reduced for computational cost),
-increasing model flexibility did not consistently improve performance.
-The limited resolution of the comparison means that small real
-differences may go undetected, and the data do not show that
+Under the evaluated configurations, the six families are not
+statistically separated in either task (apart from the tree and, less
+clearly, KNN), and the hyperparameter search did not help (default RF
+0.716 against 0.701 searched). The linear models trail the forests by
+0.02--0.04 AUC even after \texttt{log1p}, but with intervals that
+include zero: the evidence is of a tie within the resolution of 6 outer
+folds, not of proven equivalence. Under the families and the tuning
+budget evaluated (6 outer folds, 6 candidates per search, reduced for
+computational cost), increasing model flexibility did not consistently
+improve performance. The limited resolution of the comparison means that
+small real differences may go undetected, and the data do not show that
 substantially better performance is impossible with more careful model
 selection, other architectures, more extensive optimization or
 alternative representations. A plausible reading is that the attributes
