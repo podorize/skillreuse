@@ -73,7 +73,27 @@ def convert(markdown: str) -> str:
         check=True,
         capture_output=True,
     )
-    return result.stdout
+    return ascii_symbols(result.stdout)
+
+
+SYMBOLS = {
+    "±": r"\ensuremath{\pm}",
+    "−": r"\ensuremath{-}",
+    "×": r"\ensuremath{\times}",
+    "→": r"\ensuremath{\rightarrow}",
+    "ρ": r"\ensuremath{\rho}",
+    "≈": r"\ensuremath{\approx}",
+    "≥": r"\ensuremath{\geq}",
+    "≤": r"\ensuremath{\leq}",
+    "–": "--",
+}
+
+
+def ascii_symbols(latex: str) -> str:
+    """Replace Unicode symbols by LaTeX macros, independent of the input encoding."""
+    for char, macro in SYMBOLS.items():
+        latex = latex.replace(char, macro)
+    return latex
 
 
 def abstract() -> str:

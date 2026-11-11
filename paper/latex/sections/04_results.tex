@@ -1,5 +1,14 @@
 \section{Results}\label{results}
 
+\textbf{Roadmap.} Sections 4.1--4.2 answer RQ1 (dataset construction
+introduces identifiable biases); 4.3 and 4.7 answer RQ2 (a modest
+predictive signal remains under the clean protocol, first on
+development, then on the holdout); 4.5 answers RQ3 (skill and repository
+attributes carry complementary information, and which variables are
+associated with the predictions); 4.4 and 4.6 are robustness and
+model-selection checks, and the conclusions are conditional on the
+sampling and validation choices described in Section 3.
+
 \subsection{The target, the features and owner
 concentration}\label{the-target-the-features-and-owner-concentration}
 
@@ -27,7 +36,7 @@ example \texttt{sibling\_count} 116, \texttt{sibling\_bytes} 63, reduced
 to 1.6 and 0.5 by \texttt{log1p}); since trees are invariant to monotone
 transformations, we apply \texttt{log1p} only in a sensitivity analysis
 for linear models (Section 4.4). Eight pairs of columns have
-\textbar ρ\textbar{} \textgreater{} 0.95 (for example
+\textbar \ensuremath{\rho}\textbar{} \textgreater{} 0.95 (for example
 \texttt{body\_chars} and \texttt{text\_char\_count}, 0.998); we kept
 them, since trees tolerate redundancy, and read the importance of
 redundant columns with caution. No dimensionality reduction was applied.
@@ -115,7 +124,7 @@ owner-grouped validation, the results are:
   >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}@{}}
-\caption{Performance by view (mean ± standard deviation over 9
+\caption{Performance by view (mean \ensuremath{\pm} standard deviation over 9
 owner-grouped folds).}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -147,14 +156,14 @@ Ridge RMSLE
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-skill & 0.660 ± 0.022 & 0.614 & 0.698 ± 0.007 & 0.713 \\
-repository & 0.650 ± 0.019 & 0.655 & 0.707 ± 0.011 & 0.702 \\
-repository + catalog & 0.666 ± 0.009 & 0.662 & 0.696 ± 0.010 & 0.699 \\
-path + catalog & 0.579 ± 0.019 & 0.576 & 0.718 ± 0.018 & 0.714 \\
-\textbf{clean (full)} & \textbf{0.716 ± 0.024} & 0.680 & \textbf{0.679 ±
+skill & 0.660 \ensuremath{\pm} 0.022 & 0.614 & 0.698 \ensuremath{\pm} 0.007 & 0.713 \\
+repository & 0.650 \ensuremath{\pm} 0.019 & 0.655 & 0.707 \ensuremath{\pm} 0.011 & 0.702 \\
+repository + catalog & 0.666 \ensuremath{\pm} 0.009 & 0.662 & 0.696 \ensuremath{\pm} 0.010 & 0.699 \\
+path + catalog & 0.579 \ensuremath{\pm} 0.019 & 0.576 & 0.718 \ensuremath{\pm} 0.018 & 0.714 \\
+\textbf{clean (full)} & \textbf{0.716 \ensuremath{\pm} 0.024} & 0.680 & \textbf{0.679 \ensuremath{\pm}
 0.011} & 0.694 \\
-clean + shortcuts & 0.717 ± 0.022 & 0.682 & 0.637 ± 0.015 & 0.664 \\
-shortcuts only & 0.500 ± 0.015 & 0.510 & 0.688 ± 0.010 & 0.693 \\
+clean + shortcuts & 0.717 \ensuremath{\pm} 0.022 & 0.682 & 0.637 \ensuremath{\pm} 0.015 & 0.664 \\
+shortcuts only & 0.500 \ensuremath{\pm} 0.015 & 0.510 & 0.688 \ensuremath{\pm} 0.010 & 0.693 \\
 \emph{baseline} & 0.500 & 0.500 & 0.720 (mean), 0.780 (median) & \\
 \end{longtable}
 
@@ -196,23 +205,27 @@ p (Holm)
 \endlastfoot
 H1 & clean RF AUC against 0.5 & 0.716 & +0.216 {[}0.173; 0.259{]} &
 \textless{} 0.001 \\
-H2 & clean RF RMSLE against the mean & 0.679 vs 0.720 & −0.041
-{[}−0.049; −0.033{]} & \textless{} 0.001 \\
+H2 & clean RF RMSLE against the mean & 0.679 vs 0.720 & \ensuremath{-}0.041
+{[}\ensuremath{-}0.049; \ensuremath{-}0.033{]} & \textless{} 0.001 \\
 H3a & clean against repository+catalog (AUC) & 0.716 vs 0.666 & +0.050
 {[}0.017; 0.083{]} & 0.008 \\
 H3b & clean against skill (AUC) & 0.716 vs 0.660 & +0.056 {[}0.040;
 0.072{]} & \textless{} 0.001 \\
-H4 & clean+shortcuts against clean (RMSLE) & 0.637 vs 0.679 & −0.042
-{[}−0.055; −0.029{]} & \textless{} 0.001 \\
+H4 & clean+shortcuts against clean (RMSLE) & 0.637 vs 0.679 & \ensuremath{-}0.042
+{[}\ensuremath{-}0.055; \ensuremath{-}0.029{]} & \textless{} 0.001 \\
 \end{longtable}
 
-All hypotheses are rejected after Holm correction. There is a real but
-modest signal (AUC 0.72, a 6\% RMSLE reduction). Skill and repository
-contribute \textbf{complementarily}: each block alone sits at AUC
-0.65--0.67 and the combination at 0.72 (H3a, H3b). The shortcuts add to
-the regression (H4) but alone do not predict cross-owner reuse (AUC
-0.50): their regression gain comes from correlation with the number of
-copies, not from cross-owner reuse.
+The 95\% intervals are unadjusted (paired differences with the
+Nadeau--Bengio variance correction); the p-values are Holm-adjusted over
+H1--H4. All five comparisons are rejected after Holm correction, and
+none of the conclusions depends on the adjustment alone, since every
+interval excludes zero. There is a real but modest signal (AUC 0.72, a
+6\% RMSLE reduction). Skill and repository contribute
+\textbf{complementarily}: each block alone sits at AUC 0.65--0.67 and
+the combination at 0.72 (H3a, H3b). The shortcuts add to the regression
+(H4) but alone do not predict cross-owner reuse (AUC 0.50): their
+regression gain comes from correlation with the number of copies, not
+from cross-owner reuse.
 
 \subsection{Robustness}\label{robustness}
 
@@ -249,11 +262,11 @@ RMSLE gain (clean)
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-no limit & 25,918 & 0.747 ± 0.140 & 0.039 \\
-exclude owners with more than 1000 & 21,615 & 0.615 ± 0.036 & 0.036 \\
-exclude owners with more than 500 & 19,567 & 0.708 ± 0.037 & 0.030 \\
-exclude owners with more than 200 & 18,443 & 0.732 ± 0.035 & 0.037 \\
-\textbf{50 per owner} & 17,733 & 0.716 ± 0.024 & 0.041 \\
+no limit & 25,918 & 0.747 \ensuremath{\pm} 0.140 & 0.039 \\
+exclude owners with more than 1000 & 21,615 & 0.615 \ensuremath{\pm} 0.036 & 0.036 \\
+exclude owners with more than 500 & 19,567 & 0.708 \ensuremath{\pm} 0.037 & 0.030 \\
+exclude owners with more than 200 & 18,443 & 0.732 \ensuremath{\pm} 0.035 & 0.037 \\
+\textbf{50 per owner} & 17,733 & 0.716 \ensuremath{\pm} 0.024 & 0.041 \\
 \end{longtable}
 
 The RMSLE gain is stable (0.03--0.04), but the AUC oscillates from 0.615
@@ -264,26 +277,26 @@ data-dependent choice.
 
 Other checks. (i) Fixing the location class and training within each one
 (owners with more than 500 contents excluded), the clean RF still beats
-the baseline: \texttt{canonical} (5,439 contents) RMSLE −0.141, AUC
-0.714; \texttt{skills-dir} (10,721) −0.013, 0.672; \texttt{other}
-(3,810) −0.011, 0.828. (ii) With \texttt{repository\_count} as target,
-the gain is the same (−0.031 against −0.030). (iii) Only 18.8\% of
+the baseline: \texttt{canonical} (5,439 contents) RMSLE \ensuremath{-}0.141, AUC
+0.714; \texttt{skills-dir} (10,721) \ensuremath{-}0.013, 0.672; \texttt{other}
+(3,810) \ensuremath{-}0.011, 0.828. (ii) With \texttt{repository\_count} as target,
+the gain is the same (\ensuremath{-}0.031 against \ensuremath{-}0.030). (iii) Only 18.8\% of
 validation rows have a \texttt{name} seen in training, and the gain
-persists without them (RMSLE −0.039 against −0.041; AUC 0.726 against
+persists without them (RMSLE \ensuremath{-}0.039 against \ensuremath{-}0.041; AUC 0.726 against
 0.716). (iv) Repository-grouped validation, without the cap, gave no
 larger estimates than owner-grouped validation (RMSLE 0.657 against
 0.655; AUC 0.735 against 0.747). (v) Applying \texttt{log1p} to the 25
 skewed columns improves the linear models only slightly (logistic AUC
-0.680 → 0.691; Ridge RMSLE 0.694 → 0.690) and leaves the forests
+0.680 \ensuremath{\rightarrow} 0.691; Ridge RMSLE 0.694 \ensuremath{\rightarrow} 0.690) and leaves the forests
 unchanged; the forest's advantage over the linear model remains
-indistinguishable from zero (AUC +0.023, 95\% CI {[}−0.012; 0.058{]}).
+indistinguishable from zero (AUC +0.023, 95\% CI {[}\ensuremath{-}0.012; 0.058{]}).
 
 \subsection{Interpretation}\label{interpretation}
 
 For the clean RF (permutation on 6 owner-grouped folds, owners with more
 than 500 contents excluded), for cross-owner reuse, the repository block
 weighs more (AUC drop of 0.104 when permuted) than skill (0.084),
-catalog (0.016) and path (≈ 0); among columns, \texttt{log\_stars}
+catalog (0.016) and path (\ensuremath{\approx} 0); among columns, \texttt{log\_stars}
 dominates (0.056), followed by \texttt{log\_forks} (0.021) and
 \texttt{push\_recency\_days} (0.016). In regression, repository (0.019)
 and skill (0.018) weigh similarly, and the largest column is the license
@@ -299,7 +312,7 @@ should not be read as separate effects.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.82\linewidth]{figures/report_pdp.png}
-\caption{Out-of-fold partial dependence of the frozen models: classification RF (top) and regression HistGB (bottom); bands are ±1 standard deviation across folds, dashed lines the mean observed prediction}
+\caption{Out-of-fold partial dependence of the frozen models: classification RF (top) and regression HistGB (bottom); bands are \ensuremath{\pm}1 standard deviation across folds, dashed lines the mean observed prediction}
 \label{fig:report-2}
 \end{figure}
 
@@ -349,14 +362,19 @@ HistGradientBoosting & 0.693 & 0.682 & \textbf{0.670} & 0.688 \\
 \end{longtable}
 
 By the pre-specified rule we froze the default RF (classification) and
-the default HistGradientBoosting (regression). \textbf{The families
-tie:} the RF against the runner-up (searched Gradient Boosting) differs
-by 0.012 AUC (95\% CI {[}−0.003; 0.026{]}), and in regression the HistGB
-differs from the searched Gradient Boosting by −0.001 {[}−0.027;
-0.024{]}. Only the tree (and, with less evidence, the default KNN) falls
-behind, and in classification even these differences do not survive Holm
-correction (p between 0.06 and 0.13). The search did not beat the
-default configuration (RF: 0.716 against 0.701).
+the default HistGradientBoosting (regression). \textbf{Under the
+evaluated configurations, the families are not clearly separated:} the
+RF against the runner-up (searched Gradient Boosting) differs by 0.012
+AUC (95\% CI {[}\ensuremath{-}0.003; 0.026{]}), and in regression the HistGB differs
+from the searched Gradient Boosting by \ensuremath{-}0.001 {[}\ensuremath{-}0.027; 0.024{]}. Only
+the tree (and, with less evidence, the default KNN) falls behind, and in
+classification even these differences do not survive Holm correction (p
+between 0.06 and 0.13). Intervals here are unadjusted 95\% intervals;
+Holm adjusts only the p-values, within the family of comparisons of the
+best configuration against all others and the baseline. Non-significance
+reflects the limited resolution of 6 outer folds and does not establish
+equivalence. The search did not beat the default configuration (RF:
+0.716 against 0.701).
 
 \subsection{Confirmation on the
 holdout}\label{confirmation-on-the-holdout}
@@ -365,20 +383,20 @@ The frozen models were evaluated once on 25,011 contents from 10,484
 owners disjoint from development.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}@{}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1190}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2619}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1905}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2619}}@{}}
 \caption{Single evaluation on the holdout.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Task
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Model
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Result
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Baseline
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 95\% CI (owner bootstrap)
@@ -390,9 +408,9 @@ Baseline
 Task
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Model
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Result
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Baseline
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 95\% CI (owner bootstrap)
@@ -406,13 +424,13 @@ Baseline
 {[}0.716; 0.745{]}; PR AUC {[}0.905; 0.921{]} \\
 \texttt{log1p(owner\_count)} & HistGradientBoosting & RMSLE
 \textbf{0.625}; Spearman 0.330 & 0.664 (mean of \texttt{log1p}) &
-difference −0.038 {[}−0.044; −0.032{]} \\
+difference \ensuremath{-}0.038 {[}\ensuremath{-}0.044; \ensuremath{-}0.032{]} \\
 \end{longtable}
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.82\linewidth]{figures/report_holdout_roc_calibration.png}
-\caption{ROC curve, calibration and precision–recall curve of the single-owner (minority) class for the RF on the holdout}
+\caption{ROC curve, calibration and precision--recall curve of the single-owner (minority) class for the RF on the holdout}
 \label{fig:report-3}
 \end{figure}
 
