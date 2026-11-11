@@ -3,28 +3,38 @@
 \subsection{Context and motivation}\label{context-and-motivation}
 
 Agent skills are portable directories that combine structured metadata,
-natural-language instructions and, optionally, scripts and references;
-the \texttt{SKILL.md} file tells an LLM agent how to perform a task,
-which constraints to observe and which resources to use
-\cite{agentskills_spec}. Software reuse has been studied for decades
-\cite{haefliger2008code,lopes2017dejavu}, but skills have no central
-registry or package manager: reuse happens by copying folders between
-repositories. The same skill may appear in many repositories because it
-is clear and portable, because it belongs to a template or catalog,
-because a tool installed it, or because a single account duplicated it
-across its own projects. These explanations mix properties of the
-artifact and of the distribution context.
+natural-language instructions, and optional scripts and reference
+materials. At their core, a \texttt{SKILL.md} file specifies how an
+LLM-based agent should perform a task, including the constraints it must
+follow and the resources it may use \cite{agentskills_spec}. Although
+software reuse has been extensively studied
+\cite{haefliger2008code,lopes2017dejavu}, agent skills introduce
+distinct challenges because their distribution and reuse do not depend
+on a centralized registry or package management system. Instead, skills
+can be replicated by copying their directories across repositories.
+However, the presence of identical skill content in multiple
+repositories does not necessarily indicate independent adoption. Such
+replication may reflect characteristics of the skill itself, such as
+clarity and portability, or external factors, including its inclusion in
+templates or catalogs, automated installation by development tools, and
+duplication across projects maintained by the same account.
+Consequently, observed replication patterns may arise from both
+intrinsic characteristics of the skill and the context in which it is
+distributed, making it difficult to determine what drives reuse.
 
-GitSkills provides a large-scale corpus of skill occurrences, distinct
-contents and repository metadata \cite{gitskills2027}. Other studies
-examine specification defects \cite{zhang2026keepskillsreuse}, the
-effect of skills on software engineering tasks
-\cite{han2026sweskillsbench} and the evolution of prompts
-\cite{tafreshipour2025prompting}. A complementary and methodologically
-delicate question remains: which observable characteristics are
-associated with the diffusion of a skill across distinct owners, and how
-much of this predictability results from how the dataset itself was
-built?
+The GitSkills dataset provides an opportunity to investigate these
+patterns at scale by documenting skill occurrences, distinct contents,
+and associated repository metadata \cite{gitskills2027}. Previous
+research has examined defects in skill specifications
+\cite{zhang2026keepskillsreuse}, the effectiveness of skills in software
+engineering tasks \cite{han2026sweskillsbench}, and the evolution of
+prompts in software repositories \cite{tafreshipour2025prompting}.
+Building on this literature, the present study investigates whether
+observable characteristics of agent skills and their repositories are
+associated with replication across distinct GitHub owners. Importantly,
+it also examines whether the apparent predictability of such replication
+is influenced by the procedures used to construct the dataset, which may
+introduce systematic biases into the observed relationships.
 
 \subsection{Research problem}\label{research-problem}
 
