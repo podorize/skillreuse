@@ -122,23 +122,30 @@ cap}\label{validation-and-per-owner-cap}
 Validation is grouped by the \textbf{owner of the representative
 repository}: 3 repetitions of 3 folds (\texttt{StratifiedGroupKFold},
 seeds 2027--2029, strata by \texttt{owner\_count} bin), with the same
-partitions for all models. Because a few accounts concentrate the
-sample, we cap the contribution at \textbf{50 contents per owner} (in
-\texttt{content\_hash} order), leaving 17,733 contents. The value 50 was
-chosen \emph{after} observing the AUC's sensitivity to how concentrated
-owners are treated (Section 4.4); it is a data-dependent decision. Per
-fold we also measure the share of validation rows whose front-matter
-\texttt{name} appears in training and the metrics on the subset without
-overlap (a joint owner--\texttt{name} grouping forms a component with
-64\% of the rows and was discarded).
+partitions for all models. Disjointness concerns the representative
+owner only: because a content can appear under several owners, in 73\%
+of the validation rows (mean over folds) at least one occurrence owner
+also appears among the occurrence owners of the training contents. The
+attributes contain no owner identifier, but this validation does not
+guarantee complete owner separation. Because a few accounts concentrate
+the sample, we cap the contribution at \textbf{50 contents per owner}
+(in \texttt{content\_hash} order), leaving 17,733 contents. The value 50
+was chosen \emph{after} observing the AUC's sensitivity to concentrated
+owners (Section 4.4); it is a data-dependent decision. Per fold we also
+measure the share of validation rows whose front-matter \texttt{name}
+appears in training and the metrics on the subset without overlap (a
+joint owner--\texttt{name} grouping forms a component with 64\% of the
+rows and was discarded).
 
 \textbf{Target population.} The reported AUC does not characterize the
-whole ecosystem. It describes performance under an owner-balanced
-sampling protocol: contents with at least two repositories, each owner
-contributing at most 50 contents to validation (an unweighted cap, not a
-reweighting), and, for the holdout, owners with at most 37 contents
-each. Skills of heavily concentrated owners are underrepresented by
-design, and no weighting scheme restores their share of the ecosystem.
+whole ecosystem. It describes performance under a protocol that
+restricts owner concentration (owners with fewer contents still
+contribute unequal numbers, so owners are capped, not equalized):
+contents with at least two repositories, each owner contributing at most
+50 contents to validation (an unweighted cap, not a reweighting), and,
+for the holdout, owners with at most 37 contents each. Skills of heavily
+concentrated owners are underrepresented by design, and no weighting
+scheme restores their share of the ecosystem.
 
 \subsection{Models, baselines and
 tuning}\label{models-baselines-and-tuning}
@@ -168,9 +175,11 @@ confirmation, form a family corrected by Holm (\(\alpha=0.05\)); all
 other comparisons are exploratory: \textbf{H1} the clean attributes
 predict cross-owner reuse (AUC against 0.5); \textbf{H2} they reduce the
 RMSLE of \texttt{owner\_count} (clean RF against the mean of
-\texttt{log1p}); \textbf{H3a/H3b} skill adds to repository+catalog and
-vice versa (AUC); \textbf{H4} the shortcuts add to the clean attributes
-(RMSLE).
+\texttt{log1p}); \textbf{H3a/H3b} the full clean set outperforms
+repository+catalog and skill alone (AUC), views that differ from it by
+more than one block; an exploratory ablation (Section 4.3) removes
+exactly one block from the full set; \textbf{H4} the shortcuts add to
+the clean attributes (RMSLE).
 
 Interpretation uses permutation importance of the clean RF on
 owner-grouped folds (per column and per block) and out-of-fold partial
@@ -188,12 +197,12 @@ The holdout gathers contents outside the 200,000 sampled, with
 \texttt{repository\_count\ \textgreater{}=\ 2}, whose owners do not
 appear among the reused skills of the sample (development and original
 test), with the same cap of 50: 25,011 contents from 10,484 owners,
-sharing no owners or contents with the sample (at most 37 contents per
-owner, so the cap of 50 does not actually bind in the holdout; its
-balance comes from the exclusion of concentrated owners). Only the
-prevalence of \texttt{cross\_owner} (80.8\%) was inspected, as an
-integrity check. The chosen models are trained on the whole development
-set and evaluated \textbf{once}, with CIs by owner bootstrap (2,000
-resamples). Success requires the lower AUC bound above 0.5 and the upper
-bound of the RMSLE difference to the baseline below zero; a lock
-prevents re-evaluation without explicit declaration.
+sharing no representative owner and no content with the sample (at most
+37 contents per owner, so the cap of 50 does not actually bind in the
+holdout; its balance comes from the exclusion of concentrated owners).
+Only the prevalence of \texttt{cross\_owner} (80.8\%) was inspected, as
+an integrity check. The chosen models are trained on the whole
+development set and evaluated \textbf{once}, with CIs by owner bootstrap
+(2,000 resamples). Success requires the lower AUC bound above 0.5 and
+the upper bound of the RMSLE difference to the baseline below zero; a
+lock prevents re-evaluation without explicit declaration.

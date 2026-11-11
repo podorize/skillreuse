@@ -42,6 +42,9 @@ robustness:     ## limiares de donos, cap, classes de localizacao, alvo reposito
 	uv run skillreuse owner-models --exclude-owners-above 1000 --views $(V) --output-dir $(R)/robustness/excl1000
 	uv run skillreuse owner-models --cap-per-owner 50 --views $(V) --output-dir $(R)/robustness/cap50
 	for t in skills-dir other canonical; do uv run skillreuse owner-models --tier $$t --exclude-owners-above 500 --views skill repo+catalog clean_full --output-dir $(R)/robustness/tier_$$t; done
+	uv run skillreuse owner-models --cap-per-owner 50 --views clean_full minus_skill minus_repo minus_catalog minus_path --output-dir $(R)/robustness/ablation
+	uv run skillreuse owner-overlap
+	uv run skillreuse fork-audit
 	uv run skillreuse owner-models --cap-per-owner 50 --log-skewed --views skill clean_full --output-dir $(R)/robustness/log_skewed
 	uv run skillreuse owner-models --task regression --regression-target repo --exclude-owners-above 500 --views $(V) --output-dir $(R)/robustness/target_repository_count
 

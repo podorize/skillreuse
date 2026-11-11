@@ -46,7 +46,7 @@ def preprocess(markdown: str) -> str:
         shutil.copy2(source, FIGURE_DIR / output_name)
         return (
             "\n\\begin{figure}[!htbp]\n\\centering\n"
-            f"\\includegraphics[width=0.82\\linewidth]{{figures/{output_name}}}\n"
+            f"\\includegraphics[width=0.7\\linewidth]{{figures/{output_name}}}\n"
             f"\\caption{{{caption}}}\n"
             f"\\label{{fig:report-{figure_number}}}\n"
             "\\end{figure}\n"

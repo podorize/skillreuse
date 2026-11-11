@@ -59,16 +59,18 @@ repositories (\texttt{repository\_count\ \textgreater{}=\ 2}). Within
 this population, the objective is to distinguish replication across
 owners from duplication within a single owner's repositories, rather
 than to predict whether an arbitrary new skill will ever be reused. This
-restriction also explains the relatively high prevalence of cross-owner
-replication, which accounts for approximately 80\% of the analyzed
-contents. Moreover, the study adopts a cross-sectional predictive
-design: both the attributes and the targets are derived from the same
-July 2026 repository snapshot. Consequently, repository characteristics
-such as stars, forks, and last-push dates may have been observed after
-replication occurred. The models therefore assess associations with
-observed replication rather than predicting future adoption.
-Accordingly, the findings are interpreted as predictive associations,
-without claims of causality or skill quality \cite{shmueli2010explain}.
+restriction also explains the high prevalence of cross-owner
+replication: 75.3\% in the full eligible population, and about 80\% in
+the capped development sample and the holdout, where the sampling
+protocol raises it further. Moreover, the study adopts a cross-sectional
+predictive design: both the attributes and the targets are derived from
+the same July 2026 repository snapshot. Consequently, repository
+characteristics such as stars, forks, and last-push dates may have been
+observed after replication occurred. The models therefore assess
+associations with observed replication rather than predicting future
+adoption. Accordingly, the findings are interpreted as predictive
+associations, without claims of causality or skill quality
+\cite{shmueli2010explain}.
 
 Two methodological challenges further complicate the analysis.
 \textbf{The first concerns the measurement of reuse.} The number of
@@ -105,11 +107,11 @@ Together, these challenges motivate a predictive framework that
 distinguishes cross-owner replication from within-owner duplication
 while accounting for identifiable dataset-construction biases. The
 evaluation combines owner-grouped validation, controls for owner
-concentration, and a separate owner-disjoint holdout. Because the
-research hypotheses and evaluation protocol were finalized after an
-initial exploratory phase, only the single evaluation of the frozen
-models on the new holdout is treated as confirmatory; results obtained
-during development remain exploratory.
+concentration, and a separate holdout disjoint by representative owner.
+Because the research hypotheses and evaluation protocol were finalized
+after an initial exploratory phase, only the single evaluation of the
+frozen models on the new holdout is treated as confirmatory; results
+obtained during development remain exploratory.
 
 \subsection{Objectives and research
 questions}\label{objectives-and-research-questions}
@@ -124,7 +126,7 @@ questions}\label{objectives-and-research-questions}
   \textbf{RQ2 --- Predictability:} after excluding the identified
   construction-dependent shortcuts, can cross-owner reuse and the number
   of owners be predicted better than baselines, and is the estimate
-  confirmed on an owner-disjoint holdout?
+  confirmed on a holdout disjoint by representative owner?
 \item
   \textbf{RQ3 --- Origin of the signal:} what is the contribution of
   skill, repository and catalog attributes, which variables are
@@ -144,7 +146,7 @@ questions}\label{objectives-and-research-questions}
   hypotheses and confirmation on a new holdout. (iii) Evidence of a
   \textbf{modest predictive signal}, with a stable RMSLE gain across
   protocol variations, confirmed on unseen data (AUC 0.73) and
-  decomposed into blocks (an exploratory decomposition). (iv) A
+  decomposed into blocks by one-block ablations (exploratory). (iv) A
   \textbf{reproducible package} with the data revision, seeds, a
   five-minute reproduction path and a lock that prevents reusing the
   holdout.
