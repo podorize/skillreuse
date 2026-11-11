@@ -41,17 +41,19 @@ owner-grouped validation, nested tuning and a new owner-disjoint holdout
 (25,011 skills from 10,484 owners), a Random Forest reaches an AUC of
 0.73 (95\% CI 0.72--0.75) for cross-owner reuse, and a
 HistGradientBoosting model reduces the RMSLE of the number of owners by
-6\% relative to the mean baseline (0.625 versus 0.664). The estimates
-describe an owner-balanced sample (a cap per owner in validation, no
-concentrated owners in the holdout), not the whole ecosystem. The signal
-is modest, associative and cross-sectional (attributes and target come
-from the same snapshot, so this is not a prospective prediction of
-future reuse): the RMSLE gain is stable across protocol variations,
-whereas the AUC is sensitive to how concentrated owners are treated;
-skill and repository attributes contribute complementarily (an
-exploratory finding). The representative rule still decides which copy
-supplies the repository and path attributes, so residual selection
-effects cannot be ruled out.
+6\% relative to the mean baseline (0.625 versus 0.664). The population
+is skill contents observed in at least two repositories: the study
+separates cross-owner replication from within-owner duplication and does
+not predict initial reuse among all skills. The estimates describe an
+owner-balanced sample (a cap per owner in validation, no concentrated
+owners in the holdout), not the whole ecosystem. The signal is modest,
+associative and cross-sectional (attributes and target come from the
+same snapshot, so this is not a prospective prediction of future reuse):
+the RMSLE gain is stable across protocol variations, whereas the AUC is
+sensitive to how concentrated owners are treated; skill and repository
+attributes contribute complementarily (an exploratory finding). The
+representative rule still decides which copy supplies the repository and
+path attributes, so residual selection effects cannot be ruled out.
 
 \end{abstract}
 
