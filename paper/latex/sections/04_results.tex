@@ -287,9 +287,14 @@ catalog (0.016) and path (≈ 0); among columns, \texttt{log\_stars}
 dominates (0.056), followed by \texttt{log\_forks} (0.021) and
 \texttt{push\_recency\_days} (0.016). In regression, repository (0.019)
 and skill (0.018) weigh similarly, and the largest column is the license
-(0.013), followed by catalog size (0.011) and path depth (0.005).
-Uncertainties are large (6 folds), and correlated attributes share
-importance.
+(0.013), followed by catalog size (0.011) and path depth (0.005). These
+values are the largest measured permutation-importance decreases under
+the evaluated model and data distribution, not the determinants of
+reuse. Uncertainties are large (6 folds), and stars and forks are
+correlated (as are several skill-structure attributes), so permutation
+can split or shift importance among them unpredictably: the ranking
+between \texttt{log\_stars} and \texttt{log\_forks}, in particular,
+should not be read as separate effects.
 
 \begin{figure}[!htbp]
 \centering
@@ -298,7 +303,9 @@ importance.
 \label{fig:report-2}
 \end{figure}
 
-The partial dependence shows the \textbf{direction}. The probability of
+The partial dependence shows the \textbf{direction} of the model's
+response, and may evaluate combinations of attributes that are rare in
+the data (for example many forks with no stars). The probability of
 cross-owner reuse rises with stars (0.78 with none to 0.85 at about 540,
 mostly between 1 and 12 stars) and forks (0.80 to 0.83), and also with
 the \textbf{time since the last push}: repositories pushed more than
@@ -310,8 +317,9 @@ from 2 to 3). The unexpected result is the license: what matters is its
 development contents, median of zero stars) host skills with 6.6 owners
 on average, against 3.7 for MIT, and the model predicts 1.48 against
 1.29--1.30 for \texttt{log1p(owner\_count)} for any license; they also
-have more \texttt{canonical} skills (34\% against 24\%). We do not know
-the mechanism: it may reflect repositories created automatically or by
+have more \texttt{canonical} skills (34\% against 24\%). This is an
+exploratory finding, not an explanation of reuse. We do not know the
+mechanism: it may reflect repositories created automatically or by
 installers, and the data do not separate this from an effect of the
 missing license itself.
 

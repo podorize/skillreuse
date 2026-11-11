@@ -15,15 +15,19 @@ The block decomposition answers RQ3: skill (file structure) and
 repository (visibility and activity) contribute complementarily (AUC
 0.65--0.67 each, 0.72 together). Permutation importance and partial
 dependence associate cross-owner reuse mainly with \textbf{stars and
-forks} and with repositories whose \textbf{last push is old}, which is
-consistent with skills in more visible repositories, and in repositories
-that have been inactive for longer, being copied by other owners. The
-association admits more than one explanation (visibility that generates
-copies, accumulated exposure time, or repositories valued for containing
-skills that were already copied), and the data do not separate them. In
-the regression, what stands out is the \textbf{absence of a license}
-and, for large catalogs, the number of skills in the repository; the
-mechanism of the first is unknown (Section 4.5).
+forks} (stars give the largest permutation-importance decrease in the
+evaluated model, but the two are correlated and their individual shares
+are not separable) and with repositories whose \textbf{last push is
+old}, which is consistent with skills in more visible repositories, and
+in repositories that have been inactive for longer, being copied by
+other owners. The association admits more than one explanation
+(visibility that generates copies, accumulated exposure time, or
+repositories valued for containing skills that were already copied), and
+the data do not separate them. In the regression, what stands out is the
+\textbf{absence of a license} and, for large catalogs, the number of
+skills in the repository; the license result is an exploratory finding
+with unknown mechanism (Section 4.5), not a general explanation of
+reuse.
 
 \textbf{Cross-sectional, not prospective.} Attributes and labels come
 from the same July 2026 snapshot. Stars, forks and last-push date were
@@ -125,7 +129,11 @@ confirmatory claim. Near-identical variants of the same skill may still
 lie on both sides of the split.
 
 \textbf{Interpretation and ethics.} Permutation importance and partial
-dependence are associative, depend on the model and vary across folds;
+dependence are associative; correlation among attributes (stars and
+forks, several structure counts) can distribute importance
+unpredictably, and partial dependence can evaluate rare combinations, so
+strongest-feature statements are specific to the evaluated model and
+data distribution. They depend on the model and vary across folds;
 nothing here establishes causality. The data are public and GitSkills
 anonymizes commit authors; we omit owner identifiers, and the analysis
 does not aim to evaluate individuals.
