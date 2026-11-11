@@ -31,6 +31,7 @@ COMMANDS: dict[str, tuple[str, str, str]] = {
     "interpretation": ("skillreuse.interpretation", "interpretation_main", "PDP e limiar"),
     "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
     "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
+    "fork-audit": ("skillreuse.owner", "fork_audit_main", "forks e efeito sobre cross_owner"),
     "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),
     "audit-text": ("skillreuse.explain", "audit_text_main", "artefatos textuais"),
     "report": ("skillreuse.report", "report_main", "tabelas e figuras do relatorio"),

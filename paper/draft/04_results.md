@@ -53,7 +53,7 @@ With the shortcuts out, 17,733 contents (cap of 50 per owner) and owner-grouped 
 | H3b | clean against skill (AUC) | 0.716 vs 0.660 | +0.056 [0.040; 0.072] | < 0.001 |
 | H4 | clean+shortcuts against clean (RMSLE) | 0.637 vs 0.679 | −0.042 [−0.055; −0.029] | < 0.001 |
 
-: Pre-specified hypotheses on development (exploratory until the confirmation of Section 4.7).
+: Hypotheses formulated before the confirmation, evaluated on development (exploratory until Section 4.7).
 
 The 95% intervals are unadjusted (paired differences with the Nadeau–Bengio variance correction); the p-values are Holm-adjusted over H1–H4. All five comparisons are rejected after Holm correction, and none of the conclusions depends on the adjustment alone, since every interval excludes zero. There is a real but modest signal (AUC 0.72, a 6% RMSLE reduction). Skill and repository contribute **complementarily**: each block alone sits at AUC 0.65–0.67 and the combination at 0.72 (H3a, H3b). The shortcuts add to the regression (H4) but alone do not predict cross-owner reuse (AUC 0.50): their regression gain comes from correlation with the number of copies, not from cross-owner reuse.
 
