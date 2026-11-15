@@ -197,4 +197,8 @@ def run_download(output: Path, manifest_path: Path, max_workers: int = 4,) -> di
         json.dumps(manifest, indent=2, ensure_ascii=True) + "\n",
         encoding="utf-8",
     )
+    print(
+        f"Manifesto de download salvo em {manifest_path} "
+        f"({len(files)} arquivos, {manifest['total_bytes'] / 1024**3:.2f} GiB)"
+    )
     return manifest

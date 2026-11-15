@@ -16,7 +16,7 @@ from utils.preprocess import run_pipeline
 
 DEFAULT_OUTPUT = Path("data/raw/gitskills-full")
 
-DEFAULT_MANIFEST = Path("results/tables/full_download_manifest.json")
+DEFAULT_MANIFEST = Path("data/raw/gitskills-full/manifest.json")
 
 DEFAULT_ARTIFACTS = Path("data/raw/gitskills-full/artifacts/*.parquet")
 
