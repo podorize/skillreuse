@@ -10,7 +10,7 @@ import sys
 COMMANDS: dict[str, tuple[str, str, str]] = {
     "check": ("skillreuse.cli", "check", "mostra as versoes do ambiente"),
     "download": ("skillreuse.data", "download_main", "baixa GitSkills (revisao fixa)"),
-    "build": ("skillreuse.data", "build_main", "agrega repository_count e amostra 200 mil"),
+    "build": ("skillreuse.build", "build_main", "agrega repository_count e amostra 200 mil"),
     "features": ("skillreuse.features", "features_main", "atributos e divisao externa"),
     "target": ("skillreuse.models", "prepare_target_main", "alvo de contagem (reused=1)"),
     "target-eda": ("skillreuse.report", "target_eda_main", "EDA do alvo"),
