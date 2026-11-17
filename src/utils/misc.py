@@ -1,3 +1,5 @@
+import json
+from typing import Any
 import shutil
 from pathlib import Path
 
@@ -20,3 +22,19 @@ def ensure_disk_space(output: Path, files: list[dict]) -> None:
             f"Livres={free_bytes / 1024**3:.2f} GiB, "
             f"faltam baixar={missing_bytes / 1024**3:.2f} GiB."
         )
+
+def save_manifest(
+    manifest: dict[str, Any],
+    output: Path,
+) -> None:
+    """Salva um manifesto em formato JSON."""
+    
+    if output.suffix != ".json":
+        output = output / "manifest.json"
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    output.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=True) + "\n",
+        encoding="utf-8",
+    )

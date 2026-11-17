@@ -5,7 +5,7 @@ from utils.download import run_download
 
 DEFAULT_OUTPUT = Path("data/raw/gitskills-full")
 
-DEFAULT_MANIFEST = Path("data/raw/gitskills-full/manifest.json")
+DEFAULT_MANIFEST = Path("data/raw/gitskills-full")
 
 # ==========================================================================
 # Baixa e valida as tabelas essenciais do espelho Parquet do GitSkills.
@@ -22,6 +22,5 @@ def download_main() -> None:
     args = download_parse_args()
     manifest = run_download(args.output, args.manifest, 4)
     print(
-        f"Download concluido: {manifest['file_count']} arquivos, "
-        f"{manifest['total_bytes'] / 1024**3:.2f} GiB."
-    )
+        f"Manifesto de download salvo em {args.output} "
+        f"({manifest['file_count']} arquivos, {manifest['total_bytes'] / 1024**3:.2f} GiB)")
