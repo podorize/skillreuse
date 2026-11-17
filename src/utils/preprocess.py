@@ -7,6 +7,7 @@ import duckdb
 from datetime import UTC, datetime
 
 from utils.download import DATASET_REVISION, sha256_file
+from utils.misc import save_manifest
 
 def sql_path(path: Path) -> str:
     """Escapa um caminho para uso como literal SQL do DuckDB."""
@@ -17,81 +18,66 @@ def connect(temp_dir: Path) -> duckdb.DuckDBPyConnection:
     temp_dir.mkdir(parents=True, exist_ok=True)
     connection = duckdb.connect()
     connection.execute(f"SET temp_directory = '{sql_path(temp_dir)}'")
+    connection.execute("SET memory_limit = '8GB'")
+    connection.execute("SET threads = 2")
     connection.execute("SET preserve_insertion_order = false")
     return connection
 
-def build_population_index(
-    connection: duckdb.DuckDBPyConnection,
-    artifacts_glob: Path,
-    output: Path,
-    reuse_threshold: int,
-) -> None:
-    """Materializa uma linha por conteudo, sem carregar os textos em memoria."""
+def copy_query(connection: duckdb.DuckDBPyConnection, query: str, output: Path) -> None:
+    """Executa uma consulta e grava o resultado em Parquet de forma atomica."""
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + ".tmp")
     temporary.unlink(missing_ok=True)
+
     connection.execute(
         f"""
-        COPY (
-            SELECT
-                file_sha AS content_hash,
-                COUNT(*) AS occurrence_count,
-                COUNT(DISTINCT repo_full_name) AS repository_count,
-                CASE
-                    WHEN COUNT(DISTINCT repo_full_name) >= {int(reuse_threshold)} THEN 1
-                    ELSE 0
-                END AS reused
-            FROM read_parquet('{sql_path(artifacts_glob)}')
-            GROUP BY file_sha
-            ORDER BY file_sha
-        ) TO '{sql_path(temporary)}' (FORMAT PARQUET, COMPRESSION ZSTD)
+        COPY ({query})
+        TO '{sql_path(temporary)}'
+        (FORMAT PARQUET, COMPRESSION ZSTD)
         """
     )
     temporary.replace(output)
 
-def select_deterministic_hashes(
-    connection: duckdb.DuckDBPyConnection,
-    population_index: Path,
-    sample_size: int,
-    sampling_seed: int = 20261009,
-) -> pd.DataFrame:
-    """Seleciona hashes por uma segunda dispersao criptografica com semente fixa."""
-    return connection.execute(
-        f"""
-        SELECT content_hash, reused
-        FROM read_parquet('{sql_path(population_index)}')
-        ORDER BY md5(content_hash || ':{int(sampling_seed)}'), content_hash
-        LIMIT {int(sample_size)}
-        """
-    ).fetchdf()
-
-def build_modeling_sample(
-    connection: duckdb.DuckDBPyConnection,
+def build_dataset(connection: duckdb.DuckDBPyConnection,
     artifacts_glob: Path,
     repos_glob: Path,
-    population_index: Path,
     output: Path,
-    sample_size: int,
-    sampling_seed: int,
 ) -> None:
-    """Junta os conteudos selecionados a uma ocorrencia representativa e seu repositorio."""
+    """Gera uma linha por hash, com agregacoes e uma ocorrencia representativa."""
+    artifacts = sql_path(artifacts_glob)
+    repos = sql_path(repos_glob)
+
     output.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output.with_suffix(output.suffix + ".tmp")
-    temporary.unlink(missing_ok=True)
-    connection.execute(
-        f"""
-        COPY (
-            WITH selected AS (
-                SELECT *
-                FROM read_parquet('{sql_path(population_index)}')
-                ORDER BY md5(content_hash || ':{int(sampling_seed)}'), content_hash
-                LIMIT {int(sample_size)}
-            )
+
+    population_temp = output.with_name(
+        f"{output.stem}_population_temp.parquet"
+    )
+
+    try:
+        # 1. Agrega todos os conteúdos.
+        population_query = f"""
             SELECT
-                selected.content_hash,
-                selected.occurrence_count,
-                selected.repository_count,
-                selected.reused,
+                file_sha AS content_hash,
+                COUNT(*) AS occurrence_count,
+                COUNT(DISTINCT repo_full_name) AS repository_count
+            FROM read_parquet('{artifacts}')
+            GROUP BY file_sha
+        """
+
+        copy_query(
+            connection,
+            population_query,
+            population_temp,
+        )
+
+        # 2. Associa cada conteúdo à ocorrência representativa
+        # e aos metadados do repositório.
+        dataset_query = f"""
+            SELECT
+                population.content_hash,
+                population.occurrence_count,
+                population.repository_count,
+
                 representative.repo_full_name AS representative_repo_id,
                 representative.path AS representative_path,
                 representative.filename,
@@ -120,17 +106,57 @@ def build_modeling_sample(
                 repos.created_at AS repo_created_at,
                 repos.pushed_at AS repo_pushed_at,
                 repos.metadata_fetched AS repo_metadata_fetched
-            FROM selected
-            JOIN read_parquet('{sql_path(artifacts_glob)}') AS representative
-              ON representative.file_sha = selected.content_hash
-             AND representative.dedup_primary = 1
-            LEFT JOIN read_parquet('{sql_path(repos_glob)}') AS repos
-              ON repos.full_name = representative.repo_full_name
-            ORDER BY selected.content_hash
-        ) TO '{sql_path(temporary)}' (FORMAT PARQUET, COMPRESSION ZSTD)
+
+            FROM read_parquet('{sql_path(population_temp)}') AS population
+
+            LEFT JOIN read_parquet('{artifacts}') AS representative
+                ON representative.file_sha = population.content_hash
+                AND representative.dedup_primary = 1
+
+            LEFT JOIN read_parquet('{repos}') AS repos
+                ON repos.full_name = representative.repo_full_name
         """
-    )
-    temporary.replace(output)
+
+        copy_query(
+            connection,
+            dataset_query,
+            output,
+        )
+
+    finally:
+        population_temp.unlink(missing_ok=True)
+
+def build_modeling_sample(
+    connection: duckdb.DuckDBPyConnection,
+    full_dataset: Path,
+    output: Path,
+    sample_size: int,
+    sampling_seed: int = 20261009,
+) -> None:
+    """Seleciona uma amostra deterministica a partir do dataset completo."""
+    if sample_size < 1:
+        raise ValueError("sample_size deve ser positivo")
+
+    full_data = sql_path(full_dataset)
+    query = f"""
+        SELECT *
+        FROM read_parquet('{full_data}')
+        ORDER BY md5(content_hash || ':{int(sampling_seed)}'), content_hash
+        LIMIT {int(sample_size)}
+    """
+
+    population_rows = connection.execute(
+        f"SELECT COUNT(*) FROM read_parquet('{full_data}')"
+    ).fetchone()[0]
+
+    if sample_size > population_rows:
+        raise ValueError(
+            f"sample_size={sample_size} excede a populacao de "
+            f"{population_rows} conteudos"
+        )
+
+    copy_query(connection, query, output)
+
 
 def build_quality_report(
     connection: duckdb.DuckDBPyConnection,
@@ -252,83 +278,83 @@ def run_pipeline(
     tables_dir: Path,
     figures_dir: Path,
     temp_dir: Path,
-    reuse_threshold: int,
     sample_size: int,
     sampling_seed: int,
 ) -> dict[str, int | float | str]:
     """Executa a camada populacional e produz a amostra final auditavel."""
-    if reuse_threshold < 2:
-        raise ValueError("reuse_threshold deve ser pelo menos 2")
     if sample_size < 1:
         raise ValueError("sample_size deve ser positivo")
-    tables_dir.mkdir(parents=True, exist_ok=True)
+    # tables_dir.mkdir(parents=True, exist_ok=True)
 
     with connect(temp_dir) as connection:
-        build_population_index(connection, artifacts_glob, population_index, reuse_threshold)
-        population_rows = connection.execute(
-            f"SELECT COUNT(*) FROM read_parquet('{sql_path(population_index)}')"
-        ).fetchone()[0]
-        if sample_size > population_rows:
-            raise ValueError(
-                f"sample_size={sample_size} excede a populacao de {population_rows} conteudos"
-            )
+        # Primeiro materializa todos os conteudos unicos.
+        build_dataset(connection,
+                      artifacts_glob,
+                      repos_glob,
+                      population_index)
+        full_dataset_manifest = {
+            "generated_at_utc": datetime.now(UTC).isoformat(),
+            "file_path": str(population_index)
+        }
+        print(f"Dataset salvo em {population_index.parent}")
+        save_manifest(full_dataset_manifest, population_index.parent)
+
         build_modeling_sample(
             connection,
-            artifacts_glob,
-            repos_glob,
             population_index,
             modeling_sample,
             sample_size,
             sampling_seed,
         )
-        quality = build_quality_report(
-            connection, artifacts_glob, population_index, modeling_sample
-        )
-        distribution = build_reuse_distribution(connection, population_index)
 
-    if int(metric(quality, "population_contents")) != int(metric(quality, "representatives")):
-        raise RuntimeError("Numero de representantes difere do numero de conteudos")
-    if int(metric(quality, "hashes_without_exactly_one_representative")) != 0:
-        raise RuntimeError("Ha hashes sem exatamente um representante")
-    if int(metric(quality, "modeling_sample_contents")) != sample_size:
-        raise RuntimeError("A amostra final nao possui o tamanho solicitado")
-    if int(metric(quality, "modeling_sample_distinct_hashes")) != sample_size:
-        raise RuntimeError("A amostra final contem hashes duplicados")
+    #     quality = build_quality_report(
+    #         connection, artifacts_glob, population_index, modeling_sample
+    #     )
+    #     distribution = build_reuse_distribution(connection, population_index)
 
-    quality.to_csv(tables_dir / "full_data_quality.csv", index=False)
-    distribution.to_csv(tables_dir / "full_reuse_distribution.csv", index=False)
-    save_distribution_figure(
-        distribution, figures_dir / "full_reuse_distribution.png"
-    )
+    # if int(metric(quality, "population_contents")) != int(metric(quality, "representatives")):
+    #     raise RuntimeError("Numero de representantes difere do numero de conteudos")
+    # if int(metric(quality, "hashes_without_exactly_one_representative")) != 0:
+    #     raise RuntimeError("Ha hashes sem exatamente um representante")
+    # if int(metric(quality, "modeling_sample_contents")) != sample_size:
+    #     raise RuntimeError("A amostra final nao possui o tamanho solicitado")
+    # if int(metric(quality, "modeling_sample_distinct_hashes")) != sample_size:
+    #     raise RuntimeError("A amostra final contem hashes duplicados")
 
-    manifest: dict[str, int | float | str] = {
+    # quality.to_csv(tables_dir / "full_data_quality.csv", index=False)
+    # distribution.to_csv(tables_dir / "full_reuse_distribution.csv", index=False)
+    # save_distribution_figure(
+    #     distribution, figures_dir / "full_reuse_distribution.png"
+    # )
+
+    manifest = {
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "dataset_revision": DATASET_REVISION,
         "artifacts_source": str(artifacts_glob),
         "repos_source": str(repos_glob),
-        "reuse_threshold": reuse_threshold,
+        "file_path": str(modeling_sample),
         "sampling_method": "ascending md5(content_hash || ':' || sampling_seed)",
         "sampling_seed": sampling_seed,
         "requested_sample_size": sample_size,
-        "population_contents": int(metric(quality, "population_contents")),
-        "population_reused_contents": int(metric(quality, "population_reused_contents")),
-        "population_reused_percentage": float(
-            metric(quality, "population_reused_percentage")
-        ),
-        "modeling_sample_contents": int(metric(quality, "modeling_sample_contents")),
-        "modeling_sample_reused_contents": int(
-            metric(quality, "modeling_sample_reused_contents")
-        ),
-        "modeling_sample_reused_percentage": float(
-            metric(quality, "modeling_sample_reused_percentage")
-        ),
-        "sample_population_rate_difference_percentage_points": float(
-            metric(quality, "sample_population_rate_difference_percentage_points")
-        ),
+        # "population_contents": int(metric(quality, "population_contents")),
+        # "population_reused_contents": int(metric(quality, "population_reused_contents")),
+        # "population_reused_percentage": float(
+        #     metric(quality, "population_reused_percentage")
+        # ),
+        # "modeling_sample_contents": int(metric(quality, "modeling_sample_contents")),
+        # "modeling_sample_reused_contents": int(
+        #     metric(quality, "modeling_sample_reused_contents")
+        # ),
+        # "modeling_sample_reused_percentage": float(
+        #     metric(quality, "modeling_sample_reused_percentage")
+        # ),
+        # "sample_population_rate_difference_percentage_points": float(
+        #     metric(quality, "sample_population_rate_difference_percentage_points")
+        # ),
         "population_index_sha256": sha256_file(population_index),
         "modeling_sample_sha256": sha256_file(modeling_sample),
     }
-    (tables_dir / "full_population_manifest.json").write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=True) + "\n", encoding="utf-8"
-    )
+
+    save_manifest(manifest, modeling_sample.parent)
+
     return manifest

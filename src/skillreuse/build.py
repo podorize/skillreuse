@@ -8,9 +8,9 @@ DEFAULT_ARTIFACTS = Path("data/raw/gitskills-full/artifacts/*.parquet")
 
 DEFAULT_REPOS = Path("data/raw/gitskills-full/repos/*.parquet")
 
-DEFAULT_INDEX = Path("data/interim/full_population_index.parquet")
+DEFAULT_INDEX = Path("data/interim/preprocessed_data.parquet")
 
-DEFAULT_SAMPLE = Path("data/processed/final_modeling_sample.parquet")
+DEFAULT_SAMPLE = Path("data/processed/preprocessed_modeling_sample.parquet")
 
 DEFAULT_TABLES = Path("results/tables")
 
@@ -46,9 +46,8 @@ def build_main() -> None:
         tables_dir=args.tables_dir,
         figures_dir=args.figures_dir,
         temp_dir=args.temp_dir,
-        reuse_threshold=args.reuse_threshold,
         sample_size=args.sample_size,
         sampling_seed=args.sampling_seed,
     )
-    print("Populacao e amostra final geradas com sucesso.")
-    print(json.dumps(manifest, indent=2, ensure_ascii=True))
+
+    print(f"Manifesto gerado em {manifest['generated_at_utc']} e salvo em {args.modeling_sample}")

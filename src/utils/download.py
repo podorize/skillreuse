@@ -14,6 +14,7 @@ from typing import Any
 from tqdm import tqdm
 
 from utils.hashing import sha256_file
+from utils.misc import save_manifest
 
 DATASET_ID = "mvaccargiu/gitskills"
 DATASET_REVISION = "ebab17454a7c236f8f26b183567f1a126f42e3f8"
@@ -183,7 +184,7 @@ def run_download(output: Path, manifest_path: Path, max_workers: int = 4,) -> di
         max_workers=max_workers,
     )
 
-    manifest: dict[str, Any] = {
+    manifest = {
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "dataset_id": DATASET_ID,
         "revision": DATASET_REVISION,
@@ -192,13 +193,7 @@ def run_download(output: Path, manifest_path: Path, max_workers: int = 4,) -> di
         "total_bytes": sum(item["size"] for item in files),
         "files": files,
     }
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=True) + "\n",
-        encoding="utf-8",
-    )
-    print(
-        f"Manifesto de download salvo em {manifest_path} "
-        f"({len(files)} arquivos, {manifest['total_bytes'] / 1024**3:.2f} GiB)"
-    )
+
+    save_manifest(manifest, manifest_path)
+    
     return manifest
