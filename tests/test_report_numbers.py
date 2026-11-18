@@ -1,4 +1,4 @@
-"""Confere os numeros citados no relatorio (paper/draft) contra os artefatos em results/owner."""
+"""Confere os numeros citados no artigo (paper/draft) contra os arquivos de resultado."""
 
 import json
 from pathlib import Path
@@ -6,11 +6,11 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-R = Path("results/owner")
+R = Path("results")
 DRAFT = Path("paper/draft")
 pytestmark = pytest.mark.skipif(
-    not (R / "holdout" / "holdout_results.json").exists() or not DRAFT.exists(),
-    reason="artefatos ou rascunho ausentes",
+    not (R / "phase6" / "holdout_results.json").exists() or not DRAFT.exists(),
+    reason="resultados ou rascunho ausentes",
 )
 
 
@@ -18,116 +18,77 @@ def text() -> str:
     return "\n".join(p.read_text() for p in sorted(DRAFT.glob("0[0-8]_*.md")))
 
 
-def neg(x: float, nd: int = 3) -> str:
-    return ("−" if x < 0 else "") + f"{abs(x):.{nd}f}"
+def load(path: str) -> dict:
+    return json.loads((R / path).read_text())
 
 
-def thousands(n: int) -> str:
-    return f"{n:,}"
-
-
-def check(doc: str, expected: list[str]) -> None:
+def check(expected: list[str]) -> None:
+    doc = text()
     missing = [s for s in expected if s not in doc]
-    assert not missing, f"nao encontrado no relatorio: {missing}"
+    assert not missing, f"nao encontrado no artigo: {missing}"
+
+
+def ci(pair: list[float], nd: int = 3) -> str:
+    return f"[{pair[0]:.{nd}f}; {pair[1]:.{nd}f}]"
+
+
+def test_data_and_split_numbers() -> None:
+    m = load("phase2/manifest.json")
+    s = m["collection_status"]
+    check([f"{s['datada']:,}", f"{m['contents_dated']:,}", f"{m['contents_after_cap']:,}",
+           f"{m['dev_rows']:,}", f"{m['holdout_rows']:,}", f"{m['dev_authors']:,}",
+           f"{m['holdout_authors']:,}", f"{s['data_posterior_ao_retrato']:,}"])
+    c = load("phase1/manifest.json")["counts"]
+    check([f"{c['population_contents']:,}", f"{c['occurrences']:,}",
+           f"{c['occurrences_outside_aggregators']:,}", f"{c['occurrences_in_aggregators']:,}"])
+
+
+def test_window_and_eligibility() -> None:
+    w = load("phase3/window.json")
+    e = load("phase3/eda_summary.json")
+    check([f"W = {w['W']} days", f"{w['coverage']['30']:.1%}", f"{w['coverage']['60']:.1%}",
+           f"{w['lag_quantiles']['0.5']:.1f} days", f"{e['dev_eligible_rows']:,}",
+           f"{e['replicated_rate']:.1%}"])
+
+
+def test_model_selection_numbers() -> None:
+    spot = pd.read_csv(R / "phase4" / "spot_summary.csv").set_index("config")
+    check([f"{spot.loc[a, 'roc_auc_mean']:.3f} ± {spot.loc[a, 'roc_auc_std']:.3f}"
+           for a in spot.index])
+    nested = pd.read_csv(R / "phase4" / "nested_summary.csv").set_index("config")["mean"]
+    check([f"{v:.3f}" for v in nested.to_numpy()])
+    assert load("phase4/winner.json")["winner"] == "logistic|default"
 
 
 def test_holdout_numbers() -> None:
-    r = json.loads((R / "holdout" / "holdout_results.json").read_text())
-    c, g = r["classification"], r["regression"]
-    lo, hi = c["roc_auc_ci95"]
-    check(text(), [
-        f"{c['roc_auc']:.3f}", f"[{lo:.3f}; {hi:.3f}]", f"{c['pr_auc']:.3f}",
-        f"{c['brier']:.3f}", f"{c['log_loss']:.3f}", f"{g['rmsle']:.3f}",
-        f"{g['rmsle_baseline_mean_log1p']:.3f}", f"{g['spearman']:.3f}",
-        f"[{neg(g['rmsle_diff_ci95'][0])}; {neg(g['rmsle_diff_ci95'][1])}]",
-        thousands(r["holdout_rows"]), thousands(r["holdout_owners"]),
-    ])
+    h = load("phase6/holdout_results.json")
+    c = load("phase6/control_popularity.json")
+    assert h["H1"]["success"] and c["C1_popularity"]["success"]
+    check([f"{h['H1']['auc']:.3f}", ci(h["H1"]["ci95"]), f"{h['holdout_rows']:,}",
+           f"{h['holdout_authors']:,}", f"{h['point']['size']['roc_auc']:.3f}",
+           ci(h["view_ci95"]["size"]), f"{h['text_minus_size']['diff']:.3f}",
+           ci(h["text_minus_size"]["ci95"]),
+           f"{c['point']['origin_pop']['roc_auc']:.3f}",
+           f"{c['point']['origin_pop+text']['roc_auc']:.3f}", ci(c["view_ci95"]["origin_pop"]),
+           ci(c["view_ci95"]["origin_pop+text"]), f"{c['C1_popularity']['diff']:.3f}",
+           ci(c["C1_popularity"]["ci95"]), f"{h['threshold']['precision']:.1%}",
+           f"{h['threshold']['balanced_accuracy']:.3f}", f"{h['point']['text']['pr_auc']:.3f}"])
 
 
-def test_threshold_numbers() -> None:
-    p = R / "interpretation" / "threshold_results.json"
-    if not p.exists():
-        pytest.skip("interpretacao ausente")
-    t = json.loads(p.read_text())
-    h, c = t["holdout"], t["holdout"]["confusion"]
-    true_min = c["true_single_owner_pred_single_owner"] + c["true_single_owner_pred_cross_owner"]
-    check(text(), [
-        f"{t['threshold']:.2f}", f"{h['balanced_accuracy']:.3f}",
-        f"[{h['balanced_accuracy_ci95'][0]:.3f}; {h['balanced_accuracy_ci95'][1]:.3f}]",
-        f"{h['minority_pr_auc']:.3f}",
-        f"[{h['minority_pr_auc_ci95'][0]:.3f}; {h['minority_pr_auc_ci95'][1]:.3f}]",
-        f"{h['minority_recall']:.2f}", f"{h['minority_precision']:.2f}",
-        f"{t['dev_balanced_accuracy_at_threshold']:.3f}",
-        f"{t['dev_balanced_accuracy_at_0.5']:.3f}",
-        thousands(c["true_single_owner_pred_single_owner"]), thousands(true_min),
-        thousands(c["true_cross_owner_pred_single_owner"]),
-    ])
+def test_robustness_numbers() -> None:
+    s = load("phase7/sensitivity.json")
+    for k in ("window_30", "window_90", "all_copies_dated", "temporal", "name_unseen"):
+        check([f"{s[k]['auc']:.3f}", ci(s[k]["ci95"]), f"{s[k]['rows']:,}"])
+    for k in ("aggregators_agg500", "aggregators_aggnone"):
+        if isinstance(s[k], dict):
+            check([f"{s[k]['auc']:.3f}", ci(s[k]["ci95"]), f"{s[k]['rows']:,}"])
 
 
-def test_eda_and_audit_numbers() -> None:
-    e = json.loads((R / "eda_summary.json").read_text())
-    reused, cross = e["population_reused_by_repo"], e["population_cross_owner"]
-    check(text(), [
-        f"{e['share_same_owner_only'] * 100:.1f}%", f"{e['top1_owner_share'] * 100:.1f}%",
-        f"{e['top5_owner_share'] * 100:.1f}%", thousands(reused), thousands(cross),
-        thousands(reused - cross), f"{(reused - cross) / reused * 100:.1f}%",
-        f"{e['representative_rule_match'] * 100:.1f}%", thousands(e["dev_rows"]),
-        thousands(e["dev_owners"]), f"{e['name_empty_share'] * 100:.1f}%",
-        thousands(e["population_contents"]),
-    ])
-    audit = pd.read_csv(R / "audit_by_repository_count.csv")
-    exp = []
-    for _, row in audit.iterrows():
-        exp += [thousands(int(row["n"])), f"{row['p_representative_canonical'] * 100:.1f}%",
-                f"{row['mean_share_of_copies_canonical'] * 100:.1f}%"]
-    check(text(), exp)
-
-
-def test_primary_hypotheses_numbers() -> None:
-    h = pd.read_csv(R / "primary" / "primary_hypotheses.csv")
-    exp = []
-    for _, row in h.iterrows():
-        exp += [f"{row['score_a']:.3f}", f"{row['score_b']:.3f}"]
-        assert row["p_holm_family"] < 0.05, row["hypothesis"]
-    check(text(), exp)
-    assert "All five comparisons are rejected after Holm correction" in text()
-
-
-def test_sensitivity_numbers() -> None:
-    s = pd.read_csv(R / "figures" / "sensitivity_owner_limit.csv")
-    exp = []
-    for _, row in s.iterrows():
-        exp += [f"{row['auc_clean_rf']:.3f}", f"{row['rmsle_gain_clean_rf']:.3f}"]
-    check(text(), exp)
-
-
-def test_tuning_numbers() -> None:
-    c = pd.read_csv(R / "final" / "classification_nested_summary.csv").set_index("config")
-    g = pd.read_csv(R / "final" / "regression_nested_summary.csv").set_index("config")
-    check(text(), [
-        f"{c.loc['random_forest|default', 'mean']:.3f}",
-        f"{c.loc['random_forest|tuned', 'mean']:.3f}",
-        f"{g.loc['hist_gradient_boosting|default', 'mean']:.3f}",
-        f"{g.loc['baseline', 'mean']:.3f}",
-        f"{g.loc['random_forest|default', 'mean']:.3f}",
-    ])
-
-
-def test_feature_eda_numbers() -> None:
-    p = R / "feature_eda" / "feature_eda_summary.json"
-    if not p.exists():
-        pytest.skip("feature EDA ausente")
-    f = json.loads(p.read_text())
-    check(text(), [
-        str(f["matrix_columns_after_preprocessing"]), f"{f['cross_owner_prevalence'] * 100:.1f}%",
-        f"{f['max_missing_share'] * 100:.1f}%",
-        str(f["numeric_columns"] + f["categorical_columns"]),
-    ])
-    assert len(f["skewed_columns_gt_2"]) == 25 and "Twenty-five" in text()
-    assert f["collinear_pairs_gt_0.95"] == 8 and "Eight pairs" in text()
-
-
-def test_holdout_manifest_matches_text() -> None:
-    m = json.loads((R / "holdout" / "holdout_manifest.json").read_text())
-    check(text(), [thousands(m["rows"]), thousands(m["owners"]), str(m["max_rows_per_owner"]),
-                   f"{m['sanity_cross_owner_prevalence'] * 100:.1f}%"])
+def test_interpretation_numbers() -> None:
+    p = pd.read_csv(R / "phase7" / "permutation_holdout.csv").set_index("feature")
+    style = p.loc["family:Text style"]
+    check([f"{style['auc_drop']:.3f}", ci([style["ci95_low"], style["ci95_high"]])])
+    for fam in ("Size", "Front matter", "Links", "Code", "Markdown structure"):
+        check([f"{p.loc[f'family:{fam}', 'auc_drop']:.3f}"])
+    check([f"{p.loc['text_sentence_count', 'auc_drop']:.3f}"])
+    assert load("phase7/interpretation_status.json")["rq2"] == "respondida"

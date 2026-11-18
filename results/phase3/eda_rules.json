@@ -1,0 +1,82 @@
+{
+  "constant": [
+    "log_stars_at_t0",
+    "repo_is_fork"
+  ],
+  "skewed_log1p_nontree": [
+    "text_char_count",
+    "text_line_count",
+    "text_nonempty_line_count",
+    "text_word_count",
+    "text_unique_word_count",
+    "text_sentence_count",
+    "body_chars",
+    "text_average_word_length",
+    "text_average_sentence_words",
+    "markdown_heading_count",
+    "markdown_unordered_list_items",
+    "markdown_ordered_list_items",
+    "markdown_table_row_count",
+    "markdown_blockquote_count",
+    "markdown_checkbox_count",
+    "markdown_fenced_code_blocks",
+    "markdown_inline_code_count",
+    "markdown_shell_prompt_count",
+    "markdown_link_count",
+    "markdown_url_count",
+    "frontmatter_description_char_count",
+    "repo_age_days_at_t0"
+  ],
+  "collinear_pairs": [
+    {
+      "a": "text_char_count",
+      "b": "text_word_count",
+      "abs_spearman": 0.9897342188655655
+    },
+    {
+      "a": "text_char_count",
+      "b": "text_unique_word_count",
+      "abs_spearman": 0.9609470313949396
+    },
+    {
+      "a": "text_char_count",
+      "b": "body_chars",
+      "abs_spearman": 0.9981487158006992
+    },
+    {
+      "a": "text_line_count",
+      "b": "text_nonempty_line_count",
+      "abs_spearman": 0.9970810701574147
+    },
+    {
+      "a": "text_word_count",
+      "b": "text_unique_word_count",
+      "abs_spearman": 0.972441624595774
+    },
+    {
+      "a": "text_word_count",
+      "b": "body_chars",
+      "abs_spearman": 0.9876521077788617
+    },
+    {
+      "a": "text_unique_word_count",
+      "b": "body_chars",
+      "abs_spearman": 0.9588622388572704
+    },
+    {
+      "a": "frontmatter_valid",
+      "b": "frontmatter_name_missing",
+      "abs_spearman": 0.9871906592021014
+    }
+  ],
+  "drop_collinear_nontree": [
+    "text_nonempty_line_count",
+    "text_word_count",
+    "text_unique_word_count",
+    "body_chars",
+    "frontmatter_name_missing"
+  ],
+  "inconsistent_to_missing": {
+    "repo_age_days_at_t0": "negativo"
+  }
+}

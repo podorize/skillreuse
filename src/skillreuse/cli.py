@@ -9,35 +9,22 @@ import sys
 # subcomando -> (modulo, funcao, descricao)
 COMMANDS: dict[str, tuple[str, str, str]] = {
     "check": ("skillreuse.cli", "check", "mostra as versoes do ambiente"),
-    "download": ("skillreuse.data", "download_main", "baixa GitSkills (revisao fixa)"),
-    "build": ("skillreuse.data", "build_main", "agrega repository_count e amostra 200 mil"),
-    "features": ("skillreuse.features", "features_main", "atributos e divisao externa"),
-    "target": ("skillreuse.models", "prepare_target_main", "alvo de contagem (reused=1)"),
-    "target-eda": ("skillreuse.report", "target_eda_main", "EDA do alvo"),
-    "benchmark-views": ("skillreuse.benchmark", "views_main", "Ridge: skill/repo/hybrid"),
-    "benchmark": ("skillreuse.benchmark", "benchmark_main", "6 regressores agrupados"),
-    "tune": ("skillreuse.tuning", "tune_main", "busca aninhada + repeticoes + testes pareados"),
-    "controls": ("skillreuse.controls", "controls_main", "controles de atalho de coleta"),
-    "owner": ("skillreuse.owner", "owner_main", "alvo por donos, contexto, auditoria e EDA"),
-    "owner-models": ("skillreuse.owner_models", "owner_models_main", "modelos por donos"),
-    "owner-importance": ("skillreuse.owner_models", "importance_main", "permutacao (limpo)"),
-    "primary": ("skillreuse.owner_models", "primary_main", "protocolo principal (H1-H4)"),
-    "holdout": ("skillreuse.holdout", "holdout_main", "constroi o holdout disjunto por dono"),
-    "final-model": ("skillreuse.final_model", "final_main", "tuning aninhado e congelamento"),
-    "holdout-eval": ("skillreuse.final_model", "holdout_eval_main", "avaliacao unica no holdout"),
-    "figures": ("skillreuse.figures", "figures_main", "figuras do relatorio"),
-    "feature-eda": ("skillreuse.feature_eda", "feature_eda_main", "EDA dos atributos limpos"),
-    "export-derived": ("skillreuse.owner", "export_derived_main", "tabelas derivadas pequenas"),
-    "interpretation": ("skillreuse.interpretation", "interpretation_main", "PDP e limiar"),
-    "evaluate": ("skillreuse.benchmark", "evaluate_main", "avaliacao externa (RF e GB)"),
-    "explain": ("skillreuse.explain", "explain_main", "explicabilidade do Ridge hibrido"),
-    "fork-audit": ("skillreuse.owner", "fork_audit_main", "forks e efeito sobre cross_owner"),
-    "owner-overlap": (
-        "skillreuse.owner_models", "owner_overlap_main", "donos de ocorrencias em comum"
-    ),
-    "tail-audit": ("skillreuse.explain", "tail_main", "auditoria da cauda (Ridge)"),
-    "audit-text": ("skillreuse.explain", "audit_text_main", "artefatos textuais"),
-    "report": ("skillreuse.report", "report_main", "tabelas e figuras do relatorio"),
+    "download": ("skillreuse.download", "download_main", "baixa o GitSkills (revisao fixa)"),
+    "collect": ("skillreuse.collect", "collect_main",
+                "fase 1: amostra, datas das copias e estrelas (API do GitHub)"),
+    "cohort": ("skillreuse.cohort", "cohort_main", "fase 2: autores, divisao e atributos"),
+    "eda": ("skillreuse.study", "main_eda", "fase 3: EDA, janela e regras"),
+    "spot": ("skillreuse.study", "main_spot", "fase 4: spot-checking de 7 algoritmos"),
+    "tune": ("skillreuse.study", "main_tune", "fase 4: busca aninhada"),
+    "final": ("skillreuse.study", "main_final", "fase 5: modelos finais e referencia"),
+    "freeze": ("skillreuse.study", "main_freeze", "fase 5: congelamento e limiar"),
+    "holdout": ("skillreuse.study", "main_holdout", "fase 6: avaliacao unica"),
+    "control": ("skillreuse.study", "main_control",
+                "controle com popularidade no retrato (desvio)"),
+    "sensitivity": ("skillreuse.study", "main_sensitivity", "fase 7: sensibilidades"),
+    "interpret": ("skillreuse.study", "main_interpret", "fase 7: interpretacao"),
+    "figures": ("skillreuse.report", "main_figures", "figuras do artigo"),
+    "reproduce": ("skillreuse.study", "main_reproduce", "confere modelos congelados no holdout"),
 }
 
 
@@ -45,7 +32,6 @@ def check() -> None:
     """Exibe as versoes centrais para confirmar que o ambiente esta funcional."""
     import duckdb
     import pandas as pd
-    import polars as pl
     import pyarrow as pa
     import sklearn
 
@@ -56,7 +42,6 @@ def check() -> None:
         "python": platform.python_version(),
         "duckdb": duckdb.__version__,
         "pandas": pd.__version__,
-        "polars": pl.__version__,
         "pyarrow": pa.__version__,
         "scikit-learn": sklearn.__version__,
     }

@@ -1,0 +1,15 @@
+[final] r1 f1
+[final] r1 f2
+[final] r1 f3
+[final] r2 f1
+[final] r2 f2
+[final] r2 f3
+[final] r3 f1
+[final] r3 f2
+[final] r3 f3
+             roc_auc_mean  roc_auc_std  pr_auc_mean  pr_auc_std  brier_mean  brier_std
+config                                                                                
+origin             0.5911       0.0124       0.1060      0.0037      0.0710     0.0001
+origin+text        0.6643       0.0141       0.1425      0.0062      0.0697     0.0003
+size               0.5957       0.0180       0.1063      0.0059      0.0708     0.0002
+text               0.6422       0.0136       0.1229      0.0066      0.0702     0.0003

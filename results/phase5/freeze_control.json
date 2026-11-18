@@ -1,0 +1,31 @@
+{
+  "frozen_at_local": "2026-11-17T15:15:47.852769-03:00",
+  "models": {
+    "origin_pop": {
+      "file": "models/origin_pop.joblib",
+      "sha256": "c1406d00f3687ac0c797be717845aefb4ef184036c1d7ec38d0e8814e6cf084a",
+      "params": {}
+    },
+    "origin_pop+text": {
+      "file": "models/origin_pop_text.joblib",
+      "sha256": "b28a28d8d75ec465ccbf02ef93a92f078a97ebed6fa351488538963ac63e8ab4",
+      "params": {}
+    }
+  },
+  "dev_auc": {
+    "origin_pop": {
+      "mean": 0.6764119543510674,
+      "std": 0.015539971738198877
+    },
+    "origin_pop+text": {
+      "mean": 0.7251021182450468,
+      "std": 0.01196453914351
+    }
+  },
+  "dev_C1": {
+    "mean_diff": 0.04869016389397934,
+    "ci95_low": 0.0348335099587857,
+    "ci95_high": 0.06254681782917297,
+    "p_nb": 3.982383744582312e-05
+  }
+}

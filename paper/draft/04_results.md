@@ -1,117 +1,94 @@
 # 4. Results
 
-**Roadmap.** Sections 4.1–4.2 answer RQ1 (dataset construction introduces identifiable biases); 4.3 and 4.7 answer RQ2 (a modest predictive signal remains under the clean protocol, first on development, then on the holdout); 4.3 and 4.5 answer RQ3 (skill and repository attributes carry complementary information, per block ablation, and which variables are associated with the predictions); 4.4 and 4.6 are robustness and model-selection checks, and the conclusions are conditional on the sampling and validation choices described in Section 3.
+We present the results in the order of the method: what the data look like (4.1), which model we chose (4.2), how well it predicts (4.3, RQ1), whether this depends on our choices (4.4), and what the model learned (4.5, RQ2).
 
-## 4.1 The target, the features and owner concentration
+## 4.1 Exploratory analysis
 
-In development (25,918 reused contents from 7,128 owners), `owner_count` mirrors `repository_count`: mean 4.50 against 5.08, median 2 in both, P95 15 against 16. The difference is at the base: **28.0%** of the contents have `owner_count = 1` (24.7% in the full population: 75,733 of 306,088), so self-copying accounts for 11% of the total mass of `repository_count` in development. A few owners concentrate the sample: the five largest account for 24.5% of the contents together (11.9% the largest; identifiers omitted), and the largest and the fourth have on average 2.0 repositories but only 1.0 owner per content. In addition, 17.2% of the contents have no front-matter `name`, and 20.1% share it with another content, a sign of variants of the same skill.
+**The data.** We dated 198,579 of the 223,261 copies outside aggregators (88.9%). Most of the others were in repositories deleted or made private after July 2026 (Figure 1c). In the end, 135,670 of the 150,000 skills had at least one dated copy, and 135,332 remained after limiting each author to 50 skills: 94,683 in the development set, from 42,872 authors, and 40,649 in the holdout, from 18,373 authors.
 
-**Features.** The clean view has 52 columns (49 numeric, 3 categorical) that expand to 112 after preprocessing. Missing values are rare (13 columns, at most 0.2%) and imputed by the training median with an indicator. Twenty-five numeric columns have skewness above 2; since trees are invariant to monotone transformations, we apply `log1p` only in a sensitivity analysis for linear models (Section 4.4). Eight pairs of columns have |ρ| > 0.95; we kept them, since trees tolerate redundancy, and read the importance of redundant columns with caution. Finally, `cross_owner` is positive for 80.4% of the development contents (80.8% in the holdout), and we do not resample.
+![Development set: (a) cumulative share of copied skills by days from first appearance to first copy by another developer, among skills with 90 days of observation; (b) first appearance (T0) by month, with the eligibility limit for W = 60 days; (c) outcome of the dating of copies outside aggregators](../../results/figures/eda.png)
 
-## 4.2 Selection bias of the representative
+![Development set: (a) skewness of the text attributes before and after the log transform; (b) Spearman correlation between the 27 text attributes](../../results/figures/eda_attributes.png)
 
-The table compares, on the full population (1,877,981 contents), the fraction of contents whose representative is `canonical` with the fraction of copies that actually are.
+**The target.** When a skill is copied, it is copied fast. Among development skills observed for at least 90 days, the first copy by another developer arrived after a median of 10.5 days, and a quarter arrived within 2.6 days (Figure 1a). A 30-day window would capture 73.5% of these first copies and a 60-day window 89.7%, so the rule of Section 3.2 set **W = 60 days**. The ecosystem is also young: almost all skills appeared after October 2025, when the format was introduced, and more new skills appeared every month (Figure 1b). With W = 60, only skills that appeared until 10 May 2026 are eligible: **48,299 in the development set and 20,564 in the holdout**. Copied skills are a minority: **7.7%** of the eligible skills were copied by another developer within the window.
 
-| Repositories | contents | representative is `canonical` | copies in `canonical` |
+**The attributes.** All 27 text attributes are numbers; three of them (a valid front matter, a missing name, a missing description) are yes-or-no. They have no missing values, and the origin attributes almost none (0.02%, in language and license). The real problem is their distribution (Figure 2a). Most counts are zero for many skills and very large for a few — the typical skill has no links and no inline code, while some have thousands — and 22 columns have skewness above 2. The extreme case is the average word length (skewness 218), caused by a few files that are not prose at all, such as long encoded strings. We kept them, since they are real skills, and the log transform reduces their weight. We found no impossible values. The only inconsistency, 684 copies dated after the snapshot, had already been handled during the collection. Two origin attributes were constant and were removed: the fork flag and the stars at T0, which the API could not provide (Section 3.3).
+
+
+Many attributes measure almost the same thing (Figure 2b). Characters, words, unique words and body length are nearly interchangeable measures of size, and lexical diversity falls as all of them grow, because longer texts repeat more words. Eight pairs exceed a Spearman correlation of 0.95. Removing five columns (words, unique words, body length, non-empty lines, and a missing name, which duplicates an invalid front matter) leaves 22 attributes for the scale-sensitive models. The front-matter attributes, in contrast, are almost unrelated to size and style, so they bring a different kind of information.
+
+![Development set: share of copied skills by quartile of each text attribute (ties in zero-inflated attributes are split arbitrarily between the lowest quartiles)](../../results/figures/eda_univariate.png)
+
+**First signs of a signal.** Simple tables already suggest that the text matters (Figure 3). The share of copied skills more than doubles from the shortest to the longest texts (from 5.0% to 11.0% across quartiles of characters), falls from 10.7% to 4.8% as lexical diversity grows, and rises with the number of sentences, headings, links and code blocks. Skills with an invalid front matter are copied far less often than those with a valid one (2.8% against 8.3%). But these tables look at one attribute at a time, and the attributes move together: a longer text also has more sentences, more headings and more code. To tell which characteristics carry information of their own, we need a model.
+
+## 4.2 Choosing a model
+
+Table 4 and Figure 4 summarize how the model was chosen. In the spot-check, HistGradientBoosting (AUC 0.652) and logistic regression (0.642) came first, followed by the neural network, Naive Bayes and the random forest. k-nearest neighbors and the decision tree came last. The first is hurt by the many correlated and skewed attributes; the second, with default settings, keeps splitting until each leaf holds a single class, and so memorizes the training data. The results varied little from fold to fold (standard deviations of 0.005 to 0.015), so the ranking is clear.
+
+| Algorithm | Spot-check AUC | Nested, default | Nested, tuned |
 |---|---:|---:|---:|
-| 1 | 1,571,893 | 13.3% | 12.6% |
-| 2 | 172,624 | 13.8% | 8.5% |
-| 3 | 49,535 | 19.5% | 9.1% |
-| 4–5 | 36,312 | 24.1% | 10.9% |
-| 6–10 | 24,142 | 30.4% | 10.1% |
-| 11–50 | 19,589 | 57.7% | 7.7% |
-| more than 50 | 3,886 | 91.7% | 5.1% |
+| HistGradientBoosting | 0.652 ± 0.011 | 0.653 | 0.657 |
+| **Logistic regression** | **0.642 ± 0.014** | **0.645** | 0.646 |
+| MLP | 0.625 ± 0.015 | 0.630 | 0.638 |
+| Naive Bayes | 0.619 ± 0.014 | | |
+| Random Forest | 0.614 ± 0.009 | | |
+| k-NN | 0.574 ± 0.010 | | |
+| Decision tree | 0.531 ± 0.005 | | |
 
-: Effect of the representative rule, by number of repositories (full population).
+: Model selection on the text attributes: spot-check (mean ± standard deviation over 9 folds) and nested tuning of the three best algorithms (mean over 6 outer folds). The selected configuration is in bold.
 
-The probability that the representative is `canonical` grows from 14% to 92% with the number of copies, while the actual share of copies in that folder is flat or decreasing (5–13%): a single copy in `.claude/skills/` is enough, by the recovered rule, for the representative to be `canonical`. The representative's location class, and the commit history that exists only for standard locations, therefore **depend on the number of copies**. A control with the target `repository_count` shows the size of the effect: with the Random Forest, the repository attributes gave an RMSLE of 0.575, but 0.604 without `history_fetched` and `commit_count` (difference +0.029, 95% CI [0.018; 0.040]), against 0.623 for the mean-of-`log1p` baseline; the location class alone (three categories) gave 0.584.
+![Model selection: (a) spot-check of seven algorithms; (b) nested tuning of the three finalists](../../results/figures/model_selection.png)
 
-![Distributions of repositories and owners (left) and effect of the representative rule (right)](../../results/owner/eda_owner_and_selection.png)
+Tuning improved every algorithm a little, and tuned HistGradientBoosting came first (AUC 0.657). Its lead, however, is within the noise. It is 0.012 above the default logistic regression (95% CI [−0.004; 0.028]) and 0.004 above its own default version, and none of its comparisons with the other five configurations is significant after Holm's adjustment (all adjusted p ≥ 0.19). Following the rule fixed in advance, we chose the fastest of the tied configurations: **logistic regression with default hyperparameters** (AUC 0.645), which trains in a fraction of a second. We give up about 0.01 AUC and gain a model whose behavior can be read directly. The result is informative in itself: if a linear model does as well as boosted trees, the signal does not depend on complex interactions between attributes.
 
-## 4.3 Main protocol
+## 4.3 Does the text predict whether a skill is copied? (RQ1)
 
-With the shortcuts out, 17,733 contents (cap of 50 per owner) and owner-grouped validation, the results are:
+The decisive test is the holdout, used once (Table 5 and Figure 5). On 20,564 skills from 10,386 authors it had never seen, the text model reached an **AUC of 0.645** (95% CI [0.624; 0.666]). In plain terms: given one skill that other developers copied and one they did not, the model gives the copied one a higher score about 65% of the time. The interval lies well above 0.5, so the answer to RQ1 is yes: the text of a skill carries information about whether other developers will copy it (Holm-adjusted p = 0.002, the smallest value that 2,000 bootstrap samples can give). The holdout result is close to the development one (0.642 ± 0.014), so the model did not overfit.
 
-| View | RF AUC | logistic AUC | RF RMSLE | Ridge RMSLE |
-|---|---:|---:|---:|---:|
-| skill | 0.660 ± 0.022 | 0.614 | 0.698 ± 0.007 | 0.713 |
-| repository | 0.650 ± 0.019 | 0.655 | 0.707 ± 0.011 | 0.702 |
-| repository + catalog | 0.666 ± 0.009 | 0.662 | 0.696 ± 0.010 | 0.699 |
-| path + catalog | 0.579 ± 0.019 | 0.576 | 0.718 ± 0.018 | 0.714 |
-| **clean (full)** | **0.716 ± 0.024** | 0.680 | **0.679 ± 0.011** | 0.694 |
-| clean + shortcuts | 0.717 ± 0.022 | 0.682 | 0.637 ± 0.015 | 0.664 |
-| shortcuts only | 0.500 ± 0.015 | 0.510 | 0.688 ± 0.010 | 0.693 |
-| *baseline* | 0.500 | 0.500 | 0.720 (mean), 0.780 (median) | |
+| Model | Development AUC | Holdout AUC [95% CI] | PR AUC |
+|--------------------------------|---------------------:|---------------------------------:|-----------:|
+| **Text** | 0.642 ± 0.014 | **0.645** [0.624; 0.666] | 0.130 |
+| Size only (reference) | 0.596 ± 0.018 | 0.595 [0.573; 0.615] | 0.106 |
+| Origin repository | 0.676 ± 0.016 | 0.685 [0.664; 0.704] | 0.199 |
+| Origin repository + text | 0.725 ± 0.012 | 0.734 [0.714; 0.753] | 0.224 |
 
-: Performance by view (mean ± standard deviation over 9 owner-grouped folds).
+: Final models (logistic regression) on the development set (mean ± standard deviation over 9 author-grouped folds) and on the holdout (20,564 skills from 10,386 authors; 7.7% copied; 95% CIs from author bootstrap).
 
-| | Comparison | Result | 95% CI of the difference | p (Holm) |
-|---|---|---|---|---:|
-| H1 | clean RF AUC against 0.5 | 0.716 | +0.216 [0.173; 0.259] | < 0.001 |
-| H2 | clean RF RMSLE against the mean | 0.679 vs 0.720 | −0.041 [−0.049; −0.033] | < 0.001 |
-| H3a | clean against repository+catalog (AUC) | 0.716 vs 0.666 | +0.050 [0.017; 0.083] | 0.008 |
-| H3b | clean against skill (AUC) | 0.716 vs 0.660 | +0.056 [0.040; 0.072] | < 0.001 |
-| H4 | clean+shortcuts against clean (RMSLE) | 0.637 vs 0.679 | −0.042 [−0.055; −0.029] | < 0.001 |
+![Holdout: (a) ROC curves and (b) precision–recall curves of the final models; (c) confusion matrix of the text model at the threshold chosen on the development set](../../results/figures/results.png)
 
-: Hypotheses formulated before the confirmation, evaluated on development (exploratory until Section 4.7).
+Two comparisons show what kind of information the text carries. **It is more than length.** A model that sees only the size of the text reached 0.595; the full text model is **0.050** higher (95% CI [0.033; 0.069]). **It is not just a sign of where the skill was published.** A model of the origin repository — its age, language, license, the folder of the file and its popularity — reached 0.685, and adding the text raised it to 0.734, a gain of **0.049** (95% CI [0.035; 0.063]; Holm-adjusted p = 0.002). Recall that the repository's popularity was measured after T0, which favors the repository; the text adds information even so. The precision–recall curves agree (Figure 5b): every model is above the line of a random guess, and the text improves the origin model at every level of recall.
 
-The 95% intervals are unadjusted (paired differences with the Nadeau–Bengio variance correction); the p-values are Holm-adjusted over H1–H4. All five comparisons are rejected after Holm correction, and none of the conclusions depends on the adjustment alone, since every interval excludes zero. There is a real but modest signal (AUC 0.72, a 6% RMSLE reduction). The combination of blocks outperforms each view alone, which sit at AUC 0.65–0.67 against 0.72 (H3a, H3b); but these views differ from the full set by more than one block, so they do not isolate individual contributions. An exploratory ablation removes exactly one block from the full clean set (Random Forest, same folds; unadjusted 95% intervals). In classification, removing the skill block lowers the AUC by 0.044 [0.010; 0.079] and removing the repository block by 0.054 [0.034; 0.074]; removing the catalog (0.004 [−0.013; 0.021]) or the path (0.000 [−0.006; 0.007]) changes it little. In regression, removing any block raises the RMSLE slightly: skill by 0.011 [0.004; 0.017], catalog by 0.008 [0.003; 0.012], path by 0.005 [0.001; 0.009] and repository by 0.006 [−0.007; 0.019]. The evidence therefore supports complementary information from skill and repository attributes in classification, with a larger unique contribution from the repository, but only small, uneven contributions in regression. The shortcuts add to the regression (H4) but alone do not predict cross-owner reuse (AUC 0.50): their regression gain comes from correlation with the number of copies, not from cross-owner reuse.
+What the model offers is a ranking, not a reliable yes-or-no answer. Its PR AUC (0.130) is 1.7 times the share of copied skills. At the threshold chosen on the development set (a probability of 0.07), it flags 10,761 holdout skills as likely to be copied. Among them are 1,137 of the 1,594 skills that were copied (recall 71%), but most flagged skills were not copied (precision 10.6%; balanced accuracy 0.603; Figure 5c). Its probabilities also stay close to the average (Brier score 0.0701, against 0.0715 for predicting 7.7% for every skill): the model separates skills, but it never finds one that is very likely to be copied. In practice, it can help decide which skills to look at first, not decide on its own.
 
-## 4.4 Robustness
+## 4.4 How robust is the result?
 
-| Treatment of concentrated owners | contents | clean RF AUC | RMSLE gain (clean) |
-|---|---:|---:|---:|
-| no limit | 25,918 | 0.747 ± 0.140 | 0.039 |
-| exclude owners with more than 1000 | 21,615 | 0.615 ± 0.036 | 0.036 |
-| exclude owners with more than 500 | 19,567 | 0.708 ± 0.037 | 0.030 |
-| exclude owners with more than 200 | 18,443 | 0.732 ± 0.035 | 0.037 |
-| **50 per owner** | 17,733 | 0.716 ± 0.024 | 0.041 |
+The answer to RQ1 rests on several choices of ours: the window, the definition of aggregator, and a split by author that mixes old and new skills. Table 6 shows the text model when each of them changes. None changes the conclusion.
 
-: Sensitivity to the treatment of concentrated owners (RF; gain relative to the mean-of-`log1p` baseline).
+| Analysis | Skills | Copied | AUC [95% CI] |
+|----------------------------------------------|---------:|-------:|---------------------:|
+| Main analysis (W = 60, aggregators ≥ 100) | 20,564 | 7.7% | 0.645 [0.624; 0.666] |
+| Window W = 30 days | 28,464 | 5.8% | 0.648 [0.628; 0.666] |
+| Window W = 90 days | 13,460 | 9.4% | 0.633 [0.612; 0.656] |
+| Aggregators: limit of 500 skills | 20,648 | 9.0% | 0.644 [0.624; 0.663] |
+| Aggregators: no exclusion | 20,694 | 12.5% | 0.653 [0.635; 0.671] |
+| Temporal split (T0 after 14 April 2026) | 6,031 | 6.7% | 0.634 [0.589; 0.681] |
 
-The RMSLE gain is stable (0.03–0.04), but the AUC oscillates from 0.615 to 0.747: a few owners with 500 to 1000 contents lower it by 0.1, and with no limit one fold concentrates one owner and the standard deviation reaches 0.14. The cap of 50 stabilizes the estimates but is a data-dependent choice.
+: Text model under the robustness analyses (holdout; CIs from 500 author-bootstrap samples, 2,000 for the main analysis). Each analysis retrains the model on the development set with the selected configuration.
 
-Other checks. (i) Fixing the location class and training within each one (owners with more than 500 contents excluded), the clean RF still beats the baseline: $\Delta$RMSLE (model − baseline) is −0.141 for `canonical` (5,439 contents; AUC 0.714), −0.013 for `skills-dir` (10,721; AUC 0.672) and −0.011 for `other` (3,810; AUC 0.828). (ii) With `repository_count` as target, the gain is the same ($\Delta$RMSLE −0.031 against −0.030). (iii) Only 18.8% of validation rows have a `name` seen in training, and the gain persists without them ($\Delta$RMSLE −0.039 against −0.041; AUC 0.726 against 0.716). (iv) Repository-grouped validation gave no larger estimates than owner-grouped validation (AUC 0.735 against 0.747). (v) Applying `log1p` to skewed columns improves the linear models only slightly (logistic AUC 0.680 → 0.691) and leaves the forests unchanged.
+**The window.** With 30 or 90 days, the share of copied skills ranges from 5.8% to 9.4%, but the AUC stays within 0.012 of the main result. **The aggregators.** Counting copies in repositories with 100 to 499 skills, or in all repositories, raises the share of copied skills from 7.7% to 9.0% and 12.5%: bulk collectors would inflate the number of copied skills by more than half. The AUC, however, stays at 0.644 and 0.653. **Time.** The hardest test is the temporal split. Trained only on skills that appeared before 14 April 2026, the model ranked the 6,031 holdout skills that appeared afterwards with an AUC of 0.634: the text predicts the fate of skills that did not yet exist when the model learned. The two checks in Appendix A — keeping only skills whose copies could all be dated, and only skills whose names never appear in development — give AUCs of 0.626 and 0.622.
 
-## 4.5 Interpretation
+## 4.5 What the model learned (RQ2)
 
-For the clean RF (permutation on 6 owner-grouped folds, owners with more than 500 contents excluded), for cross-owner reuse, the repository block weighs more (AUC drop of 0.104 when permuted) than skill (0.084), catalog (0.016) and path (≈ 0); among columns, `log_stars` dominates (0.056), followed by `log_forks` (0.021) and `push_recency_days` (0.016). In regression, repository (0.019) and skill (0.018) weigh similarly, and the largest column is the license (0.013), followed by catalog size (0.011) and path depth (0.005). These values are the largest measured permutation-importance decreases under the evaluated model and data distribution, not the determinants of reuse. Uncertainties are large (6 folds), and stars and forks are correlated (as are several skill-structure attributes), so permutation can split or shift importance among them unpredictably: the ranking between `log_stars` and `log_forks`, in particular, should not be read as separate effects.
+Having established that the text predicts copying, we now ask which characteristics of the text the model relies on, and in which direction they act.
 
-![Out-of-fold partial dependence of the frozen models: classification RF (top) and regression HistGB (bottom); bands are ±1 standard deviation across folds, dashed lines the mean observed prediction](../../results/owner/figures/pdp.png)
+**Which characteristics.** Writing style is the most important family by far (Figure 6a). Shuffling it lowers the AUC by 0.092 (95% CI [0.071; 0.109]), about twice as much as size (0.047), and more than front matter (0.035), links (0.022), code (0.020) and Markdown structure (0.012). This ranking is stable: style comes first in all nine development folds, and the order of the six families in each fold agrees with the order on the holdout (Spearman correlation 0.71 to 1.00). Among single attributes, the number of sentences matters most (0.074), followed by lexical diversity, words per sentence, average word length and a valid front matter (Figure 6b); the SHAP values put the same attributes at the top. Note that the whole size family matters less than the number of sentences alone. The reason is that its correlated attributes act in opposite directions in the model, so shuffling them together partly cancels out.
 
-The partial dependence shows the **direction** of the model's response, and may evaluate combinations of attributes that are rare in the data (for example many forks with no stars). The probability of cross-owner reuse rises with stars (0.78 with none to 0.85 at about 540, mostly between 1 and 12 stars) and forks (0.80 to 0.83), and also with the **time since the last push**: repositories pushed more than about 100 days ago have higher probability (0.79 at 4 days, 0.85 at 176). In regression, the expected number of owners rises with catalog size (clearly only above roughly 60 skills) and with path depth (a jump from 2 to 3). The unexpected result is the license: what matters is its **absence**. Repositories without a license (52% of the development contents, median of zero stars) host skills with 6.6 owners on average, against 3.7 for MIT, and the model predicts 1.48 against 1.29–1.30 for `log1p(owner_count)` for any license; they also have more `canonical` skills (34% against 24%). This is an exploratory finding, not an explanation of reuse: the mechanism is unknown, and it may reflect repositories created automatically or by installers rather than an effect of the missing license.
+![Permutation importance of the text model on the holdout: (a) attribute families; (b) ten most important attributes (AUC drop, 95% CI)](../../results/figures/importance.png)
 
-## 4.6 Model selection and tuning
+**In which direction.** Figure 7 shows how each attribute moves the predictions. Skills with **more sentences**, **more words per sentence**, **longer words** and a **valid front matter** are pushed toward being copied; skills with a **more varied vocabulary** or a **missing description** are pushed away (Figure 7a). The dependence plots show the shape of the main effects (Figure 7b). More sentences help a lot among short texts, and the gain levels off beyond about 50 sentences. The effect of lexical diversity is linear over its whole range. An invalid front matter lowers the log-odds by about 0.9 compared with a valid one. For the number of sentences, lexical diversity and the front matter, these directions agree with the simple tables of Section 4.1.
 
-| Family | AUC default | AUC searched | RMSLE default | RMSLE searched |
-|---|---:|---:|---:|---:|
-| linear | 0.678 | 0.689 | 0.692 | 0.690 |
-| KNN | 0.667 | 0.690 | 0.703 | 0.686 |
-| tree | 0.614 | 0.634 | 0.807 | 0.699 |
-| Random Forest | **0.716** | 0.701 | 0.679 | 0.675 |
-| Gradient Boosting | 0.691 | 0.704 | 0.690 | 0.671 |
-| HistGradientBoosting | 0.693 | 0.682 | **0.670** | 0.688 |
-| *baseline* | 0.500 | | 0.720 | |
+![SHAP values of the text model on the holdout: (a) distribution of SHAP values of the 12 most influential attributes (by mean absolute SHAP value), colored by the value of the attribute; (b) dependence plots of the five most important attributes, 1st to 99th percentiles](../../results/figures/shap.png)
 
-: Nested validation (mean of 6 outer owner-grouped folds; 6 candidates per search).
+**Unexpected relations.** For four attributes, the direction flips between the simple tables and the model. On their own, longer texts, longer descriptions, more headings and more inline code go with *more* copying (Figure 3); in the model, they push predictions *down* (Figure 7a). Both views are correct, because they answer different questions. A table compares skills that differ in everything at once: longer texts also have more sentences. The model compares skills with the same amount of prose. Among those, a skill with more characters, more headings and more inline code is a denser, more technical text, and such texts are copied less. The same holds for the description: having one matters a great deal, but a longer one does not help once everything else is taken into account.
 
-By the pre-specified rule we froze the default RF (classification) and the default HistGradientBoosting (regression). **Under the evaluated configurations, the families are not clearly separated:** the RF against the runner-up (searched Gradient Boosting) differs by 0.012 AUC (95% CI [−0.003; 0.026]), and in regression the HistGB differs from the searched Gradient Boosting by −0.001 [−0.027; 0.024]. Only the tree (and, with less evidence, the default KNN) falls behind, and in classification even these differences do not survive Holm correction (p between 0.06 and 0.13). Intervals here are unadjusted 95% intervals; Holm adjusts only the p-values, within the family of comparisons of the best configuration against all others and the baseline. Non-significance reflects the limited resolution of 6 outer folds and does not establish equivalence. The search did not beat the default configuration (RF: 0.716 against 0.701).
-
-## 4.7 Confirmation on the holdout
-
-The frozen models were evaluated once on 25,011 contents from 10,484 owners, disjoint from development by representative owner.
-
-| Task | Model | Performance | Baseline |
-|--------------------|------------|--------------------------|---------|
-| Classification (`cross_owner`) | Random Forest | AUC **0.731** [0.716; 0.745] | 0.500 |
-| Regression (`log1p(owner_count)`) | HistGB | RMSLE **0.625** | 0.664 |
-
-: Single evaluation on the holdout (95% CI by owner bootstrap; HistGB is HistGradientBoosting).
-
-Secondary metrics. Classification: PR AUC 0.913 [0.905; 0.921] (baseline 0.808), Brier score 0.140 (0.155), log-loss 0.444 (0.490). Regression: Spearman 0.330; RMSLE difference to the baseline −0.038 [−0.044; −0.032].
-
-![ROC curve, calibration and precision–recall curve of the single-owner (minority) class for the RF on the holdout](../../results/owner/figures/holdout_roc_calibration.png)
-
-Both success criteria were met, and the holdout AUC (0.731) is consistent with the nested estimate on development (0.716). The holdout has a different composition (36% `canonical` skills against 21% in development, 9% `other` against 21%), since concentrated owners are left out by construction; H3 and H4 were not re-evaluated and remain exploratory.
-
-**Minority class and threshold.** The PR AUC above refers to the majority class (80.8% prevalence), so it says little. For the minority class (content under a single owner, 19.2%), the PR AUC is 0.390 (95% CI [0.362; 0.418]), about twice its prevalence. The threshold that maximizes the balanced accuracy on development out-of-fold predictions is 0.80 (the default 0.5 gives only 0.506 there). Applied unchanged to the holdout, it gives a balanced accuracy of 0.659 (95% CI [0.647; 0.670]), against 0.663 on development, with a recall of 0.79 and a precision of 0.28 for the single-owner class (3,816 of 4,809 true single-owner contents recovered, but 9,607 cross-owner contents flagged as single-owner). The model therefore **orders** contents usefully, but a threshold produces many false alarms, and it should not be used for automated decisions.
+Taken together, these effects draw a clear picture. The skills that other developers copy read like explanations: several full sentences, a vocabulary that repeats rather than varies, longer words, and a valid front matter that tells the agent what the skill is for. The skills rarely copied are either short and terse, or packed with structure and code compared with their prose — closer to notes written for one project than to instructions written for others.

@@ -1,0 +1,24 @@
+{
+  "rows": 20000,
+  "top12": [
+    "text_sentence_count",
+    "text_lexical_diversity",
+    "text_average_sentence_words",
+    "frontmatter_valid",
+    "markdown_inline_code_count",
+    "text_average_word_length",
+    "frontmatter_description_missing",
+    "text_char_count",
+    "frontmatter_description_char_count",
+    "markdown_heading_count",
+    "markdown_url_count",
+    "markdown_link_count"
+  ],
+  "spearman_value_vs_shap": {
+    "text_sentence_count": 1.0,
+    "text_lexical_diversity": -1.0,
+    "text_average_sentence_words": 0.9999999999999999,
+    "text_average_word_length": 1.0,
+    "frontmatter_valid": 1.0
+  }
+}
