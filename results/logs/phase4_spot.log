@@ -1,0 +1,18 @@
+[spot] r1 f1
+[spot] r1 f2
+[spot] r1 f3
+[spot] r2 f1
+[spot] r2 f2
+[spot] r2 f3
+[spot] r3 f1
+[spot] r3 f2
+[spot] r3 f3
+               roc_auc_mean  roc_auc_std  pr_auc_mean  pr_auc_std  brier_mean  brier_std  seconds_mean  seconds_std
+config                                                                                                             
+hist_gb              0.6523       0.0106       0.1433      0.0089      0.0697     0.0004        0.6486       0.4197
+logistic             0.6422       0.0136       0.1229      0.0066      0.0702     0.0003        0.1682       0.0335
+mlp                  0.6249       0.0153       0.1288      0.0076      0.0735     0.0008       13.0263       0.3729
+naive_bayes          0.6187       0.0142       0.1152      0.0054      0.1634     0.0150        0.1333       0.0314
+random_forest        0.6145       0.0094       0.1434      0.0072      0.0718     0.0006        1.7394       0.2894
+knn                  0.5739       0.0103       0.1017      0.0037      0.0830     0.0010        0.4540       0.0929
+decision_tree        0.5309       0.0053       0.0844      0.0016      0.1491     0.0033        0.9996       0.0753

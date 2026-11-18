@@ -1,593 +1,316 @@
-"""EDA do alvo e auditoria numerica das figuras/tabelas do relatorio."""
+"""Figuras do artigo, a partir dos arquivos de resultado (results/)."""
 
 from __future__ import annotations
 
-import argparse
 import json
-from datetime import UTC, datetime
-from pathlib import Path
 
+import joblib
 import matplotlib
-import numpy as np
-import pandas as pd
-import pyarrow.parquet as pq
-from matplotlib import pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import StratifiedGroupKFold
-
-from skillreuse.benchmark import _metrics
-from skillreuse.models import build_preprocessor, load_count_frame, predictor_view
-
-# ==========================================================================
-# EDA orientada a decidir entre alvo ordinal e regressao de contagem.
-# ==========================================================================
 
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.metrics import confusion_matrix, precision_recall_curve, roc_curve  # noqa: E402
 
-DEFAULT_TARGETS = Path("data/processed/final_targets.parquet")
+from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT  # noqa: E402
+from skillreuse.study import (  # noqa: E402
+    OUT,
+    TEXT,
+    TREE_ALGOS,
+    interp_sample,
+    load_frame,
+    write_json,
+)
 
-DEFAULT_FEATURES = Path("data/processed/final_structured_features.parquet")
-
-DEFAULT_SAMPLE = Path("data/processed/final_modeling_sample.parquet")
-
-DEFAULT_TABLES = Path("results/tables")
-
-DEFAULT_FIGURES = Path("results/figures")
-
-DEFAULT_REPORT = Path("results/target_eda.md")
-
-ORDINAL_LABELS = {
-    0: "2 repositorios",
-    1: "3-4 repositorios",
-    2: "5-9 repositorios",
-    3: "10+ repositorios",
+FIG = OUT / "figures"
+BLUE, LIGHT, GREY = "#2f5d8a", "#9bb7d4", "#999999"
+NAMES = {"logistic": "Logistic reg.", "naive_bayes": "Naive Bayes", "knn": "k-NN",
+         "decision_tree": "Decision tree", "random_forest": "Random forest",
+         "hist_gb": "HistGB", "mlp": "MLP"}
+LABEL = {
+    "text_average_sentence_words": "words per sentence", "text_lexical_diversity":
+    "lexical diversity", "text_average_word_length": "average word length",
+    "markdown_inline_code_count": "inline code spans", "markdown_heading_count": "headings",
+    "text_unique_word_count": "unique words", "frontmatter_description_char_count":
+    "description length", "frontmatter_name_char_count": "name length", "text_line_count":
+    "lines", "text_nonempty_line_count": "non-empty lines", "markdown_url_count": "URLs",
+    "markdown_link_count": "links", "text_sentence_count": "sentences", "text_char_count":
+    "characters", "text_word_count": "words", "body_chars": "body characters",
+    "frontmatter_valid": "valid front matter", "markdown_max_heading_depth": "heading depth",
+    "frontmatter_description_missing": "description missing",
+    "markdown_fenced_code_blocks": "code blocks", "markdown_unordered_list_items":
+    "bullet items", "markdown_ordered_list_items": "numbered items",
+    "markdown_table_row_count": "table rows", "markdown_shell_prompt_count": "shell prompts",
+    "markdown_blockquote_count": "quotes", "markdown_checkbox_count": "checkboxes",
+    "frontmatter_name_missing": "name missing",
 }
 
-def load_target_frame(targets_path: Path, features_path: Path) -> pd.DataFrame:
-    """Carrega alvos e split sem usar atributos derivados do conteudo."""
-    targets = pq.read_table(targets_path).to_pandas()
-    split = pq.read_table(features_path, columns=["content_hash", "split"]).to_pandas()
-    frame = targets.merge(split, on="content_hash", how="inner", validate="one_to_one")
-    if len(frame) != len(targets):
-        raise ValueError("A junção dos alvos com o split perdeu observacoes")
-    return frame
 
-def count_distribution(frame: pd.DataFrame, *, split: str = "train") -> pd.DataFrame:
-    """Resume repository_count entre todas as linhas e entre reutilizadas."""
-    subset = frame.loc[frame["split"].eq(split)].copy()
-    rows: list[dict[str, object]] = []
-    for population, data in (("all", subset), ("reused", subset.loc[subset["reused"].eq(1)])):
-        counts = pd.to_numeric(data["repository_count"], errors="coerce").dropna()
-        mean = float(counts.mean()) if len(counts) else float("nan")
-        variance = float(counts.var(ddof=1)) if len(counts) > 1 else float("nan")
-        row: dict[str, object] = {
-            "split": split,
-            "population": population,
-            "n": int(len(counts)),
-            "mean": mean,
-            "median": float(counts.median()) if len(counts) else float("nan"),
-            "std": float(counts.std(ddof=1)) if len(counts) > 1 else float("nan"),
-            "variance": variance,
-            "min": float(counts.min()) if len(counts) else float("nan"),
-            "max": float(counts.max()) if len(counts) else float("nan"),
-            "p50": float(counts.quantile(0.50)) if len(counts) else float("nan"),
-            "p75": float(counts.quantile(0.75)) if len(counts) else float("nan"),
-            "p90": float(counts.quantile(0.90)) if len(counts) else float("nan"),
-            "p95": float(counts.quantile(0.95)) if len(counts) else float("nan"),
-            "p99": float(counts.quantile(0.99)) if len(counts) else float("nan"),
-            "overdispersion_variance_mean": variance / mean if mean > 0 else float("nan"),
-            "missing_count": int(data["repository_count"].isna().sum()),
-            "invalid_nonpositive_count": int((counts < 1).sum()),
-        }
-        rows.append(row)
-    return pd.DataFrame(rows)
-
-def ordinal_distribution(frame: pd.DataFrame, *, split: str = "train") -> pd.DataFrame:
-    """Resume classes ordinais apenas entre skills reutilizadas."""
-    subset = frame.loc[frame["split"].eq(split) & frame["reused"].eq(1)].copy()
-    counts = subset["reuse_intensity"].astype("Int64")
-    total = len(subset)
-    rows: list[dict[str, object]] = []
-    for code in range(4):
-        values = subset.loc[counts.eq(code), "repository_count"].astype(float)
-        rows.append(
-            {
-                "split": split,
-                "intensity_code": code,
-                "label": ORDINAL_LABELS[code],
-                "n": int(len(values)),
-                "percentage": 100 * len(values) / total if total else float("nan"),
-                "count_min": float(values.min()) if len(values) else float("nan"),
-                "count_max": float(values.max()) if len(values) else float("nan"),
-                "count_mean": float(values.mean()) if len(values) else float("nan"),
-                "count_median": float(values.median()) if len(values) else float("nan"),
-                "count_std": float(values.std(ddof=1)) if len(values) > 1 else float("nan"),
-            }
-        )
-    return pd.DataFrame(rows)
-
-def group_distribution(frame: pd.DataFrame, *, split: str = "train") -> pd.DataFrame:
-    """Resume tamanho dos grupos para auditar a divisao por repositorio."""
-    subset = frame.loc[frame["split"].eq(split)].copy()
-    rows: list[dict[str, object]] = []
-    for population, data in (("all", subset), ("reused", subset.loc[subset["reused"].eq(1)])):
-        sizes = data.groupby("representative_repo_id").size()
-        rows.append(
-            {
-                "split": split,
-                "population": population,
-                "n_rows": int(len(data)),
-                "n_groups": int(sizes.size),
-                "mean_rows_per_group": float(sizes.mean()),
-                "median_rows_per_group": float(sizes.median()),
-                "p90_rows_per_group": float(sizes.quantile(0.90)),
-                "p99_rows_per_group": float(sizes.quantile(0.99)),
-                "max_rows_per_group": int(sizes.max()) if len(sizes) else 0,
-            }
-        )
-    return pd.DataFrame(rows)
-
-def split_distribution(frame: pd.DataFrame) -> pd.DataFrame:
-    """Resume a distribuicao dos estratos por split; nao orienta a decisao."""
-    data = frame.copy()
-    data["intensity_label"] = data["reuse_intensity"].map(ORDINAL_LABELS).fillna("not_reused")
-    result = (
-        data.groupby(["split", "split_stratum", "intensity_label"], dropna=False)
-        .size()
-        .rename("n")
-        .reset_index()
-    )
-    result["percentage_within_split"] = (
-        result["n"] / result.groupby("split")["n"].transform("sum") * 100
-    )
-    return result
-
-def coverage_summary(frame: pd.DataFrame, sample_path: Path) -> pd.DataFrame:
-    """Audita occurrence_count contra repository_count, sem tratar ocorrencia como alvo."""
-    sample = pq.read_table(sample_path, columns=["content_hash", "occurrence_count"]).to_pandas()
-    data = frame.merge(sample, on="content_hash", how="inner", validate="one_to_one")
-    if len(data) != len(frame):
-        raise ValueError("A auditoria de cobertura perdeu observacoes")
-    rows: list[dict[str, object]] = []
-    for population, subset in (("all", data), ("reused", data.loc[data["reused"].eq(1)])):
-        rows.append(
-            {
-                "population": population,
-                "n": int(len(subset)),
-                "missing_occurrence_count": int(subset["occurrence_count"].isna().sum()),
-                "occurrence_lt_repository": int(
-                    (subset["occurrence_count"] < subset["repository_count"]).sum()
-                ),
-                "occurrence_eq_repository": int(
-                    (subset["occurrence_count"] == subset["repository_count"]).sum()
-                ),
-                "occurrence_gt_repository": int(
-                    (subset["occurrence_count"] > subset["repository_count"]).sum()
-                ),
-                "occurrence_median": float(subset["occurrence_count"].median()),
-                "occurrence_p99": float(subset["occurrence_count"].quantile(0.99)),
-                "occurrence_max": int(subset["occurrence_count"].max()),
-            }
-        )
-    return pd.DataFrame(rows)
-
-def group_overlap_summary(frame: pd.DataFrame) -> pd.DataFrame:
-    """Verifica se algum repositorio representativo aparece nos dois splits."""
-    train_groups = set(frame.loc[frame["split"].eq("train"), "representative_repo_id"])
-    test_groups = set(frame.loc[frame["split"].eq("test"), "representative_repo_id"])
-    return pd.DataFrame(
-        [
-            {
-                "train_groups": len(train_groups),
-                "test_groups": len(test_groups),
-                "overlapping_groups": len(train_groups.intersection(test_groups)),
-            }
-        ]
-    )
-
-def save_count_figure(frame: pd.DataFrame, output: Path, split: str = "train") -> None:
-    values = frame.loc[frame["split"].eq(split) & frame["reused"].eq(1), "repository_count"]
-    figure, axes = plt.subplots(1, 2, figsize=(12, 4.5))
-    axes[0].hist(values, bins=60, color="#2563eb", alpha=0.85)
-    axes[0].set_title("Contagem bruta entre reutilizadas")
-    axes[0].set_xlabel("repository_count")
-    axes[0].set_ylabel("Numero de skills")
-    axes[0].grid(alpha=0.2)
-    axes[1].hist(np.log1p(values), bins=50, color="#0f766e", alpha=0.85)
-    axes[1].set_title("Contagem em escala logaritmica")
-    axes[1].set_xlabel("log(1 + repository_count)")
-    axes[1].set_ylabel("Numero de skills")
-    axes[1].grid(alpha=0.2)
-    figure.suptitle("EDA do alvo de reutilizacao", fontsize=14)
-    figure.tight_layout()
-    figure.savefig(output, dpi=180)
-    plt.close(figure)
-
-def save_ordinal_figure(table: pd.DataFrame, output: Path) -> None:
-    figure, axis = plt.subplots(figsize=(9, 4.5))
-    bars = axis.bar(table["label"], table["percentage"], color="#7c3aed")
-    axis.bar_label(bars, labels=[f"{value:.1f}%" for value in table["percentage"]])
-    axis.set_ylabel("Percentual entre reutilizadas")
-    axis.set_xlabel("Classe de intensidade")
-    axis.set_title("Distribuicao do alvo ordinal")
-    axis.tick_params(axis="x", rotation=20)
-    axis.grid(axis="y", alpha=0.2)
-    figure.tight_layout()
-    figure.savefig(output, dpi=180)
-    plt.close(figure)
-
-def _fmt(value: object, digits: int = 3) -> str:
-    if isinstance(value, (float, np.floating)):
-        return f"{float(value):.{digits}f}"
-    return str(value)
-
-def write_report(
-    output: Path,
-    count_table: pd.DataFrame,
-    ordinal_table: pd.DataFrame,
-    group_table: pd.DataFrame,
-    split_table: pd.DataFrame,
-    coverage_table: pd.DataFrame,
-    overlap_table: pd.DataFrame,
-) -> str:
-    reused = count_table.loc[count_table["population"].eq("reused")].iloc[0]
-    class3 = ordinal_table.loc[ordinal_table["intensity_code"].eq(3)].iloc[0]
-    lines = [
-        "# Fase 1 - EDA e decisao preliminar do alvo",
-        "",
-        "## Protocolo",
-        "",
-        "A decisao sobre a formulacao do alvo foi baseada somente no split de desenvolvimento "
-        "(`split=train`). O teste externo foi resumido para auditoria de balanceamento, mas "
-        "nao participou da recomendacao. `repository_count` e a origem do alvo e nao pode ser "
-        "usado como atributo preditor.",
-        "",
-        "## Achados principais",
-        "",
-        f"- Skills reutilizadas no desenvolvimento: **{int(reused['n']):,}**.".replace(",", "."),
-        f"- Mediana de `repository_count`: **{_fmt(reused['median'], 0)}**.",
-        f"- Media: **{_fmt(reused['mean'])}**; variancia: **{_fmt(reused['variance'])}**.",
-        f"- Razao variancia/media: **{_fmt(reused['overdispersion_variance_mean'])}**, "
-        "indicando forte sobredispersao.",
-        f"- P95: **{_fmt(reused['p95'], 1)}**; "
-        f"P99: **{_fmt(reused['p99'], 1)}**; "
-        f"maximo: **{_fmt(reused['max'], 0)}**.",
-        f"- A classe `10+` contem **{int(class3['n']):,}** skills, mas varia de "
-        f"{_fmt(class3['count_min'], 0)} a { _fmt(class3['count_max'], 0)} reutilizacoes.",
-        "",
-        "## Distribuicao ordinal",
-        "",
-        "A discretizacao atual produz classes ordenadas, mas a ultima classe agrega uma cauda "
-        "muito ampla. Isso melhora a estabilidade da classificacao, mas perde informacao sobre "
-        "a diferenca entre reutilizacao alta e muito alta.",
-        "",
-        ordinal_table.to_markdown(index=False),
-        "",
-        "## Grupos e divisao",
-        "",
-        "A divisao por `representative_repo_id` e necessaria: os grupos possuem cauda longa e "
-        "nao devem ser fragmentados entre treino e validacao. "
-        "A tabela resume o tamanho dos grupos.",
-        "",
-        group_table.to_markdown(index=False),
-        "",
-        "## Integridade da contagem e da divisao",
-        "",
-        "`occurrence_count` e sempre maior ou igual a `repository_count`; isso e consistente "
-        "com multiplas ocorrencias do mesmo conteudo dentro de um repositorio. Nao foram "
-        "observados valores ausentes ou casos em que a contagem de repositorios excedesse a "
-        "contagem de ocorrencias.",
-        "",
-        coverage_table.to_markdown(index=False),
-        "",
-        "A divisao externa nao possui sobreposicao de `representative_repo_id` "
-        "entre treino e teste:",
-        "",
-        overlap_table.to_markdown(index=False),
-        "",
-        "## Recomendacao para a proxima fase",
-        "",
-        "Decisao da Fase 1: a pesquisa adotara **regressao de contagem** como alvo principal, "
-        "preferencialmente com modelo Binomial Negativo ou regressao sobre "
-        "`log1p(repository_count)`. "
-        "A decisao e sustentada pela forte assimetria e sobredispersao observadas na contagem. "
-        "A classificacao ordinal nao integra o protocolo principal.",
-        "",
-        "O proximo passo e implementar e validar o pipeline de regressao de contagem com divisao "
-        "agrupada, sem leakage, antes do tuning completo e da avaliacao no teste externo.",
-        "",
-        "## Artefatos",
-        "",
-        "- `results/tables/target_eda_count_distribution.csv`",
-        "- `results/tables/target_eda_ordinal_distribution.csv`",
-        "- `results/tables/target_eda_group_distribution.csv`",
-        "- `results/tables/target_eda_split_distribution.csv`",
-        "- `results/tables/target_eda_coverage_summary.csv`",
-        "- `results/tables/target_eda_group_overlap.csv`",
-        "- `results/figures/target_eda_count_distribution.png`",
-        "- `results/figures/target_eda_ordinal_distribution.png`",
-        "",
-    ]
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text("\n".join(lines), encoding="utf-8")
-    return output.read_text(encoding="utf-8")
-
-def run_pipeline(
-    targets_path: Path = DEFAULT_TARGETS,
-    features_path: Path = DEFAULT_FEATURES,
-    tables_dir: Path = DEFAULT_TABLES,
-    figures_dir: Path = DEFAULT_FIGURES,
-    report_path: Path = DEFAULT_REPORT,
-    sample_path: Path = DEFAULT_SAMPLE,
-) -> dict[str, object]:
-    if not targets_path.is_file():
-        raise FileNotFoundError(f"Alvos nao encontrados: {targets_path.resolve()}")
-    if not features_path.is_file():
-        raise FileNotFoundError(f"Features nao encontradas: {features_path.resolve()}")
-    if not sample_path.is_file():
-        raise FileNotFoundError(f"Amostra nao encontrada: {sample_path.resolve()}")
-    frame = load_target_frame(targets_path, features_path)
-    train_count = count_distribution(frame, split="train")
-    train_ordinal = ordinal_distribution(frame, split="train")
-    train_groups = group_distribution(frame, split="train")
-    split_table = split_distribution(frame)
-    coverage_table = coverage_summary(frame, sample_path)
-    overlap_table = group_overlap_summary(frame)
-    # The test table is exported only for audit; it is not used in the report decision.
-    test_count = count_distribution(frame, split="test")
-    test_ordinal = ordinal_distribution(frame, split="test")
-    count_table = pd.concat([train_count, test_count], ignore_index=True)
-    ordinal_table = pd.concat([train_ordinal, test_ordinal], ignore_index=True)
-
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    figures_dir.mkdir(parents=True, exist_ok=True)
-    count_table.to_csv(tables_dir / "target_eda_count_distribution.csv", index=False)
-    ordinal_table.to_csv(tables_dir / "target_eda_ordinal_distribution.csv", index=False)
-    train_groups.to_csv(tables_dir / "target_eda_group_distribution.csv", index=False)
-    split_table.to_csv(tables_dir / "target_eda_split_distribution.csv", index=False)
-    coverage_table.to_csv(tables_dir / "target_eda_coverage_summary.csv", index=False)
-    overlap_table.to_csv(tables_dir / "target_eda_group_overlap.csv", index=False)
-    save_count_figure(frame, figures_dir / "target_eda_count_distribution.png")
-    save_ordinal_figure(train_ordinal, figures_dir / "target_eda_ordinal_distribution.png")
-    write_report(
-        report_path,
-        train_count,
-        train_ordinal,
-        train_groups,
-        split_table,
-        coverage_table,
-        overlap_table,
-    )
-
-    manifest = {
-        "generated_at_utc": datetime.now(UTC).isoformat(),
-        "targets_source": str(targets_path),
-        "features_source": str(features_path),
-        "sample_source": str(sample_path),
-        "rows": int(len(frame)),
-        "train_rows": int(frame["split"].eq("train").sum()),
-        "test_rows": int(frame["split"].eq("test").sum()),
-        "train_reused_rows": int(((frame["split"] == "train") & (frame["reused"] == 1)).sum()),
-        "test_reused_rows": int(((frame["split"] == "test") & (frame["reused"] == 1)).sum()),
-        "decision_scope": "train split only; test summarized for audit",
-        "ordinal_labels": ORDINAL_LABELS,
-        "target_decision": "count regression conditional on reused=1",
-        "primary_metric": "RMSLE",
-        "recommended_next_step": "implement grouped count-regression pipeline",
-        "overlapping_groups_train_test": int(overlap_table.iloc[0]["overlapping_groups"]),
-    }
-    (tables_dir / "target_eda_manifest.json").write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    return manifest
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--targets", type=Path, default=DEFAULT_TARGETS)
-    parser.add_argument("--features", type=Path, default=DEFAULT_FEATURES)
-    parser.add_argument("--sample", type=Path, default=DEFAULT_SAMPLE)
-    parser.add_argument("--tables-dir", type=Path, default=DEFAULT_TABLES)
-    parser.add_argument("--figures-dir", type=Path, default=DEFAULT_FIGURES)
-    parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
-    return parser.parse_args()
-
-def target_eda_main() -> None:
-    args = parse_args()
-    manifest = run_pipeline(
-        targets_path=args.targets,
-        features_path=args.features,
-        sample_path=args.sample,
-        tables_dir=args.tables_dir,
-        figures_dir=args.figures_dir,
-        report_path=args.report,
-    )
-    print("EDA do alvo gerada com sucesso.")
-    print(json.dumps(manifest, indent=2, ensure_ascii=False))
-
-
-# ==========================================================================
-# Gera tabelas e figuras auditáveis para o relatório da disciplina.
-# ==========================================================================
-
-matplotlib.use("Agg")
-
-OUTPUT = Path("results/discipline_benchmark/report_audit")
-
-PREDICTIONS = Path(
-    "results/discipline_benchmark/final_repository_only/"
-    "random_forest_test_predictions.csv"
-)
-
-PERMUTED_COLUMNS = (
-    "repo_stars", "repo_forks", "commit_count", "history_fetched",
-    "repo_language", "repo_license", "repo_is_fork", "repo_metadata_fetched",
-)
-
-def _model() -> RandomForestRegressor:
-    return RandomForestRegressor(
-        n_estimators=100, max_depth=12, min_samples_leaf=3,
-        max_features="sqrt", n_jobs=-1, random_state=2027,
-    )
-
-def _predict(model: RandomForestRegressor, matrix: object) -> np.ndarray:
-    dense = matrix.toarray() if hasattr(matrix, "toarray") else matrix
-    return np.maximum(np.expm1(model.predict(dense)), 0.0)
-
-def _summarize_tail(frame: pd.DataFrame, cuts: list[float]) -> pd.DataFrame:
-    boundaries = [-np.inf, *cuts, np.inf]
-    labels = ["≤P50", "P50–P75", "P75–P90", "P90–P95", ">P95"]
-    frame = frame.copy()
-    frame["tail_bin"] = pd.cut(
-        frame["count_target"], boundaries, labels=labels, include_lowest=True
-    )
-    rows = []
-    for label, group in frame.groupby("tail_bin", observed=True):
-        actual = group["count_target"].to_numpy(dtype=float)
-        predicted = group["prediction"].to_numpy(dtype=float)
-        rows.append({
-            "tail_bin": str(label), "rows": len(group),
-            "median_true": float(np.median(actual)),
-            "median_predicted": float(np.median(predicted)),
-            "median_signed_error": float(np.median(predicted - actual)),
-            "underprediction_rate": float(np.mean(predicted < actual)),
-            **_metrics(actual, predicted),
-        })
-    return pd.DataFrame(rows)
-
-def run(output_dir: Path = OUTPUT) -> None:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    train = load_count_frame(need_text=False, split_name="train")
-    actual_train = train["count_target"].to_numpy(dtype=float)
-    cuts = [float(np.quantile(actual_train, q)) for q in (0.5, 0.75, 0.9, 0.95)]
-    pd.DataFrame({"quantile": ["P50", "P75", "P90", "P95", "P99"],
-                  "train_count": [float(np.quantile(actual_train, q)) for q in
-                                  (0.5, 0.75, 0.9, 0.95, 0.99)]}).to_csv(
-        output_dir / "target_quantiles.csv", index=False
-    )
-    predicted_test = pd.read_csv(PREDICTIONS)
-    actual_test = predicted_test["count_target"].to_numpy(dtype=float)
-    baseline = np.full(len(actual_test), np.median(actual_train))
-    pd.DataFrame([
-        {"model": "train_median_baseline", **_metrics(actual_test, baseline)},
-        {"model": "random_forest", **_metrics(actual_test,
-                                               predicted_test["prediction"].to_numpy())},
-    ]).to_csv(output_dir / "baseline_comparison.csv", index=False)
-    tail = _summarize_tail(predicted_test, cuts)
-    tail.to_csv(output_dir / "random_forest_tail.csv", index=False)
-
-    missing = []
-    for column in PERMUTED_COLUMNS:
-        missing.append({"feature": column, "train_missing_rate": float(train[column].isna().mean()),
-                        "train_rows": len(train)})
-    pd.DataFrame(missing).to_csv(output_dir / "repository_missingness.csv", index=False)
-
-    fig, ax = plt.subplots(figsize=(7.2, 4.3))
-    ax.hist(actual_train, bins=np.logspace(np.log10(2), np.log10(actual_train.max()), 35),
-            color="#38679a", edgecolor="white")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("Número de repositórios (treino, escala log)")
-    ax.set_ylabel("Número de skills (escala log)")
-    ax.set_title("Distribuição da intensidade entre skills reutilizadas")
+def _save(fig: plt.Figure, name: str) -> None:
+    FIG.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
-    fig.savefig(output_dir / "target_distribution.png", dpi=180)
+    fig.savefig(FIG / name, dpi=170)
     plt.close(fig)
 
-    fig, ax = plt.subplots(figsize=(7.2, 4.3))
-    ax.hexbin(actual_test, predicted_test["prediction"], xscale="log", yscale="log",
-              gridsize=42, mincnt=1, cmap="viridis")
-    ax.plot([2, max(actual_test)], [2, max(actual_test)], "--", color="#cc4339", lw=1)
-    ax.set_xlim(1.8, max(actual_test) * 1.1)
-    ax.set_ylim(1, max(actual_test) * 1.1)
-    ax.set_xlabel("Contagem observada no teste")
-    ax.set_ylabel("Previsão do Random Forest")
-    ax.set_title("Valores observados e previstos no teste")
-    fig.tight_layout()
-    fig.savefig(output_dir / "observed_vs_predicted.png", dpi=180)
-    plt.close(fig)
 
-    fig, ax = plt.subplots(figsize=(7.2, 4.3))
-    ax.bar(tail["tail_bin"], tail["mae"], color="#38679a")
-    ax.set_yscale("log")
-    ax.set_ylabel("MAE em repositórios (escala log)")
-    ax.set_xlabel("Faixa definida pelos quantis do treino")
-    ax.set_title("Erro do Random Forest por intensidade no teste")
-    fig.tight_layout()
-    fig.savefig(output_dir / "error_by_intensity.png", dpi=180)
-    plt.close(fig)
+def fig_eda() -> None:
+    win = json.loads((OUT / "phase3" / "window.json").read_text())
+    dev_all = load_frame("dev", eligible_only=False)
+    t0 = pd.to_datetime(dev_all["t0"], utc=True)
+    obs = dev_all[t0 <= SNAPSHOT - pd.Timedelta(days=90)]
+    lags = obs.loc[obs["first_copy_lag_days"] <= 90, "first_copy_lag_days"]
+    fig, ax = plt.subplots(1, 3, figsize=(14, 3.7))
+    xs = np.arange(0, 91)
+    ax[0].plot(xs, [(lags <= x).mean() for x in xs], color=BLUE)
+    ax[0].axvline(win["W"], color="#c0504d", ls="--", lw=1, label=f"W = {win['W']} days")
+    ax[0].axhline(0.8, color=GREY, lw=0.7)
+    ax[0].set_xlabel("days from first appearance to first copy")
+    ax[0].set_ylabel("cumulative share")
+    ax[0].set_title("(a) Time to first copy by another developer")
+    ax[0].legend(fontsize=8)
+    m = t0.dt.strftime("%Y-%m")
+    m = m.where(m >= "2025-10", "earlier")
+    months = m.value_counts()
+    months = months.reindex(["earlier"] + sorted(k for k in months.index if k != "earlier"))
+    ax[1].bar(months.index, months.values, color=LIGHT)
+    cut = (SNAPSHOT - pd.Timedelta(days=win["W"])).strftime("%Y-%m")
+    ax[1].axvline(list(months.index).index(cut) + 0.5 if cut in months.index else len(months),
+                  color="#c0504d", ls="--", lw=1, label="eligibility limit")
+    ax[1].tick_params(axis="x", rotation=60, labelsize=7)
+    ax[1].set_title("(b) First appearance (T0) by month, development")
+    ax[1].legend(fontsize=8)
+    occ = pd.read_parquet(OCCURRENCES, columns=["content_hash", "repo_full_name", "path",
+                                               "aggregator"])
+    status = pd.read_parquet(DATES).merge(occ, on=["content_hash", "repo_full_name", "path"])
+    status = status.loc[~status["aggregator"], "status"].value_counts(normalize=True)
+    lab = {"datada": "dated", "repositorio_inacessivel": "repository gone",
+           "arquivo_ausente": "file gone", "hash_nao_encontrado": "hash not found",
+           "falha_de_coleta": "collection failure",
+           "data_posterior_ao_retrato": "date after snapshot"}
+    ax[2].barh([lab.get(s, s) for s in status.index[::-1]], status.values[::-1], color=BLUE)
+    for i, v in enumerate(status.values[::-1]):
+        ax[2].text(v + 0.01, i, f"{v:.1%}", va="center", fontsize=8)
+    ax[2].set_xlim(0, 1.1)
+    ax[2].set_title("(c) Dating of copies outside aggregators")
+    _save(fig, "eda.png")
 
-    folds = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=2027)
-    records = []
-    for fold, (tr_idx, val_idx) in enumerate(folds.split(
-        train, y=train["split_stratum"], groups=train["representative_repo_id"]
-    ), start=1):
-        tr, val = train.iloc[tr_idx], train.iloc[val_idx]
-        config = {"use_text": False, "use_structural": False, "use_repository": True}
-        x_tr = predictor_view(tr, **config)
-        x_val = predictor_view(val, **config)
-        preprocessor = build_preprocessor(x_tr, **config)
-        fit_tr = preprocessor.fit_transform(x_tr)
-        fit_val = preprocessor.transform(x_val)
-        model = _model()
-        model.fit(fit_tr.toarray() if hasattr(fit_tr, "toarray") else fit_tr,
-                  tr["log_count_target"].to_numpy(dtype=float))
-        y_val = val["count_target"].to_numpy(dtype=float)
-        base = _metrics(y_val, _predict(model, fit_val))["rmsle"]
-        for position, column in enumerate(PERMUTED_COLUMNS):
-            shuffled = x_val.copy()
-            shuffled[column] = np.random.default_rng(2027 + 100 * fold + position).permutation(
-                shuffled[column].to_numpy()
-            )
-            score = _metrics(y_val, _predict(model, preprocessor.transform(shuffled)))["rmsle"]
-            records.append({"fold": fold, "feature": column, "rmsle_increase": score - base})
-        if fold == 1:
-            sample = x_val.sample(n=min(1000, len(x_val)), random_state=2027)
-            effects = []
-            for stars in (0, 1, 3, 10, 100, 1000):
-                varied = sample.copy()
-                varied["repo_stars"] = stars
-                predictions = _predict(model, preprocessor.transform(varied))
-                effects.append({"repo_stars_set_to": stars,
-                                "mean_predicted_count": float(np.mean(predictions))})
-            effects_frame = pd.DataFrame(effects)
-            effects_frame.to_csv(output_dir / "stars_scenario_fold1.csv", index=False)
-            fig, ax = plt.subplots(figsize=(6.4, 3.8))
-            ax.plot(effects_frame["repo_stars_set_to"], effects_frame["mean_predicted_count"],
-                    marker="o", color="#38679a")
-            ax.set_xscale("symlog", linthresh=1)
-            ax.set_xlabel("Estrelas do repositório fixadas no cenário")
-            ax.set_ylabel("Previsão média de repositórios")
-            ax.set_title("Resposta do modelo a cenários de estrelas (dobra 1)")
-            fig.tight_layout()
-            fig.savefig(output_dir / "stars_scenario_fold1.png", dpi=180)
-            plt.close(fig)
-    perm = pd.DataFrame(records)
-    perm.to_csv(output_dir / "permutation_by_fold.csv", index=False)
-    perm_summary = (perm.groupby("feature")["rmsle_increase"]
-                    .agg(["mean", "std"]).sort_values("mean", ascending=False))
-    perm_summary.to_csv(output_dir / "permutation_summary.csv", index_label="feature")
-    fig, ax = plt.subplots(figsize=(7.2, 4.3))
-    ax.barh(perm_summary.index.astype(str), perm_summary["mean"], color="#38679a")
-    ax.invert_yaxis()
-    ax.set_xlabel("Aumento do RMSLE após permutação (validação)")
-    ax.set_title("Importância agrupada dos atributos do repositório")
-    fig.tight_layout()
-    fig.savefig(output_dir / "permutation_importance.png", dpi=180)
-    plt.close(fig)
-    (output_dir / "audit_manifest.json").write_text(json.dumps({
-        "source_predictions": str(PREDICTIONS),
-        "source_split": "external test; no model refitting for tail or baseline",
-        "tail_cutoffs_from": "development train",
-        "tail_cutoffs": cuts,
-        "permutation_split": "development only, 3 StratifiedGroupKFold folds",
-        "group": "representative_repo_id", "seed": 2027,
-        "permutations_per_feature_per_fold": 1,
-        "model": "random_forest_d12_n100",
-    }, indent=2) + "\n", encoding="utf-8")
-    print("Artefatos gerados em", output_dir)
 
-def report_main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, default=OUTPUT)
-    args = parser.parse_args()
-    run(args.output_dir)
+def fig_selection() -> None:
+    spot = pd.read_csv(OUT / "phase4" / "spot_folds.csv")
+    nested = pd.read_csv(OUT / "phase4" / "nested_folds.csv")
+    order = spot.groupby("config")["roc_auc"].mean().sort_values().index
+    fig, ax = plt.subplots(1, 2, figsize=(12, 3.8))
+    ax[0].boxplot([spot.loc[spot.config == c, "roc_auc"] for c in order], vert=False)
+    ax[0].set_yticks(range(1, len(order) + 1), [NAMES[c] for c in order])
+    ax[0].axvline(0.5, color=GREY, ls="--", lw=0.8)
+    ax[0].set_xlabel("ROC AUC (9 author-grouped folds)")
+    ax[0].set_title("(a) Spot-checking, default hyperparameters")
+    cfg = nested.groupby("config")["roc_auc"].mean().sort_values().index
+    ax[1].boxplot([nested.loc[nested.config == c, "roc_auc"] for c in cfg], vert=False)
+    ax[1].set_yticks(range(1, len(cfg) + 1),
+                     [f"{NAMES[c.split('|')[0]]} ({c.split('|')[1]})" for c in cfg])
+    ax[1].set_xlabel("ROC AUC (6 outer folds, nested search)")
+    ax[1].set_title("(b) Nested tuning of the three finalists")
+    _save(fig, "model_selection.png")
+
+
+def fig_eda_attributes() -> None:
+    """Assimetria antes e depois do log e correlacao de Spearman dos atributos de texto."""
+    dev = load_frame("dev")
+    rules = json.loads((OUT / "phase3" / "eda_rules.json").read_text())
+    num = [c for c in TEXT if dev[c].nunique() > 2]
+    skew = dev[num].astype(float).skew()
+    skew_log = np.log1p(dev[num].clip(lower=0).astype(float)).skew()
+    order = skew.sort_values(ascending=False).index[:14]
+    fig, ax = plt.subplots(1, 2, figsize=(11.5, 5.2), gridspec_kw={"width_ratios": [1, 1.3]})
+    y = np.arange(len(order))
+    ax[0].barh(y + 0.2, np.clip(skew[order], None, 60), 0.4, label="raw (clipped at 60)",
+               color="#cccccc")
+    ax[0].barh(y - 0.2, [skew_log[c] if c in rules["skewed_log1p_nontree"] else skew[c]
+                         for c in order], 0.4, label="after log1p", color=BLUE)
+    ax[0].set_yticks(y, [LABEL.get(c, c) for c in order], fontsize=8)
+    ax[0].invert_yaxis()
+    ax[0].axvline(2, color="#c0504d", ls="--", lw=0.8, label="rule: skewness > 2")
+    ax[0].set_xlabel("skewness (development set)")
+    ax[0].set_title("(a) Skewness of the text attributes")
+    ax[0].legend(fontsize=7, loc="lower right")
+    corr = dev[TEXT].astype(float).corr("spearman")
+    im = ax[1].imshow(corr.values, cmap="RdBu_r", vmin=-1, vmax=1)
+    ax[1].set_xticks(range(len(TEXT)), [LABEL.get(c, c) for c in TEXT], rotation=90, fontsize=7)
+    ax[1].set_yticks(range(len(TEXT)), [LABEL.get(c, c) for c in TEXT], fontsize=7)
+    fig.colorbar(im, ax=ax[1], shrink=0.75, label="Spearman correlation")
+    ax[1].set_title("(b) Correlation between text attributes")
+    _save(fig, "eda_attributes.png")
+
+
+def fig_eda_univariate() -> None:
+    """Taxa de copia por quartil de cada atributo de texto (desenvolvimento)."""
+    uni = pd.read_csv(OUT / "phase3" / "univariate_rates.csv").set_index("feature")
+    uni = uni.loc[[c for c in TEXT if c in uni.index]]
+    base = json.loads((OUT / "phase3" / "eda_summary.json").read_text())["replicated_rate"]
+    fig, ax = plt.subplots(figsize=(6.2, 6.6))
+    im = ax.imshow(uni.values, cmap="RdBu_r", vmin=base - 0.05, vmax=base + 0.05, aspect="auto")
+    n = uni.shape[1]
+    ax.set_xticks(range(n), [f"Q{k + 1}" + (" (low)" if k == 0 else " (high)" if k == n - 1 else "")
+                             for k in range(n)])
+    ax.set_yticks(range(len(uni)), [LABEL.get(c, c) for c in uni.index], fontsize=8)
+    for i in range(uni.shape[0]):
+        for k in range(n):
+            ax.text(k, i, f"{uni.values[i, k]:.1%}", ha="center", va="center", fontsize=7)
+    fig.colorbar(im, ax=ax, shrink=0.6, label=f"share copied (overall {base:.1%})")
+    ax.set_title("Share of copied skills by quartile of each text attribute")
+    _save(fig, "eda_univariate.png")
+
+
+def fig_results() -> None:
+    """ROC e precisao-revocacao dos modelos finais e matriz de confusao do modelo de texto."""
+    hold = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
+    pred = pd.read_parquet(OUT / "phase6" / "holdout_predictions_control.parquet")
+    ctrl = json.loads((OUT / "phase6" / "control_popularity.json").read_text())["point"]
+    point = {**hold["point"], **ctrl}
+    fz = json.loads((OUT / "phase5" / "freeze.json").read_text())
+    fig, ax = plt.subplots(1, 3, figsize=(16, 4.6), gridspec_kw={"width_ratios": [1, 1, 0.8]})
+    views = (("text", "text", BLUE), ("size", "size only", LIGHT),
+             ("origin_pop", "origin repository", GREY),
+             ("origin_pop+text", "origin repository + text", "#c0504d"))
+    for view, lab, color in views:
+        p = pred[f"prob_{view.replace('+', '_')}"]
+        fpr, tpr, _ = roc_curve(pred["y"], p)
+        ax[0].plot(fpr, tpr, color=color, lw=1.5,
+                   label=f"{lab} (AUC {point[view]['roc_auc']:.3f})")
+        prec, rec, _ = precision_recall_curve(pred["y"], p)
+        ax[1].plot(rec, prec, color=color, lw=1.5,
+                   label=f"{lab} (PR AUC {point[view]['pr_auc']:.3f})")
+    ax[0].plot([0, 1], [0, 1], color=GREY, ls="--", lw=0.8)
+    ax[0].set_xlabel("False positive rate")
+    ax[0].set_ylabel("True positive rate")
+    ax[0].set_title("(a) ROC curves")
+    ax[0].legend(fontsize=7, loc="lower right")
+    prev = hold["prevalence"]
+    ax[1].axhline(prev, color=GREY, ls="--", lw=0.8, label=f"prevalence ({prev:.1%})")
+    ax[1].set_xlabel("Recall")
+    ax[1].set_ylabel("Precision")
+    ax[1].set_ylim(0, 0.6)
+    ax[1].set_title("(b) Precision-recall curves")
+    ax[1].legend(fontsize=7, loc="upper right")
+    yt = pred["y"].to_numpy()
+    cm = confusion_matrix(yt, (pred["prob_text"] >= fz["threshold"]).astype(int))
+    share = cm / cm.sum(axis=1, keepdims=True)
+    ax[2].imshow(share, cmap="Blues", vmin=0, vmax=1)
+    for (i, k), v in np.ndenumerate(cm):
+        ax[2].text(k, i, f"{v:,}\n({share[i, k]:.0%} of row)", ha="center", va="center",
+                   fontsize=9, color="white" if share[i, k] > 0.6 else "black")
+    ax[2].set_xticks([0, 1], ["predicted\nnot copied", "predicted\ncopied"])
+    ax[2].set_yticks([0, 1], ["not copied", "copied"])
+    ax[2].set_title(f"(c) Text model, threshold {fz['threshold']:.2f}")
+    _save(fig, "results.png")
+
+
+def fig_interpretation() -> None:
+    """Importancia por permutacao e valores SHAP do modelo de texto."""
+    perm = pd.read_csv(OUT / "phase7" / "permutation_holdout.csv")
+    fam = perm[perm["feature"].str.startswith("family:")].iloc[::-1]
+    col = perm[~perm["feature"].str.startswith("family:")].head(10).iloc[::-1]
+    fig, ax = plt.subplots(1, 2, figsize=(12, 3.9))
+    for a, d, lab in ((ax[0], fam, fam["feature"].str.removeprefix("family:")),
+                      (ax[1], col, col["feature"].map(lambda c: LABEL.get(c, c)))):
+        a.barh(lab, d["auc_drop"], color=BLUE,
+               xerr=[(d["auc_drop"] - d["ci95_low"]).clip(lower=0),
+                     (d["ci95_high"] - d["auc_drop"]).clip(lower=0)])
+        a.set_xlabel("AUC drop when permuted (holdout, 95% CI)")
+    ax[0].set_title("(a) Attribute families")
+    ax[1].set_title("(b) Top 10 attributes")
+    _save(fig, "importance.png")
+    fz = json.loads((OUT / "phase5" / "freeze.json").read_text())
+    m = joblib.load(fz["models"]["text"]["file"])
+    pipe, cols = m["pipeline"], m["columns"]
+    sample = interp_sample(load_frame("holdout"))
+    import shap  # noqa: PLC0415
+
+    xt = pipe[:-1].transform(sample[cols])
+    names = list(pipe.named_steps["pre"].get_feature_names_out())
+    model = pipe.named_steps["model"]
+    if fz["algo"] in TREE_ALGOS:
+        values = shap.TreeExplainer(model).shap_values(xt)
+    elif fz["algo"] == "logistic":
+        values = shap.LinearExplainer(
+            model, shap.maskers.Independent(xt, max_samples=len(xt))).shap_values(xt)
+    else:
+        sub = np.random.default_rng(0).choice(len(xt), size=min(1000, len(xt)), replace=False)
+        xt, sample = xt[sub], sample.iloc[sub].reset_index(drop=True)
+        values = shap.Explainer(lambda x: model.predict_proba(x)[:, 1], xt[:100])(xt).values
+    values = values[1] if isinstance(values, list) else values
+    if values.ndim == 3:
+        values = values[:, :, 1]
+    raw = {c: next(k for k, n in enumerate(names) if n.endswith(f"__{c}")) for c in cols}
+    imp = pd.Series({c: np.abs(values[:, j]).mean() for c, j in raw.items()}) \
+        .sort_values(ascending=False)
+    pd.DataFrame({"feature": imp.index, "mean_abs_shap": imp.values}) \
+        .to_csv(OUT / "phase7" / "shap_holdout.csv", index=False)
+    rng = np.random.default_rng(0)
+    pick = rng.choice(len(xt), size=min(5000, len(xt)), replace=False)
+    top = list(imp.index[:12])
+    fig = plt.figure(figsize=(12, 8.2), layout="constrained")
+    gs = fig.add_gridspec(2, 5, height_ratios=[1.3, 1])
+    a0 = fig.add_subplot(gs[0, :])
+    for r, c in enumerate(top[::-1]):
+        v = values[pick, raw[c]]
+        x = sample[c].to_numpy(dtype=float)[pick]
+        q = pd.Series(x).rank(pct=True).to_numpy()
+        a0.scatter(v, r + rng.uniform(-0.3, 0.3, len(v)), c=q, cmap="coolwarm", s=2, alpha=0.5)
+    a0.set_yticks(range(len(top)), [LABEL.get(c, c) for c in top[::-1]], fontsize=10)
+    a0.axvline(0, color=GREY, lw=0.7)
+    lim = np.nanpercentile(np.abs(values[pick][:, [raw[c] for c in top]]), 99.9)
+    a0.set_xlim(-lim * 1.1, lim * 1.1)
+    a0.set_xlabel("SHAP value (log-odds); color: attribute value from low (blue) to high (red)")
+    a0.set_title("(a) SHAP values of the 12 most influential attributes")
+    perm_top = [f for f in perm["feature"] if not f.startswith("family:")][:5]
+    dep = {}
+    for i, c in enumerate(perm_top):
+        a = fig.add_subplot(gs[1, i])
+        x = sample[c].to_numpy(dtype=float)
+        a.axhline(0, color=GREY, lw=0.7)
+        if set(np.unique(x[~np.isnan(x)])) <= {0.0, 1.0}:
+            # atributo binario: um ponto por categoria, com o numero de skills
+            sv = values[:, raw[c]]
+            for k in (0, 1):
+                s = sv[x == k]
+                a.scatter(k + rng.uniform(-0.12, 0.12, len(s)), s, s=3, alpha=0.3, color=BLUE)
+                a.plot([k - 0.2, k + 0.2], [s.mean()] * 2, color="black", lw=1.5)
+                a.annotate(f"{s.mean():+.2f}\nn = {len(s):,}", (k, s.mean()),
+                           xytext=(0, 8 if s.mean() >= 0 else -24), textcoords="offset points",
+                           ha="center", fontsize=8)
+            a.set_xticks([0, 1], ["no", "yes"])
+            a.set_xlim(-0.6, 1.6)
+            pad = 0.35 * (sv.max() - sv.min() + 1e-9)
+            a.set_ylim(min(sv.min(), 0) - pad, max(sv.max(), 0) + pad)
+        else:
+            lo, hi = np.nanpercentile(x, [1, 99])
+            a.scatter(x[pick], values[pick, raw[c]], s=3, alpha=0.3, color=BLUE)
+            a.set_xlim(lo - 0.02 * (hi - lo + 1e-9), hi + 0.02 * (hi - lo + 1e-9))
+            inside = (x >= lo) & (x <= hi)
+            sv = values[inside, raw[c]]
+            pad = 0.05 * (sv.max() - sv.min() + 1e-9)
+            a.set_ylim(sv.min() - pad, sv.max() + pad)
+        a.set_xlabel(LABEL.get(c, c), fontsize=9)
+        a.set_title(("(b) SHAP dependence: " if i == 0 else "") + LABEL.get(c, c), fontsize=9,
+                    loc="left" if i == 0 else "center")
+        if i == 0:
+            a.set_ylabel("SHAP value (log-odds)")
+        dep[c] = float(pd.Series(x).corr(pd.Series(values[:, raw[c]]), method="spearman"))
+    FIG.mkdir(parents=True, exist_ok=True)
+    fig.savefig(FIG / "shap.png", dpi=170)
+    plt.close(fig)
+    write_json(OUT / "phase7" / "shap_dependence.json", {"rows": len(xt), "top12": top,
+                                                         "spearman_value_vs_shap": dep})
+
+
+def main_figures() -> None:
+    fig_eda()
+    fig_eda_attributes()
+    fig_eda_univariate()
+    fig_selection()
+    fig_results()
+    fig_interpretation()
+    print(sorted(p.name for p in FIG.glob("*.png")))

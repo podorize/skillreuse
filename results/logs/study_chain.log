@@ -1,0 +1,27 @@
+14:36:54 inicio do estudo principal (agregadores seguem em paralelo)
+14:36:54 inicio phase2_cohort
+14:43:00 fim phase2_cohort
+14:43:00 inicio phase3_eda
+14:43:04 fim phase3_eda
+14:43:04 inicio phase4_spot
+14:45:58 fim phase4_spot
+14:45:58 inicio phase4_tune
+14:50:37 fim phase4_tune
+14:50:37 inicio phase5_final
+14:50:54 fim phase5_final
+14:50:54 inicio phase5_freeze
+14:50:58 fim phase5_freeze
+14:50:58 inicio phase6_holdout
+14:51:43 fim phase6_holdout
+14:51:43 inicio phase7_interpret
+14:56:57 fim phase7_interpret
+14:56:57 inicio phase7_sensitivity_partial
+14:57:13 fim phase7_sensitivity_partial
+14:57:13 ESTUDO PRINCIPAL COMPLETO
+18:03:15 inicio phase7_variants
+18:03:30 fim phase7_variants
+18:03:30 inicio phase7_sensitivity
+18:03:51 fim phase7_sensitivity
+18:03:51 inicio phase7_figures
+18:03:57 fim phase7_figures
+18:03:57 ESTUDO COMPLETO

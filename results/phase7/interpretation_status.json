@@ -1,0 +1,23 @@
+{
+  "rq2": "respondida",
+  "rows": 20000,
+  "authors": 10100,
+  "top5": [
+    "text_sentence_count",
+    "text_lexical_diversity",
+    "text_average_sentence_words",
+    "text_average_word_length",
+    "frontmatter_valid"
+  ],
+  "family_rank_spearman_vs_holdout": {
+    "r1f1": 1.0,
+    "r1f2": 0.9428571428571428,
+    "r1f3": 0.9428571428571428,
+    "r2f1": 0.9428571428571428,
+    "r2f2": 0.9428571428571428,
+    "r2f3": 0.7142857142857143,
+    "r3f1": 0.9428571428571428,
+    "r3f2": 0.9428571428571428,
+    "r3f3": 1.0
+  }
+}

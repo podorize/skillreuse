@@ -1,0 +1,13 @@
+12:27:06 inicio collect_dates_main
+14:09:10 fim collect_dates_main
+14:09:10 inicio collect_stars
+14:18:01 fim collect_stars
+14:18:01 inicio collect_dates_aggregators
+15:03:36 reinicio dos agregadores com lotes de 5 e 16 consultas
+15:03:36 inicio collect_dates_aggregators
+16:32:47 reinicio dos agregadores com lotes de 5 e 12 consultas (retomada)
+16:32:47 inicio collect_dates_aggregators
+18:02:25 fim collect_dates_aggregators
+18:02:25 inicio collect_merge
+18:02:26 fim collect_merge
+18:02:26 COLETA COMPLETA

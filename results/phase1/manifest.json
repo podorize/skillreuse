@@ -1,0 +1,14 @@
+{
+  "phase": 1,
+  "protocol": "paper/protocol.md secao 2",
+  "created_utc": "2026-11-17T14:01:07.517361+00:00",
+  "seed": "20261121",
+  "aggregator_min_skills": 100,
+  "counts": {
+    "population_contents": 1163728,
+    "sample_contents": 150000,
+    "occurrences": 308256,
+    "occurrences_outside_aggregators": 223261,
+    "occurrences_in_aggregators": 84995
+  }
+}
