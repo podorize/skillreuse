@@ -1,0 +1,8 @@
+status
+datada                       271950
+repositorio_inacessivel       31719
+arquivo_ausente                2140
+falha_de_coleta                1127
+data_posterior_ao_retrato       772
+hash_nao_encontrado             548
+Name: count, dtype: int64

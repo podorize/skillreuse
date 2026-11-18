@@ -1,0 +1,33 @@
+{
+  "phase": 2,
+  "created_utc": "2026-11-17T17:42:53.290607+00:00",
+  "seed": "20261122",
+  "snapshot": "2026-07-09",
+  "collection_status": {
+    "datada": 198579,
+    "repositorio_inacessivel": 20934,
+    "arquivo_ausente": 1567,
+    "falha_de_coleta": 960,
+    "data_posterior_ao_retrato": 684,
+    "hash_nao_encontrado": 537
+  },
+  "contents_dated": 135670,
+  "contents_after_cap": 135332,
+  "dev_rows": 94683,
+  "dev_authors": 42872,
+  "holdout_rows": 40649,
+  "holdout_authors": 18373,
+  "invariants": {
+    "author_overlap": 0,
+    "hash_overlap": 0,
+    "max_per_author": 50,
+    "holdout_author_share_by_band": {
+      "1": 0.30000282063577133,
+      "11-50": 0.2995073891625616,
+      "2-3": 0.2999760019198464,
+      "4-10": 0.30003699593044764
+    },
+    "failed": []
+  },
+  "table_sha256": "ce531e1bf6dcbc7963dbacbf285d17d6e395baa59aa1bd67ad7aedd9e93a166b"
+}

@@ -1,120 +1,156 @@
-# Protocolo principal da pesquisa (v1.1)
+# Research protocol (APPROVED)
 
-**Estado:** definido em 10/11/2026, depois de uma fase exploratória no desenvolvimento; v1.1 registra o holdout construído, o tuning aninhado e os modelos congelados **antes** da avaliação do holdout (tag git `frozen-before-holdout`). Este documento fixa o que é **confirmatório** (hipóteses H1–H4, um único modelo final, um holdout novo) e o que é **exploratório**. Decisões tomadas depois de ver resultados estão marcadas como *dependentes dos dados* (seção 9).
+**Status:** approved by the authors on 17/11/2026; no collection data had been obtained and no model had been trained with this design. It meets the requirements of the CMP263 practical assignment (Machine Learning, UFRGS) and was designed for submission to the MSR Mining Challenge, which uses GitSkills. The registration (phase 0) is in `results/phase0/registration.json`, with the SHA-256 hash of this file. The protocol is executed in phases (Section 12). Any later change is a declared deviation (Section 13).
 
-## 1. Pergunta e posicionamento
+**Translation:** the protocol was approved and executed in Portuguese and translated into English on 18/11/2026, with no change of content. The SHA-256 hashes recorded in `results/phase0/registration.json` and `results/phase5/freeze.json` refer to the original Portuguese text.
 
-Quais características observáveis de uma skill e do seu repositório estão associadas à difusão de seu conteúdo **entre donos** no GitHub, e quanto dessa previsibilidade é artefato da construção do dataset?
+---
 
-Duas contribuições, nesta ordem:
+## 1. Questions and hypotheses
 
-1. **Metodológica:** a escolha do representante no GitSkills (melhor classe de localização, depois ordem alfabética de repositório e caminho) torna `location_class` e `history_fetched` função do número de cópias; o alvo `repository_count` mistura difusão com autocópia; poucos donos concentram a amostra.
-2. **Preditiva (modesta e testada com cuidado):** com atributos livres desses artefatos, há sinal para o reúso entre donos.
+- **RQ1:** *Do the characteristics of a skill's text, observed when it first appears, predict better than chance whether other developers will copy it?*
+- **RQ2:** *Which text characteristics carry this signal, and in which direction?*
 
-Os resultados são **associações observacionais**; não há afirmação causal nem de qualidade da skill.
+**Control.** The text could merely reflect where the skill was published: a popular repository attracts copies. We compare a model with attributes of the origin repository **at T0**, including its popularity, and a model with origin repository + text.
 
-## 2. Dados e população
+| Hypothesis | Criterion (holdout, 95% CI by author bootstrap, Holm across the two) |
+|---|---|
+| **H1** (RQ1) | AUC of the text model > 0.5 |
+| **C1** (control) | AUC(repository + text) − AUC(repository) > 0 |
 
-- Fonte: GitSkills, revisão Hugging Face `ebab17454a7c236f8f26b183567f1a126f42e3f8` (coleta de julho de 2026; referência temporal fixa em 2026-07-20).
-- Amostra: 200.000 conteúdos (`md5(content_hash || ':20261009')`); divisão externa original agrupada por repositório: 160.000 desenvolvimento / 40.000 teste.
-- Unidade: conteúdo distinto de `SKILL.md` (`content_hash`).
-- **População de estudo:** conteúdos com `repository_count >= 2` (reutilizados). Desenvolvimento: 25.918 conteúdos de 7.128 donos.
-- **Limite por dono (principal):** no máximo **50 conteúdos por dono do repositório representativo**, escolhidos pela ordem de `content_hash` (determinística). Resulta em 17.733 conteúdos. Sensibilidades: sem limite, exclusão de donos com >200, >500 e >1000 linhas.
-- A partição externa original **está consumida** (foi consultada e 17% de suas linhas têm donos presentes no desenvolvimento). Nenhuma afirmação confirmatória se apoia nela (seção 8).
+RQ2 is answered only if H1 is confirmed.
 
-## 3. Alvos
+---
 
-| Papel | Alvo | Definição |
+## 2. Data
+
+### 2.1 Source, aggregators and population
+- GitSkills, revision `ebab17454a7c236f8f26b183567f1a126f42e3f8` (Hugging Face `mvaccargiu/gitskills`), verified by SHA-256. One row per occurrence of a `SKILL.md`; the content hash identifies identical copies.
+- **Aggregator:** a repository with **100 or more** distinct contents in GitSkills, such as registries, mirrors and marketplaces that collect skills in bulk. Copies in these repositories do not represent the adoption of the skill by a developer.
+- **Population:** contents with at least one occurrence outside aggregators (about 1.16 million).
+- **Sample:** the first 150,000 contents of the population in the order of `md5(content_hash || ':20261121')`, with all their occurrences.
+- **Snapshot:** S = 09/07/2026, start of the GitSkills crawl.
+
+### 2.2 Collection through the GitHub API
+Done once, through the GraphQL API, reading public repositories only, with up to 4 parallel queries and progress saved in parts so it can be resumed. Network or rate-limit failures are retried up to 3 times, with increasing waits; if they persist, the occurrence receives the status "collection failure". The resulting tables are published with the code.
+- **Arrival of each copy** (including those in aggregators, used only in the sensitivity analysis of Section 8) = the later of (a) the first commit, in the history of the path on the default branch (up to 500 commits), in which the file has exactly the content hash and (b) the creation of the repository, which corrects histories inherited from clones.
+- **Status of each occurrence:** dated, repository inaccessible, file missing, hash not found or collection failure.
+- **Stars of the origin repository at T0:** count of the stars dated before T0, read in chronological order until passing T0 or reaching 10,000 (recorded as ≥ 10,000; the attribute enters on a log scale).
+
+### 2.3 Definitions
+- **T0** = earliest arrival among the dated copies outside aggregators. **Origin** = the copy with that arrival. **Author** = owner of the origin repository.
+- **Copied (target)** = there is a dated copy, outside aggregators, by **another owner**, with arrival in [T0, T0 + W].
+- **Window W:** fixed in phase 3 by the rule of Section 5, among 30, 60 and 90 days.
+- **Eligible** = skills with T0 ≤ S − W, so that all of them have the full observation window.
+- **Cap:** at most 50 skills per author, the first ones in hash order, applied before the split.
+
+---
+
+## 3. Attributes
+
+| Group | Use | Columns |
 |---|---|---|
-| **Principal (classificação)** | `cross_owner` | `owner_count >= 2`, com `owner_count` = donos distintos que contêm o mesmo conteúdo (todas as ocorrências brutas) |
-| Secundário (regressão) | `log1p(owner_count)` | métrica RMSLE |
-| Sensibilidade | `log1p(repository_count)` | alvo antigo |
+| **Text** | Main model (RQ1, RQ2) | 27 attributes of the `SKILL.md`: size, style, Markdown structure, code, links and front matter. Identical in all copies, so they are the text at T0 |
+| **Origin repository at T0** | Control only | Stars at T0 (log), age of the repository at T0, language, license, fork, and path of the origin copy (depth, root, template, plugin, vendor, documentation, package, other tools, `.claude`) |
+| **Outside the models** | — | Attributes measured at S (current stars and forks, last push, number of skills in the repository); folder and package of the GitSkills representative copy; collection indicators |
 
-Justificativa: `repository_count` conta autocópia (28% das skills reutilizadas têm todas as cópias em um único dono) e é limite inferior da população (a busca do GitHub é parcial).
+---
 
-## 4. Atributos
+## 4. Split and validation
 
-**Principais (limpos, 52 colunas):**
+- **Split:** by author, over all dated skills after the cap, before any analysis. Within each author-size band (1, 2–3, 4–10, 11–50, more than 50 skills), authors are ordered by `md5(author || ':20261122')`; the first **30%** form the **holdout** and the others the **development set**.
+- **Invariants:** no author and no hash on both sides; at most 50 skills per author; 29% to 31% of the authors in the holdout in each band.
+- **Validation on the development set:** 3 repetitions × 3 folds of `StratifiedGroupKFold`, grouped by author and stratified by the target (seeds 2027–2029), the same for all algorithms.
 
-| Bloco | n | Conteúdo |
-|---|---:|---|
-| `skill` | 34 | estrutura do SKILL.md (tamanho, títulos, listas, blocos de código, links, front matter, scripts/referências, pasta) e `filename` |
-| `repo` | 8 | `log1p` de estrelas e forks, `repo_is_fork`, idade, recência do push, dias ativos, linguagem, licença |
-| `catalog` | 2 | `log1p` do número de skills no repositório e indicador ≥10 |
-| `path` | 8 | profundidade, raiz, `template`, `plugin`, `vendor`, `docs`, `pkg`, diretório de outra ferramenta |
+---
 
-**Atalhos (analisados como achado, fora dos modelos principais):** `location_class`, `history_fetched`, `commit_count`, `.claude` no caminho. Dependem da regra de escolha do representante (auditoria em `results/owner/audit_by_*`).
+## 5. Exploratory analysis and preprocessing
 
-Nunca são preditores: `repository_count`, `owner_count`, `occurrence_count`, `canonical_share`, `any_canonical`, estratos e partição.
+- **Development set only:** collection coverage, distribution of T0 and of the time to first copy, types, missing values, outliers, inconsistencies, correlations and relation with the target.
+- **Window rule:** among development skills with at least 90 days of observation (T0 ≤ S − 90) and copied within 90 days, W = the smallest value among 30, 60 and 90 that covers at least 80% of the times to first copy. Restricting to skills with 90 days of observation avoids the censoring bias of recent skills.
+- **Preprocessing rules:** constant columns removed; skewness > 2 → log in scale-sensitive models; Spearman > 0.95 → one column of the pair removed in those models; impossible values → missing. **Outliers** are kept, because they are real skills (very long texts, a lot of code), and the log reduces their influence in scale-sensitive models. **Discretization** is not used: trees choose their own cut points, and fixed bins would discard information in the other models.
+- **Pipelines fitted inside each fold:** median imputation with indicator, or constant category; one-hot with rare categories (< 10) grouped; standardization for logistic regression, k-NN, Naive Bayes and MLP; no resampling; imbalance handled by class weight as a hyperparameter.
 
-Pré-processamento (sempre ajustado no treino de cada dobra): mediana + indicador de ausência + escala (sem média) para numéricos; categoria constante + one-hot (`min_frequency=10`) para categóricos.
+---
 
-## 5. Modelos e validação
+## 6. Modeling
 
-- **Modelo principal:** Random Forest (regressão: 100 árvores, `max_depth=12`, `min_samples_leaf=3`, `max_features=sqrt`; classificação: 300 árvores com os mesmos limites; `random_state=2027`).
-- Referências lineares: Ridge (`alpha=10`) e regressão logística (`C=1`).
-- Baselines: prevalência (classificação), média e mediana de `log1p` (regressão).
-- **Validação:** 3 repetições × 3 dobras `StratifiedGroupKFold`, **agrupadas por dono**, estratificadas por faixa de `owner_count`; sementes 2027, 2028, 2029; mesmas partições para todos os modelos. Nenhum dono aparece em treino e validação de uma mesma dobra.
-- **Sensibilidade ao `name`:** por dobra, fração das linhas de validação com `name` visto no treino e métricas no subconjunto sem sobreposição.
-- **Tuning aninhado e seleção (executados):** `skillreuse final-model`; seis famílias (linear, KNN, árvore, Random Forest, Gradient Boosting, HistGradientBoosting) × {padrão, buscada} sobre `clean_full`; externa 2 repetições × 3 dobras agrupadas por dono; interna 3 dobras agrupadas por dono, `RandomizedSearchCV` com 6 candidatas; seleção pela maior média externa (AUC) ou menor (RMSLE). **Desvio por custo computacional:** o protocolo previa 3×3 e 12 candidatas.
-- **Modelos congelados** (`results/owner/final/final_config_*.json`): classificação = Random Forest padrão (AUC aninhado 0,716, baseline 0,5); regressão = HistGradientBoosting padrão (RMSLE aninhado 0,6695, baseline 0,7197). Em ambas as tarefas as famílias empatam estatisticamente (IC das diferenças inclui zero); a regra pré-especificada seleciona a melhor média. A busca não superou a configuração padrão. Só esses dois modelos vão ao holdout. H2 foi testada com RF no desenvolvimento; o modelo final de regressão é o HistGB selecionado pela regra.
+1. **Spot-checking:** 7 algorithms with default hyperparameters on the text (logistic regression, Naive Bayes, k-NN, decision tree, random forest, HistGradientBoosting, MLP). The 3 with the highest mean AUC go on.
+2. **Nested search:** 6 outer folds (2 × 3) and 3 inner folds by author; random search of 10 configurations; default and tuned versions. The highest mean outer AUC wins. If the difference to the second is not significant (Nadeau–Bengio with Holm), the one with the shortest mean training time wins.
+3. **Final models** on the whole development set: **text**, **origin repository** and **origin repository + text**, each with its own search.
+4. **Simple reference:** the same algorithm with the size attributes only. On the holdout, the AUC difference to the text model is reported with a 95% CI, descriptively (no hypothesis), to show whether the signal goes beyond the length of the text.
+5. **Threshold:** maximum balanced accuracy on the out-of-fold predictions of the development set.
+6. **Freezing** of models and threshold with hashes, before reading the holdout.
 
-## 6. Métricas
+---
 
-- Principais: **AUC-ROC** (classificação) e **RMSLE** (regressão).
-- Secundárias: AUC-PR, Brier, log-loss, MAE, MAE em `log1p`, Spearman.
-- Incerteza: diferença pareada por (repetição, dobra), IC95% e **teste t com correção de Nadeau–Bengio** (as repetições reutilizam os mesmos dados). O Wilcoxon pareado é complementar, não decide.
+## 7. Evaluation
 
-## 7. Hipóteses pré-especificadas (família com correção de Holm, α = 0,05)
+- **Main metric:** ROC AUC. **Secondary:** PR AUC (against the prevalence), Brier score and, at the threshold, precision, recall and balanced accuracy.
+- **Development set:** paired comparisons by fold with Nadeau–Bengio and Holm.
+- **Holdout:** evaluated **only once**, with a recorded lock; 95% CI by author bootstrap (2,000 resamples).
 
-| ID | Hipótese (contra a alternativa de ausência de efeito) | Tarefa | Comparação |
-|---|---|---|---|
-| H1 | os atributos limpos preveem reúso entre donos | classificação | AUC `clean_full` RF contra prevalência (0,5) |
-| H2 | os atributos limpos reduzem o RMSLE de `owner_count` | regressão | RF `clean_full` contra média de `log1p` |
-| H3a | a skill acrescenta ao repositório e catálogo | classificação | `clean_full` contra `repo+catalog` (AUC) |
-| H3b | repositório e catálogo acrescentam à skill | classificação | `clean_full` contra `skill` (AUC) |
-| H4 | os atalhos acrescentam aos atributos limpos (achado metodológico) | regressão | `clean_full+shortcuts` contra `clean_full` (RMSLE) |
+---
 
-Todo o resto é **exploratório**: reportar IC e p nominal, sem declarar significância.
+## 8. Sensitivity and robustness
 
-Executar: `make primary` → `results/owner/primary/primary_hypotheses.csv`.
+Done after the main evaluation, with the frozen hyperparameters, and reported whatever the result.
 
-## 8. Confirmação em holdout novo
+| Analysis | Question | How |
+|---|---|---|
+| **Aggregators** | Does the result depend on the definition of aggregator? | Limit of 500 skills and no exclusion, on the same sample (T0 and target recomputed; text model retrained on the development set and evaluated on the holdout) |
+| **Window** | Does the result depend on W? | The other two values of W |
+| **Undated copies** | Do inaccessible repositories distort T0 or the target? | Only skills with all copies outside aggregators dated |
+| **Temporal split** | Does the model predict future skills? | Cutoff C = 70th percentile of T0 among the eligible development skills; training on development skills with T0 < C; testing on holdout skills with T0 ≥ C |
+| **Known variants** | Does performance come from recognizing variants of training skills? | AUC on the holdout only with skills whose front-matter `name` (known at T0) does not appear in the development set. Filters based on the copies are not used, because they depend on the target; the effect of families that circulate together is assessed by the temporal split |
 
-A fase acima é **exploratória para fins confirmatórios**, pois os resultados foram vistos antes de fixar o protocolo. A confirmação exige um holdout nunca consultado:
+---
 
-- Conteúdos fora dos 200.000 amostrados (≈1,68 milhão) com `repository_count >= 2`, **donos disjuntos** dos donos de todas as skills reutilizadas da amostra (desenvolvimento e teste original; critério mais rígido que o inicial), com o mesmo limite de 50 conteúdos por dono. Construído por `skillreuse holdout`: 25.011 conteúdos de 10.484 donos, sobreposição zero de donos e de conteúdos, máximo de 37 conteúdos por dono, semente `20261110`. A prevalência de `cross_owner` (80,8%) foi vista como verificação de integridade; nenhum modelo foi avaliado antes do congelamento.
-- **Deslocamento de composição (limitação):** o holdout tem 36% de skills `canonical` e 9% `other` (desenvolvimento: 21% e 21%), porque os donos concentrados ficam de fora.
-- Mesmas definições de alvos e atributos, mesmo código, **um único** modelo final (o selecionado na seção 5), uma única avaliação.
-- Estimativa com **bootstrap por conglomerado (dono)**, 2.000 reamostras. Critério de sucesso: limite inferior do IC95% do AUC > 0,5 e limite superior do IC95% da diferença de RMSLE para a média < 0.
-- Se o critério falhar, o resultado é reportado como tal.
+## 9. Interpretation (RQ2)
 
-## 9. Decisões dependentes dos dados (transparência)
+- **Model:** the text model, which uses the winning algorithm and is the best model for the research question. The repository + text model has another purpose (the control) and is not interpreted.
+- **Sample:** the whole holdout, or 20,000 skills drawn by author (`md5(author || ':20261123')`) if it is larger.
+- **Methods:** permutation importance by family and by attribute, with bootstrap CIs; ALE and SHAP of the 5 main attributes; stability of the family ranking over the 9 folds.
+- **Reading:** associations of the model, not causes; only what is stable is interpreted.
 
-1. O **limite de 50 por dono** foi escolhido depois de ver que o AUC varia de 0,615 a 0,747 conforme o limiar de exclusão (poucos donos com 500–1000 linhas dominam o resultado). Escolher outro valor altera as estimativas; a sensibilidade (25/50/100, sem limite, limiares) é obrigatória no relatório.
-2. A escolha de `cross_owner` como alvo principal e de `clean_full` como visão principal veio da fase exploratória.
-3. Os atalhos foram excluídos depois de a auditoria mostrar que a probabilidade de o representante ser `canonical` sobe de 14% (2 repositórios) para 92% (>50) enquanto a fração real de cópias em `canonical` fica entre 5% e 13%.
+---
 
-## 10. Interpretação e limites
+## 10. Reproducibility
 
-- Importância por permutação em dobras agrupadas por dono (`skillreuse owner-importance`); correlação entre atributos limita a leitura individual.
-- Os atributos descrevem **uma cópia** (o representante) de cada conteúdo; agregados sobre todas as cópias dependeriam das mesmas ocorrências que definem o alvo (vazamento) e não são usados.
-- Cópia exata não captura versões modificadas; `owner_count` é limite inferior; o snapshot é de julho de 2026.
-- A atribuição de dono usa a conta do repositório; organizações e contas de uma mesma pessoa podem ser distintas.
+- Python 3.12 with `uv.lock`; fixed seeds; collection tables, derived table and frozen models published; a `Makefile` per phase; tests that check invariants and every number in the paper; a Colab notebook that reproduces the results without the API.
 
-## 11. Dicionário de dados
+---
 
-Ver `results/owner/` (EDA, auditoria) e `results/owner/primary/manifest.json`. Colunas originais: tabela `artifacts` e `repos` do GitSkills (arXiv:2608.10906).
+## 11. Threats to validity
 
-## 12. Resultado da avaliação única no holdout (10/11/2026)
+- **Coverage:** copies deleted before S are not observed, those inaccessible after S are not dated, and GitHub code search only indexes recently active repositories (a small effect in an ecosystem less than a year old); the target is a lower bound and T0 may be late.
+- **History:** rewrites (rebase, force-push) are not detected; the arrival rule only corrects histories older than the creation of the repository.
+- **Authorship:** the earliest observed copy approximates the author; different accounts of the same person or organization count as different developers; copies made by installers count as adoption.
+- **Aggregators:** the limit of 100 skills separates bulk collection from individual adoption only approximately (sensitivity analysis of Section 8).
 
-Executado uma vez, com os modelos congelados na tag `frozen-before-holdout` (`results/owner/holdout/holdout_results.json`; trava em `evaluation_lock.json`).
+---
 
-| Tarefa | Modelo | Resultado | Baseline | IC95% (bootstrap por dono, 2.000) |
-|---|---|---:|---:|---|
-| `cross_owner` | Random Forest padrão | AUC **0,731**; AUC-PR 0,913; Brier 0,140; log-loss 0,444 | AUC 0,5; AUC-PR 0,808; Brier 0,155; log-loss 0,490 | AUC [0,716; 0,745]; AUC-PR [0,905; 0,921] |
-| `log1p(owner_count)` | HistGradientBoosting padrão | RMSLE **0,625**; Spearman 0,330 | média de `log1p`: 0,664 | diferença −0,038 [−0,044; −0,032] |
+## 12. Phases
 
-Critérios de sucesso da seção 8: **atendidos** (limite inferior do AUC > 0,5; limite superior da diferença de RMSLE < 0). A estimativa de AUC no holdout (0,731) é compatível com a do desenvolvimento (0,716 aninhado).
+| Phase | Content | Output |
+|---|---|---|
+| 0 | Registration of this protocol | Hash recorded |
+| 1 | Aggregators, population, sample and collection (2.1, 2.2) | Collection tables with the status of each occurrence |
+| 2 | Authors, split and attributes (2.3, 3, 4) | Invariants approved; manifest |
+| 3 | EDA, window and rules (5) | W, eligible skills, target and rules recorded |
+| 4 | Spot-checking and nested search (6.1, 6.2) | Winner recorded |
+| 5 | Final models, reference and threshold; freezing (6.3–6.6) | Models with hashes |
+| 6 | Single evaluation (7) | Results and lock |
+| 7 | Sensitivity, robustness and interpretation (8, 9) | Results recorded |
+| 8 | Paper, notebook and tests | Numbers checked by the tests |
 
-Limitações da confirmação: (i) efeito pequeno em RMSLE (≈6% da baseline); (ii) deslocamento de composição entre desenvolvimento e holdout (seção 8); (iii) H3 e H4 não foram reavaliadas no holdout (permanecem exploratórias); (iv) a seleção entre famílias foi um empate estatístico; (v) a confirmação vale para o snapshot de julho de 2026 e para donos com poucas skills reutilizadas (donos concentrados foram excluídos por construção).
+---
+
+## 13. Deviations
+
+| Date | Phase | Deviation | Reason | Before or after results |
+|---|---|---|---|---|
+| 17/11/2026 | 1 | **Clarification:** copies whose computed arrival is later than the end of the GitSkills crawl (20/07/2026) receive the status "date after the snapshot" and are not dated (684 of 223,261). A copy observed in the snapshot cannot have arrived after it; the date comes from recreated repositories or rewritten histories. | Data quality; identified in a trial run of the code on partial data | Before the main results |
+| 17/11/2026 | 1 | **Execution:** the copies in aggregators, used only in the sensitivity analysis, were collected in batches of 5 with 16 parallel queries, because batches of 40 stalled in repositories with tens of thousands of files. The aggregator sensitivity analysis runs after the other analyses, with the alternative T0 values in a separate file (`data/derived/aggregator_variants.parquet`), without changing the main table. | Execution time | Before the results of that sensitivity analysis |
+| 17/11/2026 | 5–6 | **Popularity in the control:** the GitHub API no longer lists stars with their dates (empty query even for popular repositories), so the stars at T0 were all zero and were removed as constant by the rule of Section 5; the original C1 tested only the fixed attributes of the origin repository. The control was redone with **stars and forks of the origin repository at the snapshot** (later than T0, which makes the control more demanding) and only C1 was re-evaluated on the holdout (`results/phase6/control_popularity.json`). The text model, H1 and the original results (`results/phase6/holdout_results.json`) do not change. | Data unavailable; keep the test of the main alternative explanation | After the single evaluation |
+| 18/11/2026 | 7 | **Interpretation:** the ALE was computed but not included in the paper; RQ2 is answered with permutation importance and SHAP, which already show the direction and shape of the effects of the main attributes. To keep the repository restricted to what the paper uses, the ALE code and the file `results/phase7/ale_holdout.csv` were removed. | Simplicity of the paper; the ALE repeated what SHAP shows for a linear model | After the interpretation results |

@@ -1,0 +1,15 @@
+{
+  "best_auc": "hist_gb|tuned",
+  "tied": [
+    "hist_gb|tuned",
+    "hist_gb|default",
+    "logistic|default",
+    "logistic|tuned",
+    "mlp|default",
+    "mlp|tuned"
+  ],
+  "winner": "logistic|default",
+  "algo": "logistic",
+  "variant": "default",
+  "rule": "maior AUC externa; entre empatados, menor tempo"
+}

@@ -1,3 +1,0 @@
-# Apêndice B — Uso de ferramentas de inteligência artificial
-
-O Claude Code \cite{claude_code} (Anthropic) foi usado como assistente de implementação e análise ao longo do projeto: auditoria do dataset, construção de alvo e atributos, código de validação e ajuste, construção do holdout, testes, figuras e redação. O autor definiu as perguntas de pesquisa, aprovou cada decisão metodológica (alvo por donos, atributos excluídos, teto por dono, protocolo, holdout e avaliação única), revisou os resultados e responde pelo código, pelas afirmações e pela interpretação. Testes automatizados conferem os números do texto com os arquivos de resultados.

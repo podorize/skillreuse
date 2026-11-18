@@ -1,0 +1,27 @@
+[tune] r1 f1 hist_gb: default 0.6471 tuned 0.6462
+[tune] r1 f1 logistic: default 0.6300 tuned 0.6320
+[tune] r1 f1 mlp: default 0.6337 tuned 0.5947
+[tune] r1 f2 hist_gb: default 0.6627 tuned 0.6714
+[tune] r1 f2 logistic: default 0.6497 tuned 0.6518
+[tune] r1 f2 mlp: default 0.6427 tuned 0.6643
+[tune] r1 f3 hist_gb: default 0.6525 tuned 0.6578
+[tune] r1 f3 logistic: default 0.6522 tuned 0.6525
+[tune] r1 f3 mlp: default 0.6143 tuned 0.6210
+[tune] r2 f1 hist_gb: default 0.6561 tuned 0.6592
+[tune] r2 f1 logistic: default 0.6471 tuned 0.6501
+[tune] r2 f1 mlp: default 0.6443 tuned 0.6545
+[tune] r2 f2 hist_gb: default 0.6586 tuned 0.6640
+[tune] r2 f2 logistic: default 0.6478 tuned 0.6478
+[tune] r2 f2 mlp: default 0.6305 tuned 0.6618
+[tune] r2 f3 hist_gb: default 0.6392 tuned 0.6420
+[tune] r2 f3 logistic: default 0.6408 tuned 0.6414
+[tune] r2 f3 mlp: default 0.6166 tuned 0.6328
+                    mean     std  fit_seconds
+config                                       
+hist_gb|tuned     0.6568  0.0110       1.0628
+hist_gb|default   0.6527  0.0085       0.5948
+logistic|tuned    0.6459  0.0079       0.1644
+logistic|default  0.6446  0.0081       0.1237
+mlp|tuned         0.6382  0.0273       0.8953
+mlp|default       0.6304  0.0127      12.3475 
+vencedor: logistic|default

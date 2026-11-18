@@ -8,20 +8,18 @@ __pycache__/
 
 # Dados: grandes e reconstruiveis pelo pipeline (`make data`).
 data/raw/*
-data/interim/*
-data/processed/*
 !data/*/.gitkeep
 
-# Tabelas geradas: versionar apenas manifestos e tabelas do alvo citados no relatorio.
-results/tables/*
-!results/tables/*manifest.json
-!results/tables/target_eda_*.csv
-!results/tables/full_reuse_distribution.csv
-results/figures/
 
-# Saidas da reproducao rapida (`make quick`)
-results/owner/primary_quick/
-results/owner/holdout_repro/
+# Saidas da reproducao rapida (`make quick` e notebook)
+results/reproduce/
 
-# Versao de leitura gerada (`python paper/build_html.py`)
-paper/report.html
+# Saidas do LaTeX
+paper/latex/*.aux
+paper/latex/*.log
+paper/latex/*.bbl
+paper/latex/*.blg
+paper/latex/*.out
+
+# Partes intermediarias da coleta (reunidas em data/derived/collection/dates.parquet)
+data/derived/collection/dates_parts/

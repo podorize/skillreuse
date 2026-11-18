@@ -4,6 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{booktabs,longtable,array,calc}
 \usepackage{amsmath,amssymb}
 \usepackage{url}
@@ -12,7 +13,7 @@
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{Cross-owner reuse of agent skills on GitHub: predictability and construction biases of GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
+\title{Does the text of an agent skill predict its replication on GitHub? A predictive study on GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
 \author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
@@ -21,32 +22,26 @@
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
 \begin{abstract}
 
 
-Agent skills are copied between repositories without a central registry,
-and the GitSkills dataset documents this diffusion at scale. We study
-whether observable characteristics of a skill and of its repository are
-associated with cross-owner replication of identical content, and how
-much of this predictability is an artifact of how the dataset was built.
-The rule that selects the representative copy of each content makes its
-location class depend on the number of copies (the probability that the
-representative sits in \texttt{.claude/skills/} rises from 14\% to 92\%,
-while the actual share of copies there stays at 5--13\%), and about a
-quarter of the replicated contents exist under a single owner. After
-excluding the identified construction-dependent shortcuts, a Random
-Forest reaches an AUC of 0.73 (95\% CI 0.72--0.75) for cross-owner
-replication on a new holdout disjoint by representative owner (25,011
-contents, 10,484 owners), and a HistGradientBoosting model reduces the
-RMSLE of the number of owners from 0.664 to 0.625 relative to the mean
-baseline. The signal is modest and cross-sectional: it describes
-associations with observed replication among contents present in at
-least two repositories, under an owner-capped sampling protocol, and is
-not a prospective prediction of future reuse.
+Agent skills are Markdown files that teach LLM-based coding agents how
+to perform a task, and they spread across GitHub by being copied. We ask
+whether the text of a skill predicts whether other developers will copy
+it. To measure copying reliably, we dated the copies of 150,000
+GitSkills skills through the GitHub API and labeled a skill as copied
+when another developer copied it within 60 days of its first appearance,
+ignoring repositories that collect skills in bulk. On 20,564 skills from
+unseen authors, a model of the text reached an AUC of 0.645, beyond text
+length and beyond the popularity of the origin repository. Skills
+written as explanatory prose, with a stable vocabulary and valid
+metadata, were copied more often. The signal is modest but robust, also
+on future skills.
 
 \end{abstract}
 
-\noindent\textbf{Keywords:} agent skills; software reuse; mining software repositories; construction bias; grouped validation.
+\noindent\textbf{Keywords:} agent skills; software reuse; machine learning; mining software repositories; interpretability.
 
 \input{sections/01_introduction.tex}
 

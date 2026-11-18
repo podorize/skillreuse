@@ -1,0 +1,16 @@
+{
+  "ranking": [
+    "hist_gb",
+    "logistic",
+    "mlp",
+    "naive_bayes",
+    "random_forest",
+    "knn",
+    "decision_tree"
+  ],
+  "selected_top3": [
+    "hist_gb",
+    "logistic",
+    "mlp"
+  ]
+}

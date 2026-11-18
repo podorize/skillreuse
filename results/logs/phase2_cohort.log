@@ -1,0 +1,28 @@
+[atributos] lote 0: 8,588
+[atributos] lote 1: 8,380
+[atributos] lote 2: 8,595
+[atributos] lote 3: 8,361
+[atributos] lote 4: 8,293
+[atributos] lote 5: 8,627
+[atributos] lote 6: 8,449
+[atributos] lote 7: 8,479
+[atributos] lote 8: 8,459
+[atributos] lote 9: 8,524
+[atributos] lote a: 8,456
+[atributos] lote b: 8,283
+[atributos] lote c: 8,410
+[atributos] lote d: 8,415
+[atributos] lote e: 8,561
+[atributos] lote f: 8,452
+{
+  "author_overlap": 0,
+  "hash_overlap": 0,
+  "max_per_author": 50,
+  "holdout_author_share_by_band": {
+    "1": 0.30000282063577133,
+    "11-50": 0.2995073891625616,
+    "2-3": 0.2999760019198464,
+    "4-10": 0.30003699593044764
+  },
+  "failed": []
+}
