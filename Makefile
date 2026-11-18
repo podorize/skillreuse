@@ -1,69 +1,37 @@
-# Pipeline do relatorio. Requer `uv`; os dados vao para data/raw (~7 GB).
-SEED ?= 2027
-R    := results/owner
-V    := skill repo+catalog clean_full clean_full+shortcuts shortcuts_only
+# Pipeline do estudo (paper/protocol.md). Requer `uv`; os dados brutos vao para data/raw (~7 GB).
+# A fase 1 usa a API do GitHub (gh autenticado); as tabelas da coleta estao em data/derived/collection.
+.PHONY: quick data collect study holdout robustness test paper pdf
 
-.PHONY: html quick-setup quick interpretation feature-eda derived data owner controls primary robustness importance final holdout figures test paper
+quick:          ## reproducao rapida sem dados brutos nem API: confere os modelos congelados no holdout
+	uv run skillreuse reproduce
 
-quick-setup:    ## copia as tabelas derivadas (9 MB) para data/processed, sem baixar os dados brutos
-	mkdir -p data/processed
-	cp -n data/derived/*.parquet data/processed/
-
-quick: quick-setup  ## reproducao rapida (~6 min): protocolo principal (1 repeticao) e holdout em outro diretorio
-	uv run skillreuse primary --repeats 1 --output-dir results/owner/primary_quick
-	uv run skillreuse holdout-eval --output-dir results/owner/holdout_repro
-
-data:           ## download (revisao fixa), amostra deterministica, divisao e alvo de contagem
+data:           ## download verificado do GitSkills (revisao fixa)
 	uv run skillreuse download
-	uv run skillreuse build
-	uv run skillreuse features
-	uv run skillreuse target
 
-owner:          ## alvo por donos, contexto, auditoria do representante e EDA
-	uv run skillreuse owner
+collect:        ## fase 1: amostra, datas das copias e estrelas em T0 (API do GitHub, horas)
+	uv run skillreuse collect sample
+	uv run skillreuse collect dates --scope main
+	uv run skillreuse collect stars
+	uv run skillreuse collect dates --scope aggregators
+	uv run skillreuse collect merge
 
-feature-eda:    ## EDA dos atributos (ausentes, assimetria, colinearidade, equilibrio)
-	uv run skillreuse feature-eda
+study:          ## fases 2-5: autores e divisao, EDA e janela, selecao, modelos finais e congelamento
+	uv run skillreuse cohort
+	uv run skillreuse eda
+	uv run skillreuse spot
+	OMP_NUM_THREADS=1 uv run skillreuse tune
+	uv run skillreuse final
+	uv run skillreuse freeze
 
-derived:        ## regenera as tabelas pequenas de data/derived a partir de data/processed
-	uv run skillreuse export-derived
-
-controls:       ## controle com o desenho original (alvo repository_count)
-	uv run skillreuse controls --repeats 3 --folds 3 --seed $(SEED)
-
-primary:        ## protocolo principal: H1-H4 com limite de 50 por dono
-	uv run skillreuse primary
-
-robustness:     ## limiares de donos, cap, classes de localizacao, alvo repository_count
-	uv run skillreuse owner-models --output-dir $(R)/models
-	uv run skillreuse owner-models --exclude-owners-above 500 --output-dir $(R)/models_excl_big_owners
-	uv run skillreuse owner-models --group-by repo --views skill repo+catalog clean_full clean_full+shortcuts --output-dir $(R)/models_repo_grouped
-	uv run skillreuse owner-models --exclude-owners-above 200 --views $(V) --output-dir $(R)/robustness/excl200
-	uv run skillreuse owner-models --exclude-owners-above 1000 --views $(V) --output-dir $(R)/robustness/excl1000
-	uv run skillreuse owner-models --cap-per-owner 50 --views $(V) --output-dir $(R)/robustness/cap50
-	for t in skills-dir other canonical; do uv run skillreuse owner-models --tier $$t --exclude-owners-above 500 --views skill repo+catalog clean_full --output-dir $(R)/robustness/tier_$$t; done
-	uv run skillreuse owner-models --cap-per-owner 50 --views clean_full minus_skill minus_repo minus_catalog minus_path --output-dir $(R)/robustness/ablation
-	uv run skillreuse owner-overlap
-	uv run skillreuse fork-audit
-	uv run skillreuse owner-models --cap-per-owner 50 --log-skewed --views skill clean_full --output-dir $(R)/robustness/log_skewed
-	uv run skillreuse owner-models --task regression --regression-target repo --exclude-owners-above 500 --views $(V) --output-dir $(R)/robustness/target_repository_count
-
-importance:     ## importancia por permutacao (conjunto limpo)
-	uv run skillreuse owner-importance --exclude-owners-above 500 --repeats 2 --n-perm 3
-
-interpretation:  ## dependencia parcial (fora da amostra) e analise de limiar
-	uv run skillreuse interpretation
-
-final:          ## tuning aninhado e congelamento dos modelos (nao le o holdout)
-	OMP_NUM_THREADS=1 uv run skillreuse final-model --repeats 2 --folds 3 --inner-folds 3 --n-iter 6 --n-jobs 4
-
-holdout:        ## constroi o holdout disjunto por dono
+holdout:        ## fase 6: avaliacao UNICA (trava em results/phase6/evaluation_lock.json) e controle
 	uv run skillreuse holdout
+	uv run skillreuse cohort --popularity
+	uv run skillreuse control
 
-holdout-eval:   ## avaliacao UNICA no holdout (trava em results/owner/holdout/evaluation_lock.json)
-	uv run skillreuse holdout-eval
-
-figures:        ## figuras do relatorio
+robustness:     ## fase 7: sensibilidades, interpretacao e figuras
+	uv run skillreuse cohort --variants
+	uv run skillreuse sensitivity
+	uv run skillreuse interpret
 	uv run skillreuse figures
 
 test:
@@ -72,5 +40,5 @@ test:
 paper:          ## Markdown -> LaTeX (requer pandoc)
 	uv run python paper/build_latex.py
 
-html:           ## versao de leitura do relatorio em HTML unico (paper/report.html)
-	uv run python paper/build_html.py
+pdf: paper      ## compila paper/latex/main.pdf (requer tectonic)
+	cd paper/latex && tectonic -X compile main.tex

@@ -1,6 +1,6 @@
 import pytest
 
-from skillreuse.data import RemoteFile, parse_remote_files
+from skillreuse.download import RemoteFile, parse_remote_files
 
 
 def test_parse_remote_files_filters_and_orders_parquets() -> None:

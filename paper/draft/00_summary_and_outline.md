@@ -2,45 +2,34 @@
 
 ## Abstract
 
-Agent skills are copied between repositories without a central registry, and the GitSkills dataset documents this diffusion at scale. We study whether observable characteristics of a skill and of its repository are associated with cross-owner replication of identical content, and how much of this predictability is an artifact of how the dataset was built. The rule that selects the representative copy of each content makes its location class depend on the number of copies (the probability that the representative sits in `.claude/skills/` rises from 14% to 92%, while the actual share of copies there stays at 5–13%), and about a quarter of the replicated contents exist under a single owner. After excluding the identified construction-dependent shortcuts, a Random Forest reaches an AUC of 0.73 (95% CI 0.72–0.75) for cross-owner replication on a new holdout disjoint by representative owner (25,011 contents, 10,484 owners), and a HistGradientBoosting model reduces the RMSLE of the number of owners from 0.664 to 0.625 relative to the mean baseline. The signal is modest and cross-sectional: it describes associations with observed replication among contents present in at least two repositories, under an owner-capped sampling protocol, and is not a prospective prediction of future reuse.
+Agent skills are Markdown files that teach LLM-based coding agents how to perform a task, and they spread across GitHub by being copied. We ask whether the text of a skill predicts whether other developers will copy it. To measure copying reliably, we dated the copies of 150,000 GitSkills skills through the GitHub API and labeled a skill as copied when another developer copied it within 60 days of its first appearance, ignoring repositories that collect skills in bulk. On 20,564 skills from unseen authors, a model of the text reached an AUC of 0.645, beyond text length and beyond the popularity of the origin repository. Skills written as explanatory prose, with a stable vocabulary and valid metadata, were copied more often. The signal is modest but robust, also on future skills.
 
 ## Contents
 
 1. **Introduction**
-   1.1 Context and motivation  
-   1.2 Research problem  
-   1.3 Objectives and research questions  
-   1.4 Contributions
 2. **Related work**
-   2.1 Reuse, cloning and natural-language artifacts  
-   2.2 Agent skills and prompt artifacts  
-   2.3 Validation, leakage and construction bias  
-   2.4 Modeling, explainability and research gap
-3. **Methodology**
-   3.1 Research design  
-   3.2 Data and unit of analysis  
-   3.3 Representative rule and audit  
-   3.4 Targets  
-   3.5 Features  
-   3.6 Validation and per-owner cap  
-   3.7 Models, baselines and tuning  
-   3.8 Metrics, inference and interpretation  
-   3.9 New holdout
+3. **Materials and methods**
+   3.1 Data  
+   3.2 Measuring whether a skill was copied  
+   3.3 Attributes  
+   3.4 Training and test data  
+   3.5 Exploratory analysis and preprocessing  
+   3.6 Model development  
+   3.7 Evaluation  
+   3.8 Interpretation
 4. **Results**
-   4.1 The target, the features and owner concentration  
-   4.2 Selection bias of the representative  
-   4.3 Main protocol  
-   4.4 Robustness  
-   4.5 Interpretation  
-   4.6 Model selection and tuning  
-   4.7 Confirmation on the holdout
+   4.1 Exploratory analysis  
+   4.2 Choosing a model  
+   4.3 Does the text predict whether a skill is copied? (RQ1)  
+   4.4 How robust is the result?  
+   4.5 What the model learned (RQ2)
 5. **Discussion**
-   5.1 What the signal means  
-   5.2 Implications for using GitSkills  
-   5.3 Models and data limits  
-   5.4 Threats to validity and limitations
-6. **Conclusion and future work**
+   5.1 What the results mean  
+   5.2 Alternative explanations  
+   5.3 Implications  
+   5.4 Limitations
+6. **Conclusion**
 
 **References**  
-**Appendix A — Reproducibility and execution**  
+**Appendix A — Reproducibility**  
 **Appendix B — Use of artificial intelligence tools**

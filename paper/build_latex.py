@@ -1,8 +1,7 @@
-"""Build the CMP263 SBC manuscript from the reviewed Markdown report.
+"""Gera o projeto LaTeX (template SBC) a partir do rascunho em Markdown de ``paper/draft``.
 
-The Markdown files remain the editable content source. This command copies only
-the report figures used by the count-regression study into the Overleaf package.
-It does not train or evaluate any model.
+O Markdown e a fonte editavel; as figuras sao copiadas de ``results/figures``. Nenhum modelo
+e treinado. Requer ``pandoc``; o PDF e compilado com ``make pdf`` (``tectonic``).
 """
 
 from __future__ import annotations
@@ -26,6 +25,11 @@ SECTIONS = (
 )
 APPENDICES = ("07_appendix_reproducibility", "08_appendix_ai_usage")
 FIGURE_DIR = PAPER / "figures"
+# figuras pequenas nao precisam da largura toda (evita estouro de pagina)
+FIGURE_WIDTH: dict[str, float] = {"eda_univariate.png": 0.62, "eda_attributes.png": 0.95,
+                                   "shap.png": 0.9, "importance.png": 0.85,
+                                   "eda.png": 0.95, "model_selection.png": 0.85,
+                                   "results.png": 0.95}
 
 
 def preprocess(markdown: str) -> str:
@@ -42,11 +46,14 @@ def preprocess(markdown: str) -> str:
         if not source.is_file() or source.suffix.lower() != ".png":
             raise FileNotFoundError(source)
         figure_number += 1
+        caption = re.sub(r"`([^`]+)`", lambda m: r"\texttt{" + m.group(1).replace("_", r"\_") + "}",
+                         caption).replace("%", r"\%")
         output_name = f"report_{source.name}"
+        width = FIGURE_WIDTH.get(source.name, 1.0)
         shutil.copy2(source, FIGURE_DIR / output_name)
         return (
-            "\n\\begin{figure}[!htbp]\n\\centering\n"
-            f"\\includegraphics[width=0.7\\linewidth]{{figures/{output_name}}}\n"
+            "\n\\begin{figure}[!tbp]\n\\centering\n"
+            f"\\includegraphics[width={width}\\linewidth]{{figures/{output_name}}}\n"
             f"\\caption{{{caption}}}\n"
             f"\\label{{fig:report-{figure_number}}}\n"
             "\\end{figure}\n"
@@ -116,6 +123,7 @@ def main() -> None:
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{booktabs,longtable,array,calc}
 \usepackage{amsmath,amssymb}
 \usepackage{url}
@@ -124,7 +132,7 @@ def main() -> None:
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{Cross-owner reuse of agent skills on GitHub: predictability and construction biases of GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
+\title{Does the text of an agent skill predict its replication on GitHub? A predictive study on GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
 \author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
@@ -133,10 +141,11 @@ def main() -> None:
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
 \begin{abstract}
 """
     body = [preamble, abstract(), r"\end{abstract}",
-            r"\noindent\textbf{Keywords:} agent skills; software reuse; mining software repositories; construction bias; grouped validation."]
+            r"\noindent\textbf{Keywords:} agent skills; software reuse; machine learning; mining software repositories; interpretability."]
     body.extend(f"\\input{{sections/{name}.tex}}" for name in SECTIONS)
     body.extend([r"\bibliographystyle{sbc}", r"\bibliography{references}", r"\appendix"])
     body.extend(f"\\input{{sections/{name}.tex}}" for name in APPENDICES)
