@@ -133,10 +133,10 @@ def main() -> None:
 \sloppy
 
 \title{Does the text of an agent skill predict its replication on GitHub? A predictive study on GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
-\author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
+\author{Pedro Odorize\inst{1}, Rafael Borges Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
-  \email{pedro.odorize@inf.ufrgs.br}
+  \email{pedro.odorize@inf.ufrgs.br, rafael.allgayer12@gmail.com}
 }
 
 \begin{document}
