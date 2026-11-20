@@ -24,6 +24,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
+import duckdb  # noqa: PLC0415
 
 import pandas as pd
 
@@ -36,11 +37,12 @@ SNAPSHOT = pd.Timestamp("2026-07-09", tz="UTC")
 CRAWL_END = pd.Timestamp("2026-07-21", tz="UTC")  # fim da coleta do GitSkills (20/07)
 STAR_CAP = 10_000
 MAX_COMMITS = 500
-HISTORY_PAGE = 20
+HISTORY_PAGE = 100
 
 COLLECTION = Path("data/derived/collection")
 OCCURRENCES = COLLECTION / "sample_occurrences.parquet"
 DATES_DIR = COLLECTION / "dates_parts"
+STARS_DIR = COLLECTION / "stars_parts"
 DATES = COLLECTION / "dates.parquet"
 STARS = COLLECTION / "origin_stars.parquet"
 MANIFEST = Path("results/phase1/manifest.json")
@@ -52,7 +54,6 @@ API = "https://api.github.com/graphql"
 # ---------------------------------------------------------------------------
 
 def build_sample() -> tuple[pd.DataFrame, dict[str, int]]:
-    import duckdb  # noqa: PLC0415
 
     con = duckdb.connect()
     con.sql("pragma threads=4; pragma memory_limit='3GB'")
@@ -186,8 +187,7 @@ def date_batch(client: Client, rows: list[dict]) -> list[dict]:
 
 
 def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None) -> None:
-    occ = pd.read_parquet(OCCURRENCES)
-    occ = occ[occ["aggregator"] == (scope == "aggregators")]
+    occ = pd.read_parquet(OCCURRENCES, filters=[("aggregator", "==", scope == "aggregators")])
     DATES_DIR.mkdir(parents=True, exist_ok=True)
     done = set()
     for part in DATES_DIR.glob("*.parquet"):
@@ -268,52 +268,175 @@ def origins(dates: pd.DataFrame, occ: pd.DataFrame) -> pd.DataFrame:
 def collect_stars(batch: int, workers: int) -> None:
     occ = pd.read_parquet(OCCURRENCES)
     org = origins(merge_dates(), occ)
-    need = org.groupby("repo_full_name")["arrival"].max().reset_index()
-    need = need[need["arrival"] <= SNAPSHOT]
-    client, rows, lock, t0 = Client(), [], threading.Lock(), time.time()
+    org = org[org["arrival"] <= SNAPSHOT]
 
-    def work(chunk: list[dict]) -> None:
-        state = {i: {"times": [], "cursor": None, "status": "ok"} for i in range(len(chunk))}
-        pending = list(state)
-        while pending:
-            decl, parts, var = [], [], {}
-            for i in pending:
-                owner, name = chunk[i]["repo_full_name"].split("/", 1)
-                var.update({f"o{i}": owner, f"n{i}": name, f"c{i}": state[i]["cursor"]})
-                decl += [f"$o{i}: String!", f"$n{i}: String!", f"$c{i}: String"]
-                parts.append(STARGAZERS.format(i=i))
-            q = "query(" + ", ".join(decl) + ") { rateLimit { cost remaining resetAt } " \
-                + " ".join(parts) + " }"
-            data = client.query(q, var).get("data")
-            nxt = []
-            for i in pending:
-                repo = (data or {}).get(f"f{i}")
-                if repo is None:
-                    state[i]["status"] = "falha_de_coleta" if data is None else \
-                        "repositorio_inacessivel"
-                    continue
-                sg = repo["stargazers"]
-                state[i]["times"] += [e["starredAt"] for e in sg["edges"]]
-                last = pd.Timestamp(state[i]["times"][-1]) if state[i]["times"] else None
-                if (sg["pageInfo"]["hasNextPage"] and last is not None
-                        and last <= chunk[i]["arrival"] and len(state[i]["times"]) < STAR_CAP):
-                    state[i]["cursor"] = sg["pageInfo"]["endCursor"]
-                    nxt.append(i)
-            pending = nxt
-        with lock:
-            for i, r in enumerate(chunk):
-                rows.append({"repo_full_name": r["repo_full_name"], "status": state[i]["status"],
-                             "starred_at": state[i]["times"][:STAR_CAP]})
-            if len(rows) % (batch * workers * 5) < batch:
-                print(f"[estrelas] {len(rows):,}/{len(need):,} ({time.time() - t0:.0f}s, "
-                      f"custo {client.cost})", flush=True)
+    need = (
+        org.groupby("repo_full_name")["arrival"]
+        .max()
+        .reset_index()
+    )
+    STARS_DIR.mkdir(parents=True, exist_ok=True)
 
-    recs = need.to_dict("records")
-    with ThreadPoolExecutor(max_workers=workers) as ex:
-        list(ex.map(work, [recs[i:i + batch] for i in range(0, len(recs), batch)]))
-    pd.DataFrame(rows).to_parquet(STARS, index=False)
-    print(f"[estrelas] fim: {len(rows):,} repositorios, custo {client.cost}", flush=True)
+    # Repositórios com coleta concluída em execuções anteriores.
+    done = set()
+    for part in STARS_DIR.glob("*.parquet"):
+        previous = pd.read_parquet(
+            part, columns=["repo_full_name", "status"]
+        )
+        done.update(
+            previous.loc[previous["status"] == "ok", "repo_full_name"]
+        )
 
+    need = need[~need["repo_full_name"].isin(done)]
+
+    print(f"[estrelas] {len(need):,} repositorios a coletar ({len(done):,} ja concluidos)", flush=True)
+
+    if need.empty:
+        print("[estrelas] todos os repositorios ja foram coletados", flush=True)
+    else:
+        client = Client()
+        lock = threading.Lock()
+        t0 = time.time()
+        buf = []
+        n_done = 0
+        part_id = len(list(STARS_DIR.glob("*.parquet")))
+
+        def flush(force: bool = False) -> None:
+            nonlocal buf, part_id
+            if buf and (force or len(buf) >= 100):
+                pd.DataFrame(buf).to_parquet(
+                    STARS_DIR / f"stars_{part_id:05d}.parquet",
+                    index=False,
+                )
+                part_id += 1
+                buf = []
+
+        def work(chunk: list[dict]) -> None:
+            nonlocal n_done
+
+            state = {i: {"times": [], "cursor": None, "status": "ok"}
+                     for i in range(len(chunk))
+                     }
+            pending = list(state)
+
+            while pending:
+                decl, parts, var = [], [], {}
+
+                for i in pending:
+                    owner, name = chunk[i]["repo_full_name"].split("/", 1)
+                    var.update({
+                        f"o{i}": owner,
+                        f"n{i}": name,
+                        f"c{i}": state[i]["cursor"],
+                    })
+                    decl += [
+                        f"$o{i}: String!",
+                        f"$n{i}: String!",
+                        f"$c{i}: String",
+                    ]
+                    parts.append(STARGAZERS.format(i=i))
+
+                q = (
+                    "query(" + ", ".join(decl) + ") { "
+                    "rateLimit { cost remaining resetAt } "
+                    + " ".join(parts) + " }"
+                )
+
+                data = client.query(q, var).get("data")
+                nxt = []
+
+                for i in pending:
+                    repo = (data or {}).get(f"f{i}")
+
+                    if repo is None:
+                        state[i]["status"] = (
+                            "falha_de_coleta"
+                            if data is None
+                            else "repositorio_inacessivel"
+                        )
+                        continue
+
+                    sg = repo["stargazers"]
+                    state[i]["times"].extend(
+                        e["starredAt"] for e in sg["edges"]
+                    )
+
+                    last = (
+                        pd.Timestamp(state[i]["times"][-1])
+                        if state[i]["times"]
+                        else None
+                    )
+
+                    if (
+                        sg["pageInfo"]["hasNextPage"]
+                        and last is not None
+                        and last <= chunk[i]["arrival"]
+                        and len(state[i]["times"]) < STAR_CAP
+                    ):
+                        state[i]["cursor"] = sg["pageInfo"]["endCursor"]
+                        nxt.append(i)
+
+                pending = nxt
+
+            with lock:
+                for i, r in enumerate(chunk):
+                    buf.append({
+                        "repo_full_name": r["repo_full_name"],
+                        "status": state[i]["status"],
+                        "starred_at": state[i]["times"][:STAR_CAP],
+                    })
+
+                n_done += len(chunk)
+                flush()
+
+                if n_done % (batch * workers * 5) < batch:
+                    rate = n_done / max(time.time() - t0, 1)
+                    print(
+                        f"[estrelas] {n_done:,}/{len(need):,} "
+                        f"({rate:.1f}/s, custo {client.cost})",
+                        flush=True,
+                    )
+
+        recs = need.to_dict("records")
+        chunks = [
+            recs[i:i + batch]
+            for i in range(0, len(recs), batch)
+        ]
+
+        try:
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                list(ex.map(work, chunks))
+        finally:
+            with lock:
+                flush(force=True)
+
+        print(
+            f"[estrelas] coleta parcial concluida: "
+            f"{n_done:,} repositorios, custo {client.cost}",
+            flush=True,
+        )
+
+    # Consolida todas as partes, inclusive as de execuções anteriores.
+    parts = sorted(STARS_DIR.glob("*.parquet"))
+
+    if parts:
+        stars = pd.concat(
+            [pd.read_parquet(part) for part in parts],
+            ignore_index=True,
+        )
+
+        stars = stars.drop_duplicates(
+            "repo_full_name",
+            keep="last",
+        )
+
+        stars.to_parquet(STARS, index=False)
+
+        print(
+            f"[estrelas] arquivo final atualizado: "
+            f"{len(stars):,} repositorios",
+            flush=True,
+        )
 
 # ---------------------------------------------------------------------------
 # CLI

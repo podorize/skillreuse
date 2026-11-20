@@ -10,6 +10,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -179,12 +180,36 @@ def ensure_disk_space(output: Path, files: list[RemoteFile]) -> None:
             f"faltam baixar={missing_bytes / 1024**3:.2f} GiB."
         )
 
-def run_download(output: Path, manifest_path: Path) -> dict[str, Any]:
+def download_files_parallel(files: list[dict], output: Path, max_workers: int = 4) -> None:
+    """Baixa vários arquivos simultaneamente."""
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(
+                download_file,
+                remote,
+                output / Path(remote.path).relative_to("data"),
+            ): remote
+            for remote in files
+        }
+
+        for future in as_completed(futures):
+            remote = futures[future]
+            try:
+                future.result()
+            except Exception as error:
+                raise RuntimeError(
+                    f"Falha ao baixar {remote.path}"
+                ) from error
+
+def run_download(output: Path, manifest_path: Path, max_workers: int = 4) -> dict[str, Any]:
     files = collect_remote_files()
     ensure_disk_space(output, files)
-    for remote in files:
-        local = output / Path(remote.path).relative_to("data")
-        download_file(remote, local)
+
+    download_files_parallel(
+        files=files,
+        output=output,
+        max_workers=max_workers,
+        )
 
     manifest: dict[str, Any] = {
         "generated_at_utc": datetime.now(UTC).isoformat(),
@@ -206,11 +231,12 @@ def download_parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--workers", type=int, default=4)
     return parser.parse_args()
 
 def download_main() -> None:
     args = download_parse_args()
-    manifest = run_download(args.output, args.manifest)
+    manifest = run_download(args.output, args.manifest, args.workers)
     print(
         f"Download concluido: {manifest['file_count']} arquivos, "
         f"{manifest['total_bytes'] / 1024**3:.2f} GiB."
