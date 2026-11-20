@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess
 from pathlib import Path
+import pypandoc
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,14 +73,12 @@ def preprocess(markdown: str) -> str:
 
 
 def convert(markdown: str) -> str:
-    result = subprocess.run(
-        ["pandoc", "-f", "markdown+raw_tex", "-t", "latex", "--no-highlight"],
-        input=markdown,
-        text=True,
-        check=True,
-        capture_output=True,
+    return pypandoc.convert_text(
+        markdown,
+        to="latex",
+        format="markdown+raw_tex",
+        extra_args=["--syntax-highlighting=none"],
     )
-    return ascii_symbols(result.stdout)
 
 
 SYMBOLS = {
@@ -136,7 +134,7 @@ def main() -> None:
 \author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
-  \email{pedro.odorize@inf.ufrgs.br}
+  \email{pedro.odorize@inf.ufrgs.br, rafael.allgayer12@gmail.com}
 }
 
 \begin{document}
