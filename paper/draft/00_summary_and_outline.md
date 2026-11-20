@@ -4,6 +4,12 @@
 
 Agent skills are Markdown files that teach LLM-based coding agents how to perform a task, and they spread across GitHub by being copied. We ask whether the text of a skill predicts whether other developers will copy it. To measure copying reliably, we dated the copies of 150,000 GitSkills skills through the GitHub API and labeled a skill as copied when another developer copied it within 60 days of its first appearance, ignoring repositories that collect skills in bulk. On 20,564 skills from unseen authors, a model of the text reached an AUC of 0.645, beyond text length and beyond the popularity of the origin repository. Skills written as explanatory prose, with a stable vocabulary and valid metadata, were copied more often. The signal is modest but robust, also on future skills.
 
+\newline
+
+**Resumo.**
+
+As skills de agentes são arquivos Markdown que ensinam agentes de programação baseados em LLMs a executar tarefas e se disseminam pelo GitHub por meio de cópias. Investigamos se o conteúdo textual de uma skill permite prever se outros desenvolvedores irão copiá-la. Para mensurar a disseminação por cópia de forma confiável, identificamos, por meio da API do GitHub, as datas das cópias de 150 mil skills do GitSkills e classificamos uma skill como copiada quando outro desenvolvedor a copiava em até 60 dias após sua primeira aparição, desconsiderando repositórios que coletam skills em grande escala. Em um conjunto de 20.564 skills de autores não vistos durante o treinamento, um modelo baseado no texto alcançou uma AUC de 0,645, apresentando desempenho superior ao de modelos baseados apenas no comprimento do texto e na popularidade do repositório de origem. Skills redigidas em prosa explicativa, com vocabulário estável e metadados válidos, apresentaram maiores taxas de cópia. O sinal preditivo é modesto, mas robusto, inclusive quando avaliado em skills futuras.
+
 ## Contents
 
 1. **Introduction**
