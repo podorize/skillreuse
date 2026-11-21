@@ -748,7 +748,8 @@ def run_holdout(allow_reevaluation: bool = False) -> None:
     out = OUT / "phase6"
     lock = out / "evaluation_lock.json"
     if lock.exists() and not allow_reevaluation:
-        raise SystemExit(f"Holdout already evaluated ({lock}). Re-evaluating requires a declaration.")
+        raise SystemExit(f"Holdout already evaluated ({lock}). "
+                         "Re-evaluating requires a declaration.")
     fz = frozen()
     hold = load_frame("holdout")
     y, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
