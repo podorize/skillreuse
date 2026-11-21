@@ -10,29 +10,20 @@ O texto de uma **agent skill** (o arquivo `SKILL.md`) prediz se outros desenvolv
 
 Datamos pela API do GitHub as cópias de 150.000 skills e marcamos como copiada a skill que outro desenvolvedor copiou em até 60 dias após a primeira aparição, sem contar agregadores. Em 20.564 skills de autores nunca vistos, uma regressão logística sobre 22 atributos do texto alcançou AUC de 0,645 [0,624; 0,666], acima do tamanho do texto (0,595) e somando 0,049 a um modelo do repositório de origem que inclui a popularidade. O estilo de escrita é a família de atributos mais informativa (RQ2).
 
-## Reprodução rápida (sem dados brutos nem API)
+## Como reproduzir
 
-As datas das cópias já coletadas estão em `data/derived/collection/`, a tabela do estudo em `data/derived/study_table.parquet` e os modelos congelados em `models/`.
+**Comece pelo Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab/badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb). Abra o notebook e execute todas as células; não é preciso instalar nada, e leva alguns minutos. Ele segue o artigo seção por seção, recalcula os números a partir dos dados publicados, aplica os modelos treinados ao conjunto de teste e termina com um placar que compara cada número com o artigo.
 
-```bash
-uv sync
-make quick        # spot-checking (1 repetição) e conferência dos modelos congelados no holdout
-make test         # invariantes do estudo e conferência dos números do artigo
-```
+Para reproduzir no seu computador (Python 3.12 e [uv](https://docs.astral.sh/uv/)), clone o repositório, rode `uv sync` e escolha um dos quatro níveis. Cada nível é um único comando; os tempos foram medidos num notebook com 8 GB de memória.
 
-Notebook do Colab, que acompanha o artigo seção a seção: [`notebooks/reproduce.ipynb`](notebooks/reproduce.ipynb).
+| Nível | Comando | O que refaz | Precisa de | Tempo | Resultado |
+|---|---|---|---|---|---|
+| **1. Conferir os resultados** | `make verify` | Aplica os modelos treinados ao conjunto de teste e confere cada número do artigo | só o repositório | menos de 1 min | idêntico ao artigo |
+| **2. Refazer a análise** | `make rerun` | EDA, seleção de modelos, treino, avaliação no teste, robustez e interpretação, a partir das tabelas publicadas | só o repositório | ~20 min | idêntico ao artigo |
+| **3. Refazer o tratamento** | `make rebuild` | Também a amostra e a tabela do estudo (T0, autor, alvo, atributos e divisão), a partir do GitSkills, com as datas publicadas | GitSkills (~7 GB, baixado pelo comando) | ~30 min + download | idêntico ao artigo |
+| **4. Refazer do zero** | `make from-scratch` | Também a coleta das datas das cópias pela API do GitHub | GitSkills e `gh` autenticado | ~8 h (quase tudo esperando a API) | parecido, não idêntico |
 
-## Reprodução completa (dados brutos, ~7 GB)
-
-```bash
-uv sync
-make data         # download verificado do GitSkills
-make collect      # fase 1: amostra e datas das cópias (API do GitHub, gh autenticado; horas)
-make study        # fases 2-5: autores e divisão, EDA e janela, seleção, modelos finais e congelamento
-make holdout      # fase 6: avaliação única (trava em results/phase6/) e controle
-make robustness   # fase 7: sensibilidades, interpretação e figuras
-make pdf          # LaTeX e PDF do artigo (pandoc e tectonic)
-```
+Os níveis 2 a 4 sobrescrevem `results/` e `models/`; depois, `make verify` confere os números e `git diff` mostra o que mudou. O nível 4 também substitui as datas publicadas: a nova coleta não sai igual, porque repositórios foram apagados ou alterados desde julho de 2026, e por isso as datas publicadas são o registro fixo do estudo. `make pdf` gera o artigo (pandoc e tectonic).
 
 `uv run skillreuse --help` lista os subcomandos. Python 3.12. Sementes: amostra `20261121`, divisão por autor `20261122`, dobras 2027-2029, modelos, buscas e bootstrap 2027, interpretação `20261123`.
 
