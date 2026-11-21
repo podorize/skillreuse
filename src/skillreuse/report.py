@@ -11,7 +11,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-import Path
+from pathlib import Path
 import yaml
 from sklearn.metrics import confusion_matrix, precision_recall_curve, roc_curve  # noqa: E402
 
@@ -31,6 +31,9 @@ SNAPSHOT = pd.Timestamp(config["snapshot"], tz="UTC")
 TREE_ALGOS = set(config["tree_algos"])
 ALGOS = config["algos"]
 OUT = Path(config["out"])
+
+FAMILIES = config["families"]
+TEXT = [c for fam in FAMILIES.values() for c in fam]
 
 FIG = OUT / "figures"
 BLUE, LIGHT, GREY = "#2f5d8a", "#9bb7d4", "#999999"

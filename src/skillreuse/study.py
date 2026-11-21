@@ -70,33 +70,26 @@ WINDOWS = config["windows"]
 # Atributos (secao 3)
 # ---------------------------------------------------------------------------
 
-FAMILIES = {
-    "Size": ["text_char_count", "text_line_count", "text_nonempty_line_count",
-             "text_word_count", "text_unique_word_count", "text_sentence_count", "body_chars"],
-    "Text style": ["text_lexical_diversity", "text_average_word_length",
-                   "text_average_sentence_words"],
-    "Markdown structure": ["markdown_heading_count", "markdown_max_heading_depth",
-                           "markdown_unordered_list_items", "markdown_ordered_list_items",
-                           "markdown_table_row_count", "markdown_blockquote_count",
-                           "markdown_checkbox_count"],
-    "Code": ["markdown_fenced_code_blocks", "markdown_inline_code_count",
-             "markdown_shell_prompt_count"],
-    "Links": ["markdown_link_count", "markdown_url_count"],
-    "Front matter": ["frontmatter_valid", "frontmatter_name_char_count",
-                     "frontmatter_description_char_count", "frontmatter_name_missing",
-                     "frontmatter_description_missing"],
-}
+FAMILIES = config["families"]
+
 TEXT = [c for fam in FAMILIES.values() for c in fam]
-ORIGIN = ["log_stars_at_t0", "repo_age_days_at_t0", "repo_language", "repo_license",
-          "repo_is_fork", "path_depth", "path_is_root", "p_template", "p_plugin", "p_vendor",
-          "p_docs", "p_pkg", "p_tool_dir", "p_claude_dir"]
-CATEGORICAL = {"repo_language", "repo_license"}
-# desvio da secao 13: estrelas e forks no retrato substituem as estrelas em T0
-POPULARITY = ["log_stars_snapshot", "log_forks_snapshot"]
+ORIGIN = config["origin"]
+CATEGORICAL = set(config["categorical"])
+POPULARITY = config["popularity"]
+
+# Estrelas e forks do snapshot substituem as estrelas em T0.
 ORIGIN_POP = [c for c in ORIGIN if c != "log_stars_at_t0"] + POPULARITY
-VIEWS = {"text": TEXT, "origin": ORIGIN, "origin+text": ORIGIN + TEXT, "size": FAMILIES["Size"],
-         "origin_pop": ORIGIN_POP, "origin_pop+text": ORIGIN_POP + TEXT}
-MAIN_VIEWS = ["text", "origin", "origin+text"]
+
+VIEWS = {
+    "text": TEXT,
+    "origin": ORIGIN,
+    "origin+text": ORIGIN + TEXT,
+    "size": FAMILIES["Size"],
+    "origin_pop": ORIGIN_POP,
+    "origin_pop+text": ORIGIN_POP + TEXT,
+}
+
+MAIN_VIEWS = config["main_views"]
 assert len(TEXT) == 27
 
 # ---------------------------------------------------------------------------
