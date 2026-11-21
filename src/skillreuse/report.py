@@ -1,4 +1,16 @@
-"""Figuras do artigo, a partir dos arquivos de resultado (results/)."""
+"""Figures of the paper, drawn from the result files in ``results/`` (command ``skillreuse figures``).
+
+Nothing is trained here: every figure reads files written by the earlier phases (and, for
+the SHAP values, the frozen text model). The figures, in the order of the paper:
+
+    eda.png               time to first copy, first appearance by month, dating outcome
+    eda_attributes.png    skewness of the attributes and correlation between them
+    eda_univariate.png    share of copied skills by quartile of each attribute
+    model_selection.png   spot-check of 7 algorithms and nested tuning of the best 3
+    results.png           ROC and precision-recall curves, confusion matrix on the holdout
+    importance.png        permutation importance (families and attributes)
+    shap.png              SHAP values and dependence plots of the text model
+"""
 
 from __future__ import annotations
 
@@ -25,6 +37,7 @@ from skillreuse.study import (  # noqa: E402
 
 FIG = OUT / "figures"
 BLUE, LIGHT, GREY = "#2f5d8a", "#9bb7d4", "#999999"
+# Readable names of the algorithms and of the attributes, as written in the paper.
 NAMES = {"logistic": "Logistic reg.", "naive_bayes": "Naive Bayes", "knn": "k-NN",
          "decision_tree": "Decision tree", "random_forest": "Random forest",
          "hist_gb": "HistGB", "mlp": "MLP"}
@@ -48,6 +61,7 @@ LABEL = {
 
 
 def _save(fig: plt.Figure, name: str) -> None:
+    """Save a figure in ``results/figures/`` and close it."""
     FIG.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(FIG / name, dpi=170)
@@ -55,9 +69,12 @@ def _save(fig: plt.Figure, name: str) -> None:
 
 
 def fig_eda() -> None:
+    """Figure 1: (a) time to first copy and the window W, (b) skills by month of first
+    appearance and the eligibility limit, (c) outcome of the dating of the copies."""
     win = json.loads((OUT / "phase3" / "window.json").read_text())
     dev_all = load_frame("dev", eligible_only=False)
     t0 = pd.to_datetime(dev_all["t0"], utc=True)
+    # Skills with 90 days of observation that were copied within 90 days (as in the rule of W).
     obs = dev_all[t0 <= SNAPSHOT - pd.Timedelta(days=90)]
     lags = obs.loc[obs["first_copy_lag_days"] <= 90, "first_copy_lag_days"]
     fig, ax = plt.subplots(1, 3, figsize=(14, 3.7))
@@ -69,6 +86,7 @@ def fig_eda() -> None:
     ax[0].set_ylabel("cumulative share")
     ax[0].set_title("(a) Time to first copy by another developer")
     ax[0].legend(fontsize=8)
+    # Skills before October 2025 (when the format was introduced) are grouped as "earlier".
     m = t0.dt.strftime("%Y-%m")
     m = m.where(m >= "2025-10", "earlier")
     months = m.value_counts()
@@ -84,6 +102,7 @@ def fig_eda() -> None:
                                                "aggregator"])
     status = pd.read_parquet(DATES).merge(occ, on=["content_hash", "repo_full_name", "path"])
     status = status.loc[~status["aggregator"], "status"].value_counts(normalize=True)
+    # Labels of the status codes, which are stored in Portuguese in the data files.
     lab = {"datada": "dated", "repositorio_inacessivel": "repository gone",
            "arquivo_ausente": "file gone", "hash_nao_encontrado": "hash not found",
            "falha_de_coleta": "collection failure",
@@ -97,6 +116,8 @@ def fig_eda() -> None:
 
 
 def fig_selection() -> None:
+    """Figure 4: AUC of each fold for (a) the 7 algorithms of the spot-check and (b) the
+    default and tuned versions of the 3 finalists in the nested search."""
     spot = pd.read_csv(OUT / "phase4" / "spot_folds.csv")
     nested = pd.read_csv(OUT / "phase4" / "nested_folds.csv")
     order = spot.groupby("config")["roc_auc"].mean().sort_values().index
@@ -116,7 +137,8 @@ def fig_selection() -> None:
 
 
 def fig_eda_attributes() -> None:
-    """Assimetria antes e depois do log e correlacao de Spearman dos atributos de texto."""
+    """Figure 2: (a) skewness of the attributes before and after the log transform, and
+    (b) Spearman correlation between the 27 text attributes."""
     dev = load_frame("dev")
     rules = json.loads((OUT / "phase3" / "eda_rules.json").read_text())
     num = [c for c in TEXT if dev[c].nunique() > 2]
@@ -145,7 +167,7 @@ def fig_eda_attributes() -> None:
 
 
 def fig_eda_univariate() -> None:
-    """Taxa de copia por quartil de cada atributo de texto (desenvolvimento)."""
+    """Figure 3: share of copied skills in each quartile of each text attribute (development)."""
     uni = pd.read_csv(OUT / "phase3" / "univariate_rates.csv").set_index("feature")
     uni = uni.loc[[c for c in TEXT if c in uni.index]]
     base = json.loads((OUT / "phase3" / "eda_summary.json").read_text())["replicated_rate"]
@@ -164,7 +186,12 @@ def fig_eda_univariate() -> None:
 
 
 def fig_results() -> None:
-    """ROC e precisao-revocacao dos modelos finais e matriz de confusao do modelo de texto."""
+    """Figure 5: (a) ROC and (b) precision-recall curves of the final models on the holdout,
+    and (c) the confusion matrix of the text model at the frozen threshold.
+
+    The origin models drawn are the ones with the popularity at the snapshot (the control
+    reported in the paper), so the numbers agree with Table 5.
+    """
     hold = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
     pred = pd.read_parquet(OUT / "phase6" / "holdout_predictions_control.parquet")
     ctrl = json.loads((OUT / "phase6" / "control_popularity.json").read_text())["point"]
@@ -196,7 +223,7 @@ def fig_results() -> None:
     ax[1].legend(fontsize=7, loc="upper right")
     yt = pred["y"].to_numpy()
     cm = confusion_matrix(yt, (pred["prob_text"] >= fz["threshold"]).astype(int))
-    share = cm / cm.sum(axis=1, keepdims=True)
+    share = cm / cm.sum(axis=1, keepdims=True)  # each cell as a share of its row
     ax[2].imshow(share, cmap="Blues", vmin=0, vmax=1)
     for (i, k), v in np.ndenumerate(cm):
         ax[2].text(k, i, f"{v:,}\n({share[i, k]:.0%} of row)", ha="center", va="center",
@@ -208,7 +235,16 @@ def fig_results() -> None:
 
 
 def fig_interpretation() -> None:
-    """Importancia por permutacao e valores SHAP do modelo de texto."""
+    """Figures 6 and 7: permutation importance and SHAP values of the text model.
+
+    Figure 6 (``importance.png``) shows the AUC drop for each family and for the ten most
+    important attributes. Figure 7 (``shap.png``) shows (a) the distribution of the SHAP
+    values of the 12 most influential attributes and (b) how the five most important
+    attributes change the prediction as their value changes. The SHAP values are computed
+    on the interpretation sample of the holdout. For a logistic regression, the SHAP value
+    of an attribute is its coefficient times how far the value is from the average (in
+    log-odds), so SHAP shows the effect of the coefficients on each skill.
+    """
     perm = pd.read_csv(OUT / "phase7" / "permutation_holdout.csv")
     fam = perm[perm["feature"].str.startswith("family:")].iloc[::-1]
     col = perm[~perm["feature"].str.startswith("family:")].head(10).iloc[::-1]
@@ -222,15 +258,17 @@ def fig_interpretation() -> None:
     ax[0].set_title("(a) Attribute families")
     ax[1].set_title("(b) Top 10 attributes")
     _save(fig, "importance.png")
+    # SHAP values of the text model on the interpretation sample.
     fz = json.loads((OUT / "phase5" / "freeze.json").read_text())
     m = joblib.load(fz["models"]["text"]["file"])
     pipe, cols = m["pipeline"], m["columns"]
     sample = interp_sample(load_frame("holdout"))
     import shap  # noqa: PLC0415
 
-    xt = pipe[:-1].transform(sample[cols])
+    xt = pipe[:-1].transform(sample[cols])  # the data after preprocessing, as the model sees it
     names = list(pipe.named_steps["pre"].get_feature_names_out())
     model = pipe.named_steps["model"]
+    # Pick the explainer that fits the algorithm of the model.
     if fz["algo"] in TREE_ALGOS:
         values = shap.TreeExplainer(model).shap_values(xt)
     elif fz["algo"] == "logistic":
@@ -243,16 +281,18 @@ def fig_interpretation() -> None:
     values = values[1] if isinstance(values, list) else values
     if values.ndim == 3:
         values = values[:, :, 1]
+    # Position of the preprocessed column of each original attribute.
     raw = {c: next(k for k, n in enumerate(names) if n.endswith(f"__{c}")) for c in cols}
     imp = pd.Series({c: np.abs(values[:, j]).mean() for c, j in raw.items()}) \
         .sort_values(ascending=False)
     pd.DataFrame({"feature": imp.index, "mean_abs_shap": imp.values}) \
         .to_csv(OUT / "phase7" / "shap_holdout.csv", index=False)
     rng = np.random.default_rng(0)
-    pick = rng.choice(len(xt), size=min(5000, len(xt)), replace=False)
+    pick = rng.choice(len(xt), size=min(5000, len(xt)), replace=False)  # points to draw
     top = list(imp.index[:12])
     fig = plt.figure(figsize=(12, 8.2), layout="constrained")
     gs = fig.add_gridspec(2, 5, height_ratios=[1.3, 1])
+    # (a) one row of dots per attribute, colored by the value of the attribute.
     a0 = fig.add_subplot(gs[0, :])
     for r, c in enumerate(top[::-1]):
         v = values[pick, raw[c]]
@@ -265,6 +305,7 @@ def fig_interpretation() -> None:
     a0.set_xlim(-lim * 1.1, lim * 1.1)
     a0.set_xlabel("SHAP value (log-odds); color: attribute value from low (blue) to high (red)")
     a0.set_title("(a) SHAP values of the 12 most influential attributes")
+    # (b) dependence plots of the 5 attributes with the largest permutation importance.
     perm_top = [f for f in perm["feature"] if not f.startswith("family:")][:5]
     dep = {}
     for i, c in enumerate(perm_top):
@@ -272,7 +313,7 @@ def fig_interpretation() -> None:
         x = sample[c].to_numpy(dtype=float)
         a.axhline(0, color=GREY, lw=0.7)
         if set(np.unique(x[~np.isnan(x)])) <= {0.0, 1.0}:
-            # atributo binario: um ponto por categoria, com o numero de skills
+            # binary attribute: one point cloud per category, with the number of skills
             sv = values[:, raw[c]]
             for k in (0, 1):
                 s = sv[x == k]
@@ -286,6 +327,7 @@ def fig_interpretation() -> None:
             pad = 0.35 * (sv.max() - sv.min() + 1e-9)
             a.set_ylim(min(sv.min(), 0) - pad, max(sv.max(), 0) + pad)
         else:
+            # numeric attribute: show the 1st to 99th percentile, so outliers do not squeeze it
             lo, hi = np.nanpercentile(x, [1, 99])
             a.scatter(x[pick], values[pick, raw[c]], s=3, alpha=0.3, color=BLUE)
             a.set_xlim(lo - 0.02 * (hi - lo + 1e-9), hi + 0.02 * (hi - lo + 1e-9))
@@ -307,6 +349,7 @@ def fig_interpretation() -> None:
 
 
 def main_figures() -> None:
+    """Command ``skillreuse figures``: draw all the figures of the paper."""
     fig_eda()
     fig_eda_attributes()
     fig_eda_univariate()
