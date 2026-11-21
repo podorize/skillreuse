@@ -17,8 +17,7 @@ This raises a simple question: are some skills copied more than others
 because of how they are written? If the text of a skill says something
 about its chances of being copied, authors can learn what kinds of
 instructions travel, curators can decide what to review first, and tools
-can recommend new skills. If the text says nothing, copying depends only
-on who publishes a skill and where.
+can recommend new skills.
 
 Our objective is to develop and evaluate machine learning models that
 predict, from the text of a skill, whether other developers will copy
@@ -60,13 +59,14 @@ where the skill first appeared.
 
 The text does predict copying, modestly but reliably. On 20,564 skills
 from authors the model had never seen, a model of 22 text attributes
-reached an AUC of 0.645. It did better than a model that sees only the
-length of the text, and it still added information to a model that knows
-how popular the origin repository is. The result held under every
-alternative choice we tested, including predicting skills that were
-published after the ones the model learned from. Skills written as
-explanatory prose, with a stable vocabulary and valid metadata, were
-copied more often.
+reached an AUC of 0.645. To rule out simpler explanations, we compared
+it with two references: it beat a model of text length alone, so it is
+not just length, and it still added information to a model of the origin
+repository, popularity included, so it is not just where a skill is
+published. The result held under every alternative choice we tested,
+including predicting skills that were published after the ones the model
+learned from. Skills written as explanatory prose, with a repetitive
+vocabulary and valid metadata, were copied more often.
 
 The rest of the paper is organized as follows. Section 2 reviews related
 work. Section 3 describes the data and the methods, Section 4 the

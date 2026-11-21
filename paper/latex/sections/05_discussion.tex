@@ -3,8 +3,8 @@
 The results answer both questions. The text of a skill predicts whether
 other developers will copy it (RQ1), and the signal comes mainly from
 how the skill is written (RQ2). This section discusses what that means
-(5.1), what else could explain it (5.2), who can use it (5.3) and where
-it stops (5.4).
+(5.1), what else could explain it and who can use it (5.2), and where it
+stops (5.3).
 
 \subsection{What the results mean}\label{what-the-results-mean}
 
@@ -28,33 +28,15 @@ conventions of a single codebase and have little reason to travel. This
 reading is plausible, but our data cannot separate it from the
 alternatives below.
 
-\subsection{Alternative explanations}\label{alternative-explanations}
-
-\textbf{The origin repository.} A skill in a popular repository may be
-copied because of where it is, not because of what it says. The control
-rules out the strong form of this explanation: the text adds 0.049 AUC
-to a model that knows the repository's age, language, license, the
-folder of the file, and its stars and forks. Because popularity was
-measured after T0, and may partly result from the copies themselves,
-this control favors the repository. It cannot, however, capture other
-kinds of visibility of the author, such as followers or activity
-elsewhere.
-
-\textbf{Provenance.} Skills that travel together --- collections
-released by a company, packs copied as a whole --- may share a
-recognizable house style. A model that learns that style would recognize
-where a skill comes from, not what makes it reusable. Two results limit
-this explanation: the model predicts skills whose names never appear in
-development almost as well (Appendix A), and it predicts skills that
-appeared after the ones it learned from. Still, style may partly mark
-provenance.
-
-\textbf{Generated text.} Long sentences and a repetitive vocabulary are
-also typical of text written by language models or skill generators. If
-such tools produce skills that are both more polished and more widely
-promoted, style would reflect how a skill was produced rather than the
-author's choices. GitSkills does not record who or what wrote a skill,
-so this question remains open.
+Three simpler explanations could produce the signal. A skill in a
+popular repository may be copied because of where it is, but the text
+still adds 0.049 AUC to a model of the repository's age, language,
+license, folder and popularity, which favors the repository because
+popularity was measured after T0. Skills that travel together may share
+a house style that marks provenance; the model also predicts skills that
+appeared later, but style may still partly mark it. Finally, long
+sentences and a repetitive vocabulary are typical of text written by
+language models, and GitSkills does not record who wrote a skill.
 
 \subsection{Implications}\label{implications}
 
@@ -95,6 +77,12 @@ repository could only be measured in July 2026. The sample covers
 150,000 of the 1.16 million skills, and only skills that appeared at
 least 60 days before the snapshot could be used, so the youngest skills
 are not represented.
+
+\textbf{How we model it.} The spot-check compares algorithms only with
+their default hyperparameters, which can penalize those whose defaults
+suit the problem poorly, such as k-nearest neighbors and the decision
+tree (Section 4.2). With other settings, their ranking, and therefore
+the choice of finalists, could change.
 
 \textbf{What it allows us to say.} The study follows the order of
 events, but it is observational: the models describe associations

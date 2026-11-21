@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Agent skills are Markdown files that teach LLM-based coding agents how to perform a task, and they spread across GitHub by being copied. We ask whether the text of a skill predicts whether other developers will copy it. To measure copying reliably, we dated the copies of 150,000 GitSkills skills through the GitHub API and labeled a skill as copied when another developer copied it within 60 days of its first appearance, ignoring repositories that collect skills in bulk. On 20,564 skills from unseen authors, a model of the text reached an AUC of 0.645, beyond text length and beyond the popularity of the origin repository. Skills written as explanatory prose, with a stable vocabulary and valid metadata, were copied more often. The signal is modest but robust, also on future skills.
+Agent skills are Markdown files that teach coding agents how to perform a task. We ask whether the text of a skill predicts whether other developers will copy it. To measure copying, we dated the copies of 150,000 GitSkills skills through the GitHub API and labeled a skill as copied if another developer copied it within 60 days of its first appearance, ignoring repositories that collect skills in bulk. On 20,564 skills from unseen authors, a logistic regression on 22 text attributes reached an AUC of 0.645 (95% CI 0.624–0.666), and the result held across time windows, other definitions of bulk repositories and future skills. Writing style carried most of the signal: explanatory prose, a repetitive vocabulary and valid metadata went with more copying. The relation is modest and associative, not causal.
 
 ## Contents
 
@@ -25,9 +25,8 @@ Agent skills are Markdown files that teach LLM-based coding agents how to perfor
    4.5 What the model learned (RQ2)
 5. **Discussion**
    5.1 What the results mean  
-   5.2 Alternative explanations  
-   5.3 Implications  
-   5.4 Limitations
+   5.2 Implications  
+   5.3 Limitations
 6. **Conclusion**
 
 **References**  

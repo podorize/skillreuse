@@ -18,20 +18,21 @@ mirrors and marketplaces collect skills in bulk; the largest one holds
 89,908 different skills. We call a repository with 100 or more different
 skills an \textbf{aggregator} (there are 2,867). A copy in an aggregator
 shows that a skill was collected, not that a developer decided to use
-it, so aggregators are left out of the main analysis. This leaves
+it, so copies in aggregators are ignored in the main analysis, and
+skills that exist only in aggregators are left out. This leaves
 1,163,728 skills that exist in at least one repository outside
 aggregators.
 
-To know when each skill was copied, we must date its copies (Section
-3.2), and dating a copy means querying the history of its file through
-the GitHub API, which limits how many queries an account can make per
-hour. Together, the 1,163,728 skills have 2,395,296 copies. Dating the
-copies of our sample took about seven hours at the API's limit; dating
-all of them would take about eight times longer, more than two days of
-uninterrupted queries, while a random sample is enough to answer our
-question. We therefore drew a random sample of \textbf{150,000 skills}.
-They have 308,256 copies in total: 223,261 in ordinary repositories and
-84,995 in aggregators.
+To tell the original skill from its copies, and to know when each copy
+was made, we must date the copies (Section 3.2). Dating a copy means
+querying the history of its file through the GitHub API, which limits
+how many queries an account can make per hour. The 1,163,728 skills have
+2,395,296 copies in total, and dating all of them would take more than
+two days of uninterrupted queries. We therefore drew a random sample of
+\textbf{150,000 skills}, which is enough to answer our question. The
+sample has 308,256 copies, 223,261 in ordinary repositories and 84,995
+in aggregators, and dating them took about seven hours at the API's
+limit.
 
 \subsection{Measuring whether a skill was
 copied}\label{measuring-whether-a-skill-was-copied}
@@ -248,14 +249,16 @@ This quick comparison shows which kinds of models suit the problem
 before any effort goes into tuning.
 
 \textbf{Tuning and selection.} The three best algorithms were then tuned
-with nested cross-validation. In each of six outer folds, a random
-search tried ten hyperparameter configurations (Table 3) on three inner
-folds and kept the best one; the outer fold then measured how well it
-performed on data the search had not seen. Each algorithm was also
-evaluated with its default settings. The configuration with the highest
-average AUC wins. If it is not significantly better than the others, the
-fastest of the tied configurations wins, so that we only accept extra
-complexity when it pays off.
+with nested cross-validation. In each of six outer folds (the first two
+repetitions of the partitions above), a random search drew ten
+hyperparameter configurations (Table 3), scored each on three inner
+folds of the training part, and kept the best. That configuration was
+then measured on the outer fold, which the search had never seen, so the
+estimate is not inflated by the choice. Each algorithm was also
+evaluated with its default settings. The highest mean AUC wins; if it is
+not significantly better than the others, the fastest of the tied
+configurations wins, so that we accept extra complexity only when it
+pays off.
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.3409}}

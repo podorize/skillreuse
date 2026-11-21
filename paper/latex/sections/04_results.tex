@@ -91,12 +91,17 @@ need a model.
 Table 4 and Figure 4 summarize how the model was chosen. In the
 spot-check, HistGradientBoosting (AUC 0.652) and logistic regression
 (0.642) came first, followed by the neural network, Naive Bayes and the
-random forest. k-nearest neighbors and the decision tree came last. The
-first is hurt by the many correlated and skewed attributes; the second,
-with default settings, keeps splitting until each leaf holds a single
-class, and so memorizes the training data. The results varied little
-from fold to fold (standard deviations of 0.005 to 0.015), so the
-ranking is clear.
+random forest. k-nearest neighbors and the decision tree came last, and
+both suffered from their default settings. By default, k-nearest
+neighbors looks at only five neighbors, and each prediction is the share
+of them that were copied. Because few skills are copied, many
+predictions are zero and the others take only five other values, so many
+skills tie and the ranking is coarse. The default decision tree has no
+depth limit and accepts leaves with a single skill, so it keeps
+splitting until each leaf holds a single class: it memorizes the
+training data and does not generalize. The results varied little from
+fold to fold (standard deviations of 0.005 to 0.015), so the ranking of
+the default settings is clear.
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Model selection on the text attributes: spot-check (mean \ensuremath{\pm}
@@ -143,6 +148,17 @@ gain a model whose behavior can be read directly. The result is
 informative in itself: if a linear model does as well as boosted trees,
 the signal does not depend on complex interactions between attributes.
 
+\textbf{Decision threshold.} Metrics such as precision and recall need a
+threshold on the predicted probability. We chose it on the development
+set, before opening the holdout. Using the out-of-fold probabilities of
+the text model, we tried every value from 0.01 to 0.99 and kept the one
+that maximizes balanced accuracy: the mean of the share of copied skills
+that are flagged and the share of non-copied skills that are not, so
+that both classes weigh the same although copied skills are rare. This
+gives 0.07 (balanced accuracy 0.603, precision 10.5\%, recall 71.6\%).
+Because the probabilities stay close to the average (7.7\%), it flags
+about half of the skills (52\%).
+
 \subsection{Does the text predict whether a skill is copied?
 (RQ1)}\label{does-the-text-predict-whether-a-skill-is-copied-rq1}
 
@@ -164,7 +180,7 @@ development one (0.642 \ensuremath{\pm} 0.014), so the model did not overfit.
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1200}}@{}}
 \caption{Final models (logistic regression) on the development set (mean
 \ensuremath{\pm} standard deviation over 9 author-grouped folds) and on the holdout
-(20,564 skills from 10,386 authors; 7.7\% copied; 95\% CIs from author
+(20,564 skills from 10,386 authors; 7.8\% copied; 95\% CIs from author
 bootstrap).}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
@@ -204,7 +220,7 @@ Origin repository + text & 0.725 \ensuremath{\pm} 0.012 & 0.734 {[}0.714; 0.753{
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/report_results.png}
-\caption{Holdout: (a) ROC curves and (b) precision--recall curves of the final models; (c) confusion matrix of the text model at the threshold chosen on the development set}
+\caption{Holdout: (a) ROC curves and (b) precision--recall curves of the final models, drawn from a recall of 0.01 (about 16 copied skills); (c) confusion matrix of the text model at the threshold chosen on the development set}
 \label{fig:report-5}
 \end{figure}
 
@@ -219,7 +235,8 @@ CI {[}0.035; 0.063{]}; Holm-adjusted p = 0.002). Recall that the
 repository's popularity was measured after T0, which favors the
 repository; the text adds information even so. The precision--recall
 curves agree (Figure 5b): every model is above the line of a random
-guess, and the text improves the origin model at every level of recall.
+guess, and from a recall of about 0.13 on, the text improves the origin
+model at every level.
 
 What the model offers is a ranking, not a reliable yes-or-no answer. Its
 PR AUC (0.130) is 1.7 times the share of copied skills. At the threshold
@@ -228,7 +245,7 @@ holdout skills as likely to be copied. Among them are 1,137 of the 1,594
 skills that were copied (recall 71\%), but most flagged skills were not
 copied (precision 10.6\%; balanced accuracy 0.603; Figure 5c). Its
 probabilities also stay close to the average (Brier score 0.0701,
-against 0.0715 for predicting 7.7\% for every skill): the model
+against 0.0715 for predicting 7.8\% for every skill): the model
 separates skills, but it never finds one that is very likely to be
 copied. In practice, it can help decide which skills to look at first,
 not decide on its own.
@@ -275,7 +292,7 @@ AUC {[}95\% CI{]}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Main analysis (W = 60, aggregators \ensuremath{\geq} 100) & 20,564 & 7.7\% & 0.645
+Main analysis (W = 60, aggregators \ensuremath{\geq} 100) & 20,564 & 7.8\% & 0.645
 {[}0.624; 0.666{]} \\
 Window W = 30 days & 28,464 & 5.8\% & 0.648 {[}0.628; 0.666{]} \\
 Window W = 90 days & 13,460 & 9.4\% & 0.633 {[}0.612; 0.656{]} \\
@@ -291,15 +308,15 @@ Temporal split (T0 after 14 April 2026) & 6,031 & 6.7\% & 0.634
 ranges from 5.8\% to 9.4\%, but the AUC stays within 0.012 of the main
 result. \textbf{The aggregators.} Counting copies in repositories with
 100 to 499 skills, or in all repositories, raises the share of copied
-skills from 7.7\% to 9.0\% and 12.5\%: bulk collectors would inflate the
+skills from 7.8\% to 9.0\% and 12.5\%: bulk collectors would inflate the
 number of copied skills by more than half. The AUC, however, stays at
 0.644 and 0.653. \textbf{Time.} The hardest test is the temporal split.
 Trained only on skills that appeared before 14 April 2026, the model
 ranked the 6,031 holdout skills that appeared afterwards with an AUC of
 0.634: the text predicts the fate of skills that did not yet exist when
-the model learned. The two checks in Appendix A --- keeping only skills
-whose copies could all be dated, and only skills whose names never
-appear in development --- give AUCs of 0.626 and 0.622.
+the model learned. In all five alternative analyses the AUC stays
+between 0.633 and 0.653, and every interval lies above 0.5. The answer
+to RQ1 does not depend on these choices.
 
 \subsection{What the model learned
 (RQ2)}\label{what-the-model-learned-rq2}
