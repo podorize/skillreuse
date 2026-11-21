@@ -1,12 +1,20 @@
-"""Fase 2 do protocolo (paper/protocol.md, secoes 2.3, 3 e 4): autores, divisao e atributos.
+"""Phase 2 of the protocol (paper/protocol.md, sections 2.3, 3 and 4): authors, split, attributes.
 
-A partir das datas coletadas na fase 1, cada conteudo recebe T0 (primeira chegada entre as
-copias datadas fora de agregadores), a copia de origem, o autor (dono do repositorio de origem)
-e o tempo ate a primeira copia de outro dono. O alvo de cada janela W e calculado depois
-(fase 3), porque W e escolhido pela regra da secao 5. O mesmo calculo e repetido com os limites
-de agregador das sensibilidades (500 skills e sem exclusao).
+From the dates collected in phase 1 (``collect.py``), this module builds the table of the
+study, with one row per skill. For each skill it computes:
 
-Saida: ``data/derived/study_table.parquet`` (uma linha por conteudo datado).
+* T0: the first arrival among the dated copies outside aggregators (first appearance);
+* origin: the copy that arrived at T0, and author: the owner of the origin repository;
+* time to first copy: days from T0 until the first copy by another owner;
+* the attributes: 27 of the text (``features.py``) and 14 of the origin repository;
+* the split: the whole author goes either to the development set or to the holdout.
+
+The target ("copied within W days") is *not* in the table. It is computed from the time to
+first copy in ``study.load_frame``, because the window W is chosen later, in phase 3. The
+same computation is repeated with the aggregator limits of the robustness analysis (500
+skills, and no exclusion of aggregators).
+
+Output: ``data/derived/study_table.parquet`` (one row per dated skill).
 """
 
 from __future__ import annotations
@@ -24,8 +32,12 @@ from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT, STAR_CAP, STARS
 from skillreuse.download import DEFAULT_ARTIFACTS, DEFAULT_REPOS, sql_path
 from skillreuse.features import add_engineered_features
 
+# Folders of other agent tools (.codex, .cursor, ...). A skill kept there was probably
+# written for that tool or installed by it.
 TOOL_DIRS = r"(?:^|/)\.(?:codex|agents|cursor|gemini|github|opencode|windsurf|kiro|roo)(?:/|$)"
 
+# Attributes of the origin repository taken from the path of the file. Each one is 1 when
+# the path has a folder of that kind and 0 otherwise.
 PATH_PATTERNS = {
     "p_template": (
         r"(?:^|/)(?:templates?|examples?|samples?|demos?|fixtures?|tests?|testdata)(?:/|$)"
@@ -38,22 +50,37 @@ PATH_PATTERNS = {
     "p_claude_dir": r"(?:^|/)\.claude(?:/|$)",
 }
 
-SPLIT_SEED = "20261122"
-HOLDOUT_SHARE = 0.30
-CAP_PER_AUTHOR = 50
+SPLIT_SEED = "20261122"  # seed of the author split
+HOLDOUT_SHARE = 0.30  # share of the authors that go to the holdout
+CAP_PER_AUTHOR = 50  # at most this many skills per author
 TABLE = Path("data/derived/study_table.parquet")
 VARIANTS_TABLE = Path("data/derived/aggregator_variants.parquet")
 POPULARITY_TABLE = Path("data/derived/origin_popularity.parquet")
 MANIFEST = Path("results/phase2/manifest.json")
-VARIANTS = {"": 100, "_agg500": 500, "_aggnone": None}  # limite de agregador por variante
+# Aggregator limit of each variant: "" is the main analysis (100 skills), "_agg500" uses
+# 500 skills and "_aggnone" does not exclude any aggregator (None = no limit).
+VARIANTS = {"": 100, "_agg500": 500, "_aggnone": None}
 
 
 def _band(n: pd.Series) -> pd.Series:
+    """Size band of an author, from the number of skills: 1, 2-3, 4-10, 11-50 or 51+."""
     return pd.cut(n, [0, 1, 3, 10, 50, np.inf], labels=["1", "2-3", "4-10", "11-50", "51+"])
 
 
 def timing(dates: pd.DataFrame, limit: int | None) -> pd.DataFrame:
-    """T0, origem, autor e tempo ate a primeira copia de outro dono, por conteudo."""
+    """T0, origin, author and time to first copy of each skill.
+
+    ``dates`` has one row per copy. ``limit`` is the aggregator limit: copies in
+    repositories with ``limit`` or more skills are ignored (``None`` keeps all of them).
+    Columns of the result:
+
+    * ``t0``, ``origin_repo``, ``origin_path``, ``author``, ``origin_repo_created_at``:
+      the copy that arrived first. Ties are broken by repository name and then by path, so
+      the result is always the same;
+    * ``first_copy_lag_days``: days from T0 until the first copy by an owner other than
+      the author (empty if there is none). Copies by the author do not count;
+    * ``all_copies_dated``: True if every copy outside aggregators could be dated.
+    """
     d = dates if limit is None else dates[dates["repo_skills"] < limit]
     dated = d[d["arrival"].notna()].sort_values(["content_hash", "arrival", "repo_full_name",
                                                  "path"])
@@ -62,6 +89,7 @@ def timing(dates: pd.DataFrame, limit: int | None) -> pd.DataFrame:
                  "repo_created_at"]].rename(columns={
                      "arrival": "t0", "repo_full_name": "origin_repo", "path": "origin_path",
                      "owner": "author", "repo_created_at": "origin_repo_created_at"})
+    # Copies by other owners, with the author and T0 of their skill.
     other = dated.merge(out[["content_hash", "author", "t0"]], on="content_hash")
     other = other[other["owner"] != other["author"]]
     lag = (other.groupby("content_hash")["arrival"].min()
@@ -73,9 +101,11 @@ def timing(dates: pd.DataFrame, limit: int | None) -> pd.DataFrame:
 
 
 def text_features(hashes: pd.Series) -> pd.DataFrame:
-    """Atributos de conteudo (secao 3), extraidos do texto da ocorrencia representativa.
+    """Attributes of the text (section 3) of the skills with the given hashes.
 
-    O texto e identico em todas as copias. Lido em 16 lotes pelo primeiro caractere do hash.
+    The text is read from the representative occurrence of each skill (``dedup_primary``
+    is 1). It is the same in all copies, so it does not matter which copy is read. The
+    file is large, so it is read in 16 batches, by the first character of the hash.
     """
     con = duckdb.connect()
     con.sql("pragma threads=4; pragma memory_limit='3GB'")
@@ -90,19 +120,26 @@ def text_features(hashes: pd.Series) -> pd.DataFrame:
               and file_sha in (select h from sel where h like '{prefix}%')
         """).df()
         f = add_engineered_features(df)
+        # Normalized name, used only by the "unseen names" robustness check.
         f["name_norm"] = f["name"].fillna("").str.strip().str.lower()
         parts.append(f.drop(columns=["content", "name", "description"]))
-        print(f"[atributos] lote {prefix}: {len(df):,}", flush=True)
+        print(f"[attributes] batch {prefix}: {len(df):,}", flush=True)
     return pd.concat(parts, ignore_index=True)
 
 
 def origin_features(t: pd.DataFrame) -> pd.DataFrame:
-    """Atributos do repositorio de origem fixos no tempo e estrelas em T0 (secao 3)."""
+    """Attributes of the origin repository (section 3), used only by the control model.
+
+    ``t`` is the table of ``timing``. The attributes are: age of the repository at T0,
+    language, license, fork flag, stars at T0 (log scale) and the position of the file
+    (depth, file at the root and the seven folder kinds of ``PATH_PATTERNS``).
+    """
     repos = duckdb.sql(f"""select full_name as origin_repo, language as repo_language,
                            license as repo_license, is_fork as repo_is_fork
                            from read_parquet('{sql_path(DEFAULT_REPOS)}')""").df()
     out = t[["content_hash", "origin_repo", "origin_path", "t0",
              "origin_repo_created_at"]].merge(repos, on="origin_repo", how="left")
+    # Negative when T0 is before the creation of the repository (inherited history).
     out["repo_age_days_at_t0"] = (out["t0"] - out["origin_repo_created_at"]) \
         .dt.total_seconds() / 86400
     stars = pd.read_parquet(STARS)
@@ -111,11 +148,14 @@ def origin_features(t: pd.DataFrame) -> pd.DataFrame:
     ok = set(stars.loc[stars["status"] == "ok", "repo_full_name"])
 
     def before(row: pd.Series) -> float:
+        """Number of stars given before T0 (at most ``STAR_CAP``), or missing if unknown."""
         if row["origin_repo"] not in ok:
             return np.nan
         return float(min(np.searchsorted(times[row["origin_repo"]], row["t0"].to_datetime64()),
                          STAR_CAP))
 
+    # The API returned no dates for the stars, so this column is zero for every skill and
+    # is removed later as a constant column (protocol, section 13, deviation 3).
     out["log_stars_at_t0"] = np.log1p(out.apply(before, axis=1))
     path = out["origin_path"].fillna("")
     out["path_depth"] = path.str.count("/").astype(float)
@@ -127,25 +167,41 @@ def origin_features(t: pd.DataFrame) -> pd.DataFrame:
 
 
 def split_authors(t: pd.DataFrame) -> pd.Series:
-    """Holdout = 30% dos autores de cada faixa de tamanho, na ordem do hash (secao 4)."""
+    """Choose the authors of the holdout: 30% of the authors of each size band (section 4).
+
+    The split is by author: all skills of an author go to the same side, so the model is
+    tested on developers it has never seen. Inside each band, authors are ordered by
+    ``md5(author + ':' + seed)`` and the first 30% go to the holdout. Doing this band by
+    band gives both sides the same mix of small and large accounts.
+
+    Returns a table indexed by author with ``True`` for the holdout authors.
+    """
     sizes = t.groupby("author").size()
     a = pd.DataFrame({"author": sizes.index, "n": sizes.to_numpy()})
     a["band"] = _band(a["n"]).astype(str)
     a["h"] = [hashlib.md5(f"{x}:{SPLIT_SEED}".encode()).hexdigest() for x in a["author"]]
     a = a.sort_values(["band", "h", "author"])
-    a["rank"] = a.groupby("band").cumcount() + 1
-    a["nb"] = a.groupby("band")["author"].transform("size")
+    a["rank"] = a.groupby("band").cumcount() + 1  # position of the author inside its band
+    a["nb"] = a.groupby("band")["author"].transform("size")  # number of authors in the band
     a["holdout"] = a["rank"] <= (HOLDOUT_SHARE * a["nb"]).round()
     return a.set_index("author")["holdout"]
 
 
 def build() -> None:
+    """Build the table of the study and check its invariants (command ``skillreuse cohort``).
+
+    Steps: join the dates with the occurrences, compute ``timing`` with the main
+    aggregator limit, keep at most 50 skills per author, split by author, add the text and
+    origin attributes, write the table and the manifest. The run fails if an invariant of
+    section 4 breaks: no author or content on both sides, at most 50 skills per author, and
+    29% to 31% of the authors in the holdout in each size band.
+    """
     occ = pd.read_parquet(OCCURRENCES)
     dates = pd.read_parquet(DATES).merge(
         occ[["content_hash", "repo_full_name", "path", "owner", "repo_skills"]],
         on=["content_hash", "repo_full_name", "path"], how="right")
     main = timing(dates, 100)
-    # cap de 50 por autor, na ordem do hash, antes da divisao
+    # Cap of 50 skills per author (the first ones in hash order), before the split.
     main = main.sort_values(["author", "content_hash"])
     main = main[main.groupby("author").cumcount() < CAP_PER_AUTHOR].copy()
     holdout = split_authors(main)
@@ -156,7 +212,7 @@ def build() -> None:
     table = table.rename(columns={"author": "owner"}).sort_values("content_hash")
     TABLE.parent.mkdir(parents=True, exist_ok=True)
     table.to_parquet(TABLE, index=False)
-    # invariantes (secao 4)
+    # Invariants of the split (section 4).
     dev, hold = table[table["split"] == "dev"], table[table["split"] == "holdout"]
     sizes = main.groupby("author").size()
     share = pd.DataFrame({"band": _band(sizes).astype(str), "hold": holdout.reindex(sizes.index)})
@@ -168,6 +224,7 @@ def build() -> None:
     failed = [k for k in ("author_overlap", "hash_overlap") if inv[k]]
     if inv["max_per_author"] > CAP_PER_AUTHOR:
         failed.append("max_per_author")
+    # Bands with fewer than 20 authors are too small to check the share.
     if not all(0.29 <= v <= 0.31 for b, v in by_band.items() if (share["band"] == b).sum() >= 20):
         failed.append("holdout_author_share_by_band")
     inv["failed"] = failed
@@ -183,14 +240,15 @@ def build() -> None:
         "table_sha256": hashlib.sha256(TABLE.read_bytes()).hexdigest()}, indent=2,
         default=str) + "\n")
     if failed:
-        raise RuntimeError(f"Invariantes da fase 2 falharam: {failed}")
+        raise RuntimeError(f"Phase 2 invariants failed: {failed}")
     print(json.dumps(inv, indent=2, default=str))
 
 
 def build_variants() -> None:
-    """T0 e tempo ate a primeira copia com os limites de agregador da sensibilidade (secao 8).
+    """T0 and time to first copy with the aggregator limits of the robustness analysis.
 
-    Exige a coleta das copias em agregadores; nao altera a tabela principal.
+    Needs the copies in aggregators to be dated (``collect dates --scope aggregators``).
+    Writes ``aggregator_variants.parquet`` and does not change the main table.
     """
     occ = pd.read_parquet(OCCURRENCES)
     dates = pd.read_parquet(DATES).merge(
@@ -199,7 +257,7 @@ def build_variants() -> None:
     keep = pd.read_parquet(TABLE, columns=["content_hash"])
     out = keep
     for suffix, limit in VARIANTS.items():
-        if suffix:
+        if suffix:  # the main variant ("") is already in the study table
             v = timing(dates, limit)[["content_hash", "t0", "first_copy_lag_days"]]
             out = out.merge(v.rename(columns={"t0": f"t0{suffix}", "first_copy_lag_days":
                                               f"first_copy_lag_days{suffix}"}),
@@ -209,10 +267,12 @@ def build_variants() -> None:
 
 
 def build_popularity() -> None:
-    """Estrelas e forks do repositorio de origem no retrato do GitSkills (desvio, secao 13).
+    """Stars and forks of the origin repository at the snapshot (protocol deviation).
 
-    A API do GitHub nao lista mais as estrelas com data, entao a popularidade em T0 nao pode ser
-    reconstruida; a do retrato (posterior a T0) entra no controle como versao mais exigente.
+    The GitHub API no longer lists stars with their dates, so the popularity at T0 could
+    not be rebuilt. The popularity at the snapshot, which is later than T0, is used
+    instead in the control model. This makes the control harder to beat: the stars may
+    even be partly caused by the copies. See protocol, section 13, deviation 3.
     """
     t = pd.read_parquet(TABLE, columns=["content_hash", "origin_repo"])
     repos = duckdb.sql(f"""select full_name as origin_repo, stars, forks
@@ -226,6 +286,11 @@ def build_popularity() -> None:
 
 
 def cohort_main() -> None:
+    """Command ``skillreuse cohort [--popularity | --variants]``.
+
+    Without options it builds the table of the study; the options build the two extra
+    tables used by the control model and by the robustness analysis.
+    """
     import sys  # noqa: PLC0415
 
     if "--variants" in sys.argv:
