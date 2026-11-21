@@ -1,14 +1,28 @@
-"""Fase 1 do protocolo (paper/protocol.md, secoes 2.1 e 2.2): amostra e coleta das datas.
+"""Phase 1 of the protocol (paper/protocol.md, sections 2.1 and 2.2): sample and dates.
 
-* Agregador: repositorio com 100 ou mais conteudos distintos no GitSkills.
-* Populacao: conteudos com pelo menos uma ocorrencia fora de agregadores.
-* Amostra: 150.000 primeiros conteudos na ordem de ``md5(content_hash || ':20261121')``.
-* Coleta (API GraphQL do GitHub, somente leitura): para cada ocorrencia, o commit mais antigo
-  do caminho no ramo padrao em que o arquivo tem exatamente o hash do conteudo, e a data de
-  criacao do repositorio. Chegada = a mais tardia das duas.
-* Estrelas do repositorio de origem em T0 (contadas ate 10.000).
+GitSkills is a snapshot of GitHub taken in July 2026: it says *where* each SKILL.md was,
+but not *when* it got there. This module adds the dates. The steps, in order:
 
-Saidas em ``data/derived/collection/``; o progresso e gravado em partes e a coleta e retomavel.
+1. ``sample``: choose 150,000 skills and list all their copies ("occurrences").
+2. ``dates``: ask the GitHub API when each copy arrived in its repository.
+3. ``stars``: ask the API for the stars of the origin repositories (the API returned no
+   dates, so this was later replaced by the popularity at the snapshot; see protocol,
+   section 13).
+4. ``merge``: join the partial results into one table of dates.
+
+Vocabulary used here and in the rest of the package:
+
+* skill: a distinct content, identified by the hash of the file (``file_sha``).
+* occurrence (or copy): one file in one repository with the content of a skill.
+* aggregator: a repository with 100 or more distinct skills. Registries, mirrors and
+  marketplaces collect skills in bulk, so a copy there does not show that a developer
+  chose the skill.
+* population: skills with at least one occurrence outside aggregators.
+* arrival: the date a copy appeared in its repository (defined in ``date_batch``
+  and ``merge_dates``).
+
+Outputs go to ``data/derived/collection/``. The progress is saved in parts, so the
+collection can be stopped and resumed.
 """
 
 from __future__ import annotations
@@ -29,14 +43,18 @@ import pandas as pd
 
 from skillreuse.download import DEFAULT_ARTIFACTS, sql_path
 
+# A repository with at least this many distinct skills is an aggregator.
 AGGREGATOR_MIN_SKILLS = 100
+# Seed of the sample: skills are sorted by md5(hash + ':' + seed) and the first are kept.
 SAMPLE_SEED = "20261121"
 SAMPLE_SIZE = 150_000
+# Start of the GitSkills crawl. A skill is eligible only if its whole window ends before it.
 SNAPSHOT = pd.Timestamp("2026-07-09", tz="UTC")
-CRAWL_END = pd.Timestamp("2026-07-21", tz="UTC")  # fim da coleta do GitSkills (20/07)
-STAR_CAP = 10_000
-MAX_COMMITS = 500
-HISTORY_PAGE = 20
+# End of the GitSkills crawl (20 July). A copy seen in the snapshot cannot have arrived later.
+CRAWL_END = pd.Timestamp("2026-07-21", tz="UTC")
+STAR_CAP = 10_000  # stars are counted up to this number
+MAX_COMMITS = 500  # most recent commits read in the history of one file
+HISTORY_PAGE = 20  # commits per GraphQL page
 
 COLLECTION = Path("data/derived/collection")
 OCCURRENCES = COLLECTION / "sample_occurrences.parquet"
@@ -48,22 +66,33 @@ API = "https://api.github.com/graphql"
 
 
 # ---------------------------------------------------------------------------
-# Amostra
+# Step 1: the sample
 # ---------------------------------------------------------------------------
 
 def build_sample() -> tuple[pd.DataFrame, dict[str, int]]:
+    """Choose the sample and list every occurrence of its skills.
+
+    Returns the occurrences (one row per file in a repository) and a dictionary with the
+    counts written to the phase 1 manifest. The work is done in SQL (DuckDB) because the
+    GitSkills table is too large for memory.
+    """
     import duckdb  # noqa: PLC0415
 
     con = duckdb.connect()
     con.sql("pragma threads=4; pragma memory_limit='3GB'")
+    # o: every file of GitSkills (h = hash of the content, r = repository)
     con.sql(f"""create table o as select file_sha as h, repo_full_name as r,
                 split_part(repo_full_name, '/', 1) as owner, path, filename, dedup_primary
                 from read_parquet('{sql_path(DEFAULT_ARTIFACTS)}')""")
+    # rs: number of distinct skills in each repository (>= 100 means aggregator)
     con.sql("create table rs as select r, count(distinct h) as repo_skills from o group by r")
+    # pop: the population, skills found in at least one repository that is not an aggregator
     con.sql(f"""create table pop as select h from o join rs using (r)
                 group by h having bool_or(repo_skills < {AGGREGATOR_MIN_SKILLS})""")
+    # sample: the first SAMPLE_SIZE skills in a pseudo-random but reproducible order
     con.sql(f"""create table sample as select h from pop
                 order by md5(h || ':{SAMPLE_SEED}'), h limit {SAMPLE_SIZE}""")
+    # occurrences: every copy of the sampled skills, with a flag for aggregators
     occ = con.sql(f"""
         select o.h as content_hash, o.r as repo_full_name, o.owner, o.path, o.filename,
                o.dedup_primary, rs.repo_skills,
@@ -80,19 +109,27 @@ def build_sample() -> tuple[pd.DataFrame, dict[str, int]]:
 
 
 # ---------------------------------------------------------------------------
-# Cliente GraphQL com repeticao, espera de limite e paralelismo
+# GitHub GraphQL client: retries, waiting for the rate limit and parallel calls
 # ---------------------------------------------------------------------------
 
 class Client:
+    """Minimal client of the GitHub GraphQL API, safe to share between threads.
+
+    The token comes from the GitHub CLI (``gh auth token``). Every query is tried up to
+    4 times (1 attempt + 3 retries) with growing waits. When the remaining quota gets low,
+    all threads pause until the quota is reset.
+    """
+
     def __init__(self) -> None:
         self.token = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True,
                                     check=True).stdout.strip()
         self.lock = threading.Lock()
-        self.cost = 0
-        self.pause_until = 0.0
+        self.cost = 0  # total cost of the queries so far, in GitHub rate-limit points
+        self.pause_until = 0.0  # time (seconds since the epoch) until which all threads wait
 
     def query(self, q: str, variables: dict) -> dict:
-        for attempt in range(4):  # 1 tentativa + 3 repeticoes
+        """Run one query. After the last failed attempt, return a ``COLLECTION_FAILED`` error."""
+        for attempt in range(4):  # 1 attempt + 3 retries
             wait = self.pause_until - time.time()
             if wait > 0:
                 time.sleep(wait)
@@ -115,7 +152,7 @@ class Client:
             rl = (res.get("data") or {}).get("rateLimit") or {}
             with self.lock:
                 self.cost += rl.get("cost", 0)
-                if rl.get("remaining", 5000) < 300:  # espera o reinicio da cota
+                if rl.get("remaining", 5000) < 300:  # wait for the quota to be reset
                     reset = datetime.fromisoformat(rl["resetAt"].replace("Z", "+00:00"))
                     self.pause_until = reset.timestamp() + 5
             if res.get("data") is None and res.get("errors"):
@@ -125,20 +162,44 @@ class Client:
         return {"data": None, "errors": [{"type": "COLLECTION_FAILED"}]}
 
 
+# Part of the query that reads the history of one file. {i} is the position of the
+# occurrence in the batch, so one query can ask about many repositories at once. The
+# doubled braces are literal braces, because the text goes through str.format. For each
+# commit, ``file(path).oid`` is the git hash of the file at that commit, which is the same
+# value as the ``file_sha`` of GitSkills, so a commit "has the skill" when the two match.
 HISTORY = """createdAt defaultBranchRef {{ target {{ ... on Commit {{
   history(first: {page}, path: $p{i}, after: $c{i}) {{ totalCount
     pageInfo {{ hasNextPage endCursor }} nodes {{ committedDate file(path: $p{i}) {{ oid }} }} }}
 }} }} }}"""
 
 
+# ---------------------------------------------------------------------------
+# Step 2: dates of the copies
+# ---------------------------------------------------------------------------
+
 def date_batch(client: Client, rows: list[dict]) -> list[dict]:
-    """Data, em cada ocorrencia, do primeiro commit com o hash do conteudo."""
+    """Date a batch of occurrences: when did each copy first have the content of the skill?
+
+    For every occurrence, read the history of the file on the default branch (newest commit
+    first, ``HISTORY_PAGE`` commits per query, up to ``MAX_COMMITS``) and keep the earliest
+    commit whose file has exactly the hash of the skill. Each occurrence ends with a status:
+
+    * ``datada``: dated (a commit with the hash was found);
+    * ``repositorio_inacessivel``: the repository is gone or private;
+    * ``arquivo_ausente``: the repository exists but the file has no history;
+    * ``hash_nao_encontrado``: the file has history but no commit with this exact content;
+    * ``falha_de_coleta``: the query failed after all retries.
+
+    These Portuguese codes are stored in the data files, so they are kept as they are.
+    """
+    # Reading state of each occurrence of the batch.
     state = {i: {"nodes": [], "cursor": None, "status": None, "created": None, "commits": None}
              for i in range(len(rows))}
-    pending = list(state)
+    pending = list(state)  # occurrences that still have more pages to read
     for _page in range(MAX_COMMITS // HISTORY_PAGE):
         if not pending:
             break
+        # Build one query with an alias (f0, f1, ...) for each pending occurrence.
         decl, parts, var = [], [], {}
         for i in pending:
             owner, name = rows[i]["repo_full_name"].split("/", 1)
@@ -151,7 +212,7 @@ def date_batch(client: Client, rows: list[dict]) -> list[dict]:
             + " ".join(parts) + " }"
         res = client.query(q, var)
         data = res.get("data")
-        nxt = []
+        nxt = []  # occurrences that need another page
         for i in pending:
             if data is None:
                 state[i]["status"] = "falha_de_coleta"
@@ -171,24 +232,34 @@ def date_batch(client: Client, rows: list[dict]) -> list[dict]:
                 state[i]["cursor"] = hist["pageInfo"]["endCursor"]
                 nxt.append(i)
         pending = nxt
+    # Decide the final status and the date of each occurrence.
     out = []
     for i, r in enumerate(rows):
         s = state[i]
+        # Dates of the commits in which the file has exactly the hash of the skill.
         match = [n["committedDate"] for n in s["nodes"]
                  if (n.get("file") or {}).get("oid") == r["content_hash"]]
         status = s["status"] or ("datada" if match else
                                  "arquivo_ausente" if not s["nodes"] else "hash_nao_encontrado")
         out.append({"content_hash": r["content_hash"], "repo_full_name": r["repo_full_name"],
                     "path": r["path"], "status": status, "repo_created_at": s["created"],
+                    # ISO 8601 dates sort correctly as text, so min() gives the earliest.
                     "first_hash_commit_at": min(match) if match else None,
                     "commits_on_path": s["commits"], "commits_read": len(s["nodes"])})
     return out
 
 
 def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None) -> None:
+    """Date every occurrence of one scope, in parallel, saving the progress in parts.
+
+    ``scope`` is ``main`` (copies outside aggregators) or ``aggregators`` (used only in the
+    robustness analysis). Occurrences already present in ``dates_parts/`` are skipped, so
+    the command can be stopped and run again. Results are written every 5,000 rows.
+    """
     occ = pd.read_parquet(OCCURRENCES)
     occ = occ[occ["aggregator"] == (scope == "aggregators")]
     DATES_DIR.mkdir(parents=True, exist_ok=True)
+    # An occurrence is identified by (repository, path, content hash).
     done = set()
     for part in DATES_DIR.glob("*.parquet"):
         d = pd.read_parquet(part, columns=["repo_full_name", "path", "content_hash"])
@@ -197,13 +268,14 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
             if (r["repo_full_name"], r["path"], r["content_hash"]) not in done]
     if limit:
         todo = todo[:limit]
-    print(f"[coleta] {scope}: {len(todo):,} ocorrencias a datar ({len(done):,} ja feitas)",
+    print(f"[collect] {scope}: {len(todo):,} occurrences to date ({len(done):,} already done)",
           flush=True)
     client, t0, buf, n_done = Client(), time.time(), [], 0
     lock = threading.Lock()
     part_id = len(list(DATES_DIR.glob("*.parquet")))
 
     def flush(force: bool = False) -> None:
+        """Write the buffered results as a new part file (when it has 5,000 rows or on force)."""
         nonlocal buf, part_id
         if buf and (force or len(buf) >= 5000):
             pd.DataFrame(buf).to_parquet(DATES_DIR / f"{scope}_{part_id:05d}.parquet",
@@ -212,6 +284,7 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
             buf = []
 
     def work(chunk: list[dict]) -> None:
+        """Date one batch of occurrences (runs in a worker thread)."""
         nonlocal n_done
         res = date_batch(client, chunk)
         with lock:
@@ -220,7 +293,7 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
             flush()
             if n_done % (batch * workers * 5) < batch:
                 rate = n_done / max(time.time() - t0, 1)
-                print(f"[coleta] {n_done:,}/{len(todo):,} ({rate:.1f}/s, custo {client.cost})",
+                print(f"[collect] {n_done:,}/{len(todo):,} ({rate:.1f}/s, cost {client.cost})",
                       flush=True)
 
     chunks = [todo[i:i + batch] for i in range(0, len(todo), batch)]
@@ -228,17 +301,25 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
         list(ex.map(work, chunks))
     with lock:
         flush(force=True)
-    print(f"[coleta] fim: {n_done:,} em {time.time() - t0:.0f}s, custo {client.cost}", flush=True)
+    print(f"[collect] done: {n_done:,} in {time.time() - t0:.0f}s, cost {client.cost}", flush=True)
 
 
 def merge_dates() -> pd.DataFrame:
+    """Join the parts into ``dates.parquet`` and compute the arrival of each copy.
+
+    ``arrival`` is the later of two dates: the first commit with the hash of the skill and
+    the creation of the repository. The second corrects repositories created by cloning
+    another one, which inherit its old history. Only dated copies keep an arrival.
+    """
     dates = pd.concat([pd.read_parquet(p) for p in sorted(DATES_DIR.glob("*.parquet"))],
                       ignore_index=True).drop_duplicates(["repo_full_name", "path",
                                                           "content_hash"], keep="last")
     for c in ("repo_created_at", "first_hash_commit_at"):
         dates[c] = pd.to_datetime(dates[c], utc=True)
     dates["arrival"] = dates[["first_hash_commit_at", "repo_created_at"]].max(axis=1)
-    # uma copia vista no retrato nao pode ter chegado depois do fim da coleta do GitSkills
+    # A copy seen in the snapshot cannot have arrived after the end of the GitSkills crawl.
+    # Such dates come from recreated repositories or rewritten histories, so the copy is
+    # treated as not dated (protocol, section 13, deviation 1).
     late = (dates["status"] == "datada") & (dates["arrival"] > CRAWL_END)
     dates.loc[late, "status"] = "data_posterior_ao_retrato"
     dates.loc[dates["status"] != "datada", "arrival"] = pd.NaT
@@ -247,16 +328,21 @@ def merge_dates() -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Estrelas do repositorio de origem em T0
+# Step 3: stars of the origin repository at T0
 # ---------------------------------------------------------------------------
 
+# Reads the stars of a repository in chronological order, with the date of each one.
 STARGAZERS = """f{i}: repository(owner: $o{i}, name: $n{i}) {{
   stargazers(first: 100, after: $c{i}, orderBy: {{field: STARRED_AT, direction: ASC}}) {{
     totalCount pageInfo {{ hasNextPage endCursor }} edges {{ starredAt }} }} }}"""
 
 
 def origins(dates: pd.DataFrame, occ: pd.DataFrame) -> pd.DataFrame:
-    """T0 e repositorio de origem de cada conteudo (copias datadas fora de agregadores)."""
+    """T0 and origin repository of each skill, from the dated copies outside aggregators.
+
+    The origin is the copy that arrived first (ties broken by repository name). The same
+    rule is applied again with the table of the study in ``cohort.timing``.
+    """
     d = dates.merge(occ[["content_hash", "repo_full_name", "path", "aggregator"]],
                     on=["content_hash", "repo_full_name", "path"])
     d = d[~d["aggregator"] & d["arrival"].notna()].sort_values(["content_hash", "arrival",
@@ -266,13 +352,20 @@ def origins(dates: pd.DataFrame, occ: pd.DataFrame) -> pd.DataFrame:
 
 
 def collect_stars(batch: int, workers: int) -> None:
+    """Read the dated stars of every origin repository, until T0 or ``STAR_CAP`` stars.
+
+    In practice the GitHub API returned no dates for the stars, so the stars at T0 could
+    not be rebuilt (protocol, section 13, deviation 3).
+    """
     occ = pd.read_parquet(OCCURRENCES)
     org = origins(merge_dates(), occ)
+    # For each repository, the latest T0 among its skills tells how far to read its stars.
     need = org.groupby("repo_full_name")["arrival"].max().reset_index()
     need = need[need["arrival"] <= SNAPSHOT]
     client, rows, lock, t0 = Client(), [], threading.Lock(), time.time()
 
     def work(chunk: list[dict]) -> None:
+        """Read the stars of one batch of repositories, page by page."""
         state = {i: {"times": [], "cursor": None, "status": "ok"} for i in range(len(chunk))}
         pending = list(state)
         while pending:
@@ -295,6 +388,8 @@ def collect_stars(batch: int, workers: int) -> None:
                 sg = repo["stargazers"]
                 state[i]["times"] += [e["starredAt"] for e in sg["edges"]]
                 last = pd.Timestamp(state[i]["times"][-1]) if state[i]["times"] else None
+                # Keep reading while there are more pages, the last star read is not past T0
+                # and the cap has not been reached.
                 if (sg["pageInfo"]["hasNextPage"] and last is not None
                         and last <= chunk[i]["arrival"] and len(state[i]["times"]) < STAR_CAP):
                     state[i]["cursor"] = sg["pageInfo"]["endCursor"]
@@ -305,21 +400,22 @@ def collect_stars(batch: int, workers: int) -> None:
                 rows.append({"repo_full_name": r["repo_full_name"], "status": state[i]["status"],
                              "starred_at": state[i]["times"][:STAR_CAP]})
             if len(rows) % (batch * workers * 5) < batch:
-                print(f"[estrelas] {len(rows):,}/{len(need):,} ({time.time() - t0:.0f}s, "
-                      f"custo {client.cost})", flush=True)
+                print(f"[stars] {len(rows):,}/{len(need):,} ({time.time() - t0:.0f}s, "
+                      f"cost {client.cost})", flush=True)
 
     recs = need.to_dict("records")
     with ThreadPoolExecutor(max_workers=workers) as ex:
         list(ex.map(work, [recs[i:i + batch] for i in range(0, len(recs), batch)]))
     pd.DataFrame(rows).to_parquet(STARS, index=False)
-    print(f"[estrelas] fim: {len(rows):,} repositorios, custo {client.cost}", flush=True)
+    print(f"[stars] done: {len(rows):,} repositories, cost {client.cost}", flush=True)
 
 
 # ---------------------------------------------------------------------------
-# CLI
+# Command line: ``skillreuse collect <step>``
 # ---------------------------------------------------------------------------
 
 def collect_main() -> None:
+    """Command ``skillreuse collect {sample,dates,stars,merge}``."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("step", choices=["sample", "dates", "stars", "merge"])
     parser.add_argument("--scope", choices=["main", "aggregators"], default="main")
