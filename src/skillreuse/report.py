@@ -209,7 +209,13 @@ def fig_results() -> None:
         ax[0].plot(fpr, tpr, color=color, lw=1.5,
                    label=f"{lab} (AUC {point[view]['roc_auc']:.3f})")
         prec, rec, _ = precision_recall_curve(pred["y"], p)
-        ax[1].plot(rec, prec, color=color, lw=1.5,
+        # Start the curve at recall 0.01 (about 16 copied skills). Before that, every copied
+        # skill is 0.06% of the recall and each skill with a higher score that was not copied
+        # makes the precision drop at once, so the curve is a vertical line at recall 0 that
+        # rests on a handful of skills. scikit-learn also adds an artificial (recall 0,
+        # precision 1) point at the end, which the same filter removes.
+        keep = rec >= 0.01
+        ax[1].plot(rec[keep], prec[keep], color=color, lw=1.5,
                    label=f"{lab} (PR AUC {point[view]['pr_auc']:.3f})")
     ax[0].plot([0, 1], [0, 1], color=GREY, ls="--", lw=0.8)
     ax[0].set_xlabel("False positive rate")
@@ -220,7 +226,7 @@ def fig_results() -> None:
     ax[1].axhline(prev, color=GREY, ls="--", lw=0.8, label=f"prevalence ({prev:.1%})")
     ax[1].set_xlabel("Recall")
     ax[1].set_ylabel("Precision")
-    ax[1].set_ylim(0, 0.6)
+    ax[1].set_ylim(0, 1.0)
     ax[1].set_title("(b) Precision-recall curves")
     ax[1].legend(fontsize=7, loc="upper right")
     yt = pred["y"].to_numpy()
