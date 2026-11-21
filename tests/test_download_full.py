@@ -38,5 +38,5 @@ def test_parse_remote_files_rejects_missing_checksum() -> None:
         }
     ]
 
-    with pytest.raises(ValueError, match="Metadados incompletos"):
+    with pytest.raises(ValueError, match="Incomplete metadata"):
         parse_remote_files(payload, "artifacts")
