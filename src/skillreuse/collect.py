@@ -54,6 +54,8 @@ STARS = Path(config["stars"])
 MANIFEST = Path(config["manifest"])
 DEFAULT_ARTIFACTS = Path(config["default_artifacts"])
 
+API = config["api"]
+
 
 # ---------------------------------------------------------------------------
 # Amostra
@@ -205,9 +207,7 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
         todo = todo[:limit]
     print(f"[coleta] {scope}: {len(todo):,} ocorrencias a datar ({len(done):,} ja feitas)",
           flush=True)
-    print("[debug] inicializando cliente GitHub...", flush=True)
     client, t0, buf, n_done = Client(), time.time(), [], 0
-    print("[debug] cliente GitHub inicializado.", flush=True)
     lock = threading.Lock()
     part_id = len(list(DATES_DIR.glob("*.parquet")))
 
@@ -222,9 +222,7 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
     def work(chunk: list[dict]) -> None:
         nonlocal n_done
 
-        print(f"[debug] iniciando lote com {len(chunk)} ocorrencias",flush=True)
         res = date_batch(client, chunk)
-        print(f"[debug] lote finalizado com {len(chunk)} ocorrencias",flush=True)
         with lock:
             buf.extend(res)
             n_done += len(res)
