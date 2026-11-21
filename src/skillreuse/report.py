@@ -1,4 +1,6 @@
-"""Figures of the paper, drawn from the result files in ``results/`` (command ``skillreuse figures``).
+"""Figures of the paper, drawn from the result files in ``results/``.
+
+Command: ``skillreuse figures``.
 
 Nothing is trained here: every figure reads files written by the earlier phases (and, for
 the SHAP values, the frozen text model). The figures, in the order of the paper:
