@@ -1,9 +1,29 @@
-"""Fases 3 a 7 do protocolo (paper/protocol.md): EDA e janela, selecao de modelos, modelos
-finais, avaliacao unica, sensibilidades e interpretacao.
+"""Phases 3 to 7 of the protocol (paper/protocol.md): all the machine learning of the study.
 
-Todos os experimentos de desenvolvimento usam as mesmas particoes: 3 repeticoes x 3 dobras de
-``StratifiedGroupKFold`` agrupadas por autor e estratificadas pelo alvo (sementes 2027-2029).
-O holdout so e lido em ``skillreuse holdout`` (fase 6) e depois dela (fase 7).
+The file follows the order of the phases:
+
+    Attributes        which columns each model sees (section 3)
+    Data              loading the table, the target, the folds and the metrics
+    Phase 3           exploratory analysis, choice of the window W, preprocessing rules
+    Preprocessing     pipelines of the seven algorithms
+    Phase 4           spot-check of 7 algorithms and nested search of the best 3
+    Phase 5           final models, reference models, decision threshold and freezing
+    Phase 6           single evaluation on the holdout
+    Control           control model with the popularity of the origin repository
+    Phase 7           robustness checks and interpretation of the model
+    Reproduction      check of the frozen models, and command line
+
+All development experiments use the same partitions: 3 repetitions of 3-fold
+``StratifiedGroupKFold``, grouped by author and stratified by the target (seeds 2027-2029).
+The holdout is read only in ``skillreuse holdout`` (phase 6) and after it (phase 7).
+
+Names that appear everywhere:
+
+* a "view" is a set of columns given to a model: ``text``, ``origin``, ``origin+text``,
+  ``size`` (see ``VIEWS``);
+* ``replicated`` is the target: 1 if the skill was copied by another developer within W
+  days of its first appearance (T0). The word "copied" in the paper is "replicated" here;
+* "dev" is the development set and "holdout" is the test set, split by author.
 """
 
 from __future__ import annotations
@@ -46,18 +66,21 @@ from skillreuse.cohort import POPULARITY_TABLE, TABLE, VARIANTS_TABLE  # noqa: E
 from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT  # noqa: E402
 from skillreuse.stats import N_BOOT, boot_p, holm, nb_test, owner_bootstrap  # noqa: E402
 
+# Some models do not always converge in the iterations given; this is not an error here.
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-OUT = Path("results")
-MODELS_DIR = Path("models")
-SEED = 2027
-REPEATS, FOLDS = 3, 3
-WINDOWS = [30, 60, 90]
+OUT = Path("results")  # one folder per phase: results/phase3, results/phase4, ...
+MODELS_DIR = Path("models")  # frozen models (phase 5)
+SEED = 2027  # seed of the models, the searches and the bootstrap
+REPEATS, FOLDS = 3, 3  # repetitions and folds of the cross-validation
+WINDOWS = [30, 60, 90]  # candidate windows W, in days
 
 # ---------------------------------------------------------------------------
-# Atributos (secao 3)
+# Attributes (section 3)
 # ---------------------------------------------------------------------------
 
+# The 27 attributes of the text, by family. The families are also used to measure the
+# importance of a whole group of attributes (phase 7).
 FAMILIES = {
     "Size": ["text_char_count", "text_line_count", "text_nonempty_line_count",
              "text_word_count", "text_unique_word_count", "text_sentence_count", "body_chars"],
@@ -75,32 +98,48 @@ FAMILIES = {
                      "frontmatter_description_missing"],
 }
 TEXT = [c for fam in FAMILIES.values() for c in fam]
+# The 14 attributes of the origin repository, used only by the control model.
 ORIGIN = ["log_stars_at_t0", "repo_age_days_at_t0", "repo_language", "repo_license",
           "repo_is_fork", "path_depth", "path_is_root", "p_template", "p_plugin", "p_vendor",
           "p_docs", "p_pkg", "p_tool_dir", "p_claude_dir"]
 CATEGORICAL = {"repo_language", "repo_license"}
-# desvio da secao 13: estrelas e forks no retrato substituem as estrelas em T0
+# Deviation of section 13: stars and forks at the snapshot replace the stars at T0.
 POPULARITY = ["log_stars_snapshot", "log_forks_snapshot"]
 ORIGIN_POP = [c for c in ORIGIN if c != "log_stars_at_t0"] + POPULARITY
+# Columns of each view. "size" is the simple reference model (only the size of the text).
 VIEWS = {"text": TEXT, "origin": ORIGIN, "origin+text": ORIGIN + TEXT, "size": FAMILIES["Size"],
          "origin_pop": ORIGIN_POP, "origin_pop+text": ORIGIN_POP + TEXT}
 MAIN_VIEWS = ["text", "origin", "origin+text"]
 assert len(TEXT) == 27
 
 # ---------------------------------------------------------------------------
-# Dados
+# Data
 # ---------------------------------------------------------------------------
 
 
 def window() -> int:
+    """The window W (in days) chosen in phase 3."""
     return int(json.loads((OUT / "phase3" / "window.json").read_text())["W"])
 
 
 def load_frame(split: str, w: int | None = None, variant: str = "",
                eligible_only: bool = True) -> pd.DataFrame:
-    """Skills de um lado da divisao, com alvo e elegibilidade da janela W (secao 2.3).
+    """Load the skills of one side of the split, with the target and the eligibility.
 
-    ``variant`` escolhe a definicao de agregador ("" = 100 skills, "_agg500", "_aggnone").
+    ``split`` is ``"dev"``, ``"holdout"`` or ``"all"``. ``w`` is the window in days
+    (default: the window chosen in phase 3). ``variant`` selects the definition of
+    aggregator: ``""`` is the main one (100 skills), ``"_agg500"`` and ``"_aggnone"`` are
+    the robustness variants.
+
+    Two columns are computed here, from T0 and the time to first copy (section 2.3):
+
+    * ``eligible``: T0 is at least ``w`` days before the snapshot, so the whole window was
+      observed. A skill that appeared later could not have been copied within the window;
+    * ``replicated``: the target, 1 if the first copy by another developer arrived within
+      ``w`` days of T0 (a skill with no copy by another developer has no time and counts
+      as 0).
+
+    Only eligible skills are returned, unless ``eligible_only`` is false.
     """
     frame = pd.read_parquet(TABLE)
     if POPULARITY_TABLE.is_file():
@@ -122,17 +161,30 @@ def load_frame(split: str, w: int | None = None, variant: str = "",
 
 
 def folds(frame: pd.DataFrame, repeats: int = REPEATS, n_folds: int = FOLDS, seed: int = SEED):
+    """Generate the cross-validation partitions as ``(repeat, fold, train_idx, valid_idx)``.
+
+    Each repetition is a different shuffle (seed, seed + 1, ...). Folds are grouped by
+    author, so an author is never in training and validation at the same time, and
+    stratified by the target, so each fold has about the same share of copied skills. The
+    same partitions are used for every algorithm, so their results can be compared.
+    """
     groups = frame["owner"].astype(str).to_numpy()
     y = frame["replicated"].to_numpy()
     for r in range(1, repeats + 1):
         splitter = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=seed + r - 1)
         for f, (tr, va) in enumerate(splitter.split(frame, y=y, groups=groups), 1):
             if set(groups[tr]) & set(groups[va]):
-                raise RuntimeError("autor compartilhado entre treino e validacao")
+                raise RuntimeError("an author is shared between training and validation")
             yield r, f, tr, va
 
 
 def clf_metrics(y: np.ndarray, p: np.ndarray, w: np.ndarray | None = None) -> dict[str, float]:
+    """Metrics of the predicted probabilities ``p`` for the true labels ``y``.
+
+    ROC AUC (the main metric), PR AUC, Brier score, log loss and the prevalence (share of
+    positives). ``w`` are optional weights per row. Probabilities are clipped to
+    [1e-6, 1 - 1e-6] so that the log loss never becomes infinite.
+    """
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return {"roc_auc": float(roc_auc_score(y, p, sample_weight=w)),
             "pr_auc": float(average_precision_score(y, p, sample_weight=w)),
@@ -142,10 +194,12 @@ def clf_metrics(y: np.ndarray, p: np.ndarray, w: np.ndarray | None = None) -> di
 
 
 def sha256(path: Path) -> str:
+    """SHA-256 of a file, used to fingerprint the frozen models and inputs."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def write_json(path: Path, obj: object) -> None:
+    """Write ``obj`` as readable JSON, creating the folder. Arrays become lists."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=2, ensure_ascii=False,
                                default=lambda v: v.tolist() if hasattr(v, "tolist") else str(v))
@@ -153,26 +207,49 @@ def write_json(path: Path, obj: object) -> None:
 
 
 def ci(samples: np.ndarray) -> list[float]:
+    """95% percentile interval of a sample (for example of bootstrap results)."""
     return np.percentile(samples, [2.5, 97.5]).tolist()
 
 # ---------------------------------------------------------------------------
-# Fase 3: EDA, janela e regras de pre-processamento (secao 5)
+# Phase 3: exploratory analysis, window and preprocessing rules (section 5)
+# Uses only the development set, so nothing from the holdout can influence the choices.
 # ---------------------------------------------------------------------------
 
 
 def choose_window(dev: pd.DataFrame) -> dict[str, object]:
-    """Regra da janela: skills com 90 dias de observacao copiadas em ate 90 dias."""
+    """Choose the window W by the rule written in the protocol.
+
+    Take the development skills observed for at least 90 days (T0 at least 90 days before
+    the snapshot) that were copied within 90 days. Among the candidates 30, 60 and 90 days,
+    W is the smallest one that covers at least 80% of their times to first copy. Looking
+    only at skills with 90 days of observation avoids bias: recent skills have not had
+    time to show a late first copy.
+    """
     t0 = pd.to_datetime(dev["t0"], utc=True)
     obs = dev[t0 <= SNAPSHOT - pd.Timedelta(days=90)]
     lags = obs.loc[obs["first_copy_lag_days"] <= 90, "first_copy_lag_days"]
     cover = {w: float((lags <= w).mean()) for w in WINDOWS}
     w = next((w for w in WINDOWS if cover[w] >= 0.80), 90)
+    # The text of "rule" is stored in window.json, so it is kept as it was written.
     return {"W": w, "coverage": cover, "skills_with_90d": len(obs),
             "copied_within_90d": len(lags), "lag_quantiles": lags.quantile([.25, .5, .75, .8, .9])
             .round(1).to_dict(), "rule": "menor W em {30,60,90} com >= 80% dos tempos"}
 
 
 def eda_rules(dev: pd.DataFrame) -> dict[str, object]:
+    """Derive the preprocessing rules from the development data (section 5).
+
+    * ``constant``: columns with a single value, which carry no information;
+    * ``skewed_log1p_nontree``: numeric columns with only non-negative values and skewness
+      above 2, which get a log transform in models that are sensitive to scale (the very
+      long tail would let a few extreme skills dominate them);
+    * ``collinear_pairs``: pairs of columns with absolute Spearman correlation above 0.95;
+    * ``drop_collinear_nontree``: columns removed from scale-sensitive models, so that
+      only one column of each correlated group stays. A column is kept unless it correlates
+      above 0.95 with a column that was already kept (greedy, in the order of ``TEXT``).
+
+    Tree models ignore the last two rules: they do not mind skewness or correlation.
+    """
     cols = TEXT + ORIGIN
     numeric = [c for c in cols if c not in CATEGORICAL]
     constant = [c for c in cols if dev[c].nunique(dropna=True) <= 1]
@@ -193,21 +270,31 @@ def eda_rules(dev: pd.DataFrame) -> dict[str, object]:
 
 
 def run_eda() -> None:
+    """Phase 3 (command ``skillreuse eda``): exploratory analysis of the development set.
+
+    Writes to ``results/phase3/``: the window (``window.json``), the preprocessing rules
+    (``eda_rules.json``), a profile of every attribute (``feature_profile.csv``), the share
+    of copied skills by quartile of each text attribute (``univariate_rates.csv``) and a
+    summary of the data (``eda_summary.json``).
+    """
     out = OUT / "phase3"
     out.mkdir(parents=True, exist_ok=True)
     dev_all = load_frame("dev", eligible_only=False)
     win = choose_window(dev_all)
     write_json(out / "window.json", win)
     dev = load_frame("dev", w=win["W"])
+    # A negative age means T0 is before the creation of the repository: impossible, so missing.
     dev.loc[dev["repo_age_days_at_t0"] < 0, "repo_age_days_at_t0"] = np.nan
     rules = eda_rules(dev)
     write_json(out / "eda_rules.json", rules)
+    # Outcome of the dating of the copies outside aggregators, for the paper.
     occ = pd.read_parquet(OCCURRENCES,
                           columns=["content_hash", "repo_full_name", "path", "aggregator"])
     status = pd.read_parquet(DATES).merge(occ, on=["content_hash", "repo_full_name", "path"]) \
         .merge(pd.read_parquet(TABLE, columns=["content_hash", "split"]), on="content_hash")
     status = status[(status["split"] == "dev") & ~status["aggregator"].astype(bool)]
     status = status["status"].value_counts(normalize=True).to_dict()
+    # Profile of each attribute: missing values, distribution and skewness.
     prof = []
     for c in TEXT + ORIGIN:
         s = dev[c]
@@ -219,6 +306,8 @@ def run_eda() -> None:
                         "skew": float(v.skew())})
         prof.append(row)
     pd.DataFrame(prof).to_csv(out / "feature_profile.csv", index=False)
+    # Share of copied skills in each quartile of an attribute. Ranking with "first" breaks
+    # ties by order, so zero-heavy attributes are split arbitrarily between quartiles.
     uni = []
     for c in [c for c in TEXT if dev[c].nunique() > 4]:
         q = pd.qcut(dev[c].rank(method="first"), 4, labels=False)
@@ -236,24 +325,36 @@ def run_eda() -> None:
                                                                 "replicated_rate")}}, indent=2))
 
 # ---------------------------------------------------------------------------
-# Pre-processamento e algoritmos (secoes 5 e 6)
+# Preprocessing and algorithms (sections 5 and 6)
 # ---------------------------------------------------------------------------
 
+# Tree models need no scaling, no log and no removal of correlated columns.
 TREE_ALGOS = {"decision_tree", "random_forest", "hist_gb"}
 ALGOS = ["logistic", "naive_bayes", "knn", "decision_tree", "random_forest", "hist_gb", "mlp"]
 
 
 def _log1p_clip(x: object) -> np.ndarray:
+    """log(1 + x), with negative values clipped to 0 first.
+
+    This function (and ``_dense``) is stored by name inside the frozen models in
+    ``models/*.joblib``, so it must not be renamed or moved.
+    """
     return np.log1p(np.clip(np.asarray(x, dtype=float), 0, None))
 
 
 def _dense(x: object) -> np.ndarray:
+    """Turn a sparse matrix (the output of one-hot encoding) into a dense array."""
     return x.toarray() if hasattr(x, "toarray") else np.asarray(x)
 
 
 def load_rules() -> dict[str, object]:
+    """Load the preprocessing rules of phase 3, plus those of the popularity columns.
+
+    The popularity columns were added later (deviation of section 13), so their rules are
+    in a separate file written by ``run_control`` and merged here when it exists.
+    """
     rules = json.loads((OUT / "phase3" / "eda_rules.json").read_text())
-    extra = OUT / "phase5" / "control_rules.json"  # regras das colunas de popularidade (desvio)
+    extra = OUT / "phase5" / "control_rules.json"  # rules of the popularity columns (deviation)
     if extra.is_file():
         for k, v in json.loads(extra.read_text()).items():
             if isinstance(v, list):
@@ -262,6 +363,8 @@ def load_rules() -> dict[str, object]:
 
 
 def view_columns(view: str, algo: str, rules: dict[str, object]) -> list[str]:
+    """Columns of a view for an algorithm: remove constant columns, and for algorithms that
+    are not trees also the columns removed for collinearity."""
     cols = [c for c in VIEWS[view] if c not in rules["constant"]]
     if algo not in TREE_ALGOS:
         cols = [c for c in cols if c not in rules["drop_collinear_nontree"]]
@@ -269,6 +372,17 @@ def view_columns(view: str, algo: str, rules: dict[str, object]) -> list[str]:
 
 
 def preprocessor(columns: list[str], algo: str, rules: dict[str, object]) -> ColumnTransformer:
+    """Build the preprocessing of the columns, in up to three blocks.
+
+    * numeric columns: median imputation (with a flag for the missing ones) and, for
+      algorithms that are not trees, standardization;
+    * skewed numeric columns (not trees): imputation, then log(1 + x), then standardization;
+    * categorical columns: constant imputation and one-hot encoding, with categories that
+      appear fewer than 10 times grouped together.
+
+    This is only a description: nothing is learned until the pipeline is fitted, and then
+    the medians, means and categories come from the training data only.
+    """
     tree = algo in TREE_ALGOS
     cat = [c for c in columns if c in CATEGORICAL]
     num = [c for c in columns if c not in CATEGORICAL]
@@ -293,6 +407,7 @@ def preprocessor(columns: list[str], algo: str, rules: dict[str, object]) -> Col
 
 
 def estimator(algo: str, threads: int = -1) -> object:
+    """A new model with the default hyperparameters of scikit-learn (and fixed seeds)."""
     return {
         "logistic": lambda: LogisticRegression(max_iter=2000),
         "naive_bayes": lambda: GaussianNB(),
@@ -304,6 +419,8 @@ def estimator(algo: str, threads: int = -1) -> object:
     }[algo]()
 
 
+# Hyperparameters searched in phase 4 (10 random configurations per algorithm).
+# ``loguniform`` draws on a log scale, ``randint`` an integer, a list one of its values.
 SPACES: dict[str, dict[str, object]] = {
     "logistic": {"C": loguniform(1e-3, 1e2), "class_weight": [None, "balanced"]},
     "naive_bayes": {"var_smoothing": loguniform(1e-12, 1e-6)},
@@ -323,6 +440,13 @@ SPACES: dict[str, dict[str, object]] = {
 
 def pipeline(algo: str, view: str, rules: dict[str, object], params: dict | None = None,
              threads: int = -1) -> tuple[Pipeline, list[str]]:
+    """Build the full model: preprocessing, then (if needed) densifying, then the algorithm.
+
+    Returns the pipeline and the list of columns it expects. Because everything is inside
+    one pipeline, it is fitted on the training data of each fold only, so no information of
+    the validation data leaks into training. Logistic regression takes the sparse matrix
+    directly; the other algorithms need it dense.
+    """
     cols = view_columns(view, algo, rules)
     steps = [("pre", preprocessor(cols, algo, rules))]
     if algo != "logistic":
@@ -335,11 +459,16 @@ def pipeline(algo: str, view: str, rules: dict[str, object], params: dict | None
 
 
 def _ratio(rows: pd.DataFrame) -> float:
+    """Mean ratio (validation size / training size) of the folds, used by ``nb_test``."""
     return float((rows["validation_rows"] / rows["train_rows"]).mean())
 
 
 def compare_to_best(folds_df: pd.DataFrame, key: str = "config") -> pd.DataFrame:
-    """Testes pareados (Nadeau-Bengio) do melhor contra os demais, com Holm."""
+    """Compare the best configuration (highest mean AUC) with each of the others.
+
+    Uses a paired Nadeau-Bengio test on the AUC of each fold, and adjusts the p-values for
+    the number of comparisons with Holm's method.
+    """
     wide = folds_df.pivot_table(index=["repeat", "fold"], columns=key, values="roc_auc")
     best = wide.mean().idxmax()
     ratio = _ratio(folds_df)
@@ -351,11 +480,18 @@ def compare_to_best(folds_df: pd.DataFrame, key: str = "config") -> pd.DataFrame
     return out
 
 # ---------------------------------------------------------------------------
-# Fase 4: spot-checking e busca aninhada (secoes 6.1 e 6.2)
+# Phase 4: spot-check and nested search (sections 6.1 and 6.2)
 # ---------------------------------------------------------------------------
 
 
 def run_spot(repeats: int = REPEATS, out: Path = OUT / "phase4") -> None:
+    """Spot-check (command ``skillreuse spot``): the 7 algorithms with default settings.
+
+    Each algorithm is trained and validated on exactly the same 9 partitions of the
+    development set, using the text attributes. The 3 with the highest mean AUC go on to
+    the nested search. Writes ``spot_folds.csv`` (one row per fold and algorithm),
+    ``spot_summary.csv``, ``spot_tests.csv`` and ``selection.json``.
+    """
     out.mkdir(parents=True, exist_ok=True)
     dev, rules = load_frame("dev"), load_rules()
     y = dev["replicated"].to_numpy()
@@ -382,16 +518,22 @@ def run_spot(repeats: int = REPEATS, out: Path = OUT / "phase4") -> None:
     print(summary.round(4).to_string())
 
 
-N_ITER, INNER_FOLDS, N_JOBS = 10, 3, 4
+N_ITER, INNER_FOLDS, N_JOBS = 10, 3, 4  # configurations tried, inner folds, parallel jobs
 
 
 def inner_cv(train: pd.DataFrame, seed: int) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Inner folds of the nested search: 3 folds of the training data, grouped by author."""
     splitter = StratifiedGroupKFold(n_splits=INNER_FOLDS, shuffle=True, random_state=seed)
     return list(splitter.split(train, y=train["replicated"], groups=train["owner"].astype(str)))
 
 
 def search(algo: str, view: str, train: pd.DataFrame, rules: dict, seed: int
            ) -> RandomizedSearchCV:
+    """Random search of ``N_ITER`` configurations of ``SPACES[algo]`` on the training data.
+
+    Each configuration is scored by AUC on the inner folds, and the best one is refitted
+    on all the training data.
+    """
     pipe, cols = pipeline(algo, view, rules, threads=1)
     rs = RandomizedSearchCV(pipe, {f"model__{k}": v for k, v in SPACES[algo].items()},
                             n_iter=N_ITER, cv=inner_cv(train, seed), scoring="roc_auc",
@@ -400,6 +542,20 @@ def search(algo: str, view: str, train: pd.DataFrame, rules: dict, seed: int
 
 
 def run_tune() -> None:
+    """Nested search (command ``skillreuse tune``) of the 3 best algorithms of the spot-check.
+
+    In each of 6 outer folds (2 repetitions x 3 folds) the search picks its best
+    configuration using only the training part, and that configuration is then measured on
+    the outer validation fold, which the search never saw. The default version of each
+    algorithm is measured on the same folds. The outer result is an honest estimate of
+    "search, then train", while the inner score of the search would be optimistic.
+
+    The winner is chosen by the rule of the protocol: the configuration with the highest
+    mean AUC wins, unless it is not significantly better than others (Nadeau-Bengio with
+    Holm); among the tied configurations, the one that trains fastest wins. Simplicity is
+    accepted when the extra complexity does not pay off. Writes ``nested_folds.csv``,
+    ``nested_summary.csv``, ``nested_tests.csv`` and ``winner.json``.
+    """
     out = OUT / "phase4"
     dev, rules = load_frame("dev"), load_rules()
     top3 = json.loads((out / "selection.json").read_text())["selected_top3"]
@@ -432,20 +588,24 @@ def run_tune() -> None:
     tests = compare_to_best(df)
     tests.to_csv(out / "nested_tests.csv", index=False)
     best = summary.index[0]
+    # Tied configurations: the best one and every one that is not significantly worse.
     tied = [best] + tests.loc[tests["p_holm"] >= 0.05, "other"].tolist()
-    winner = summary.loc[tied, "fit_seconds"].idxmin()  # desempate da secao 6.2
+    winner = summary.loc[tied, "fit_seconds"].idxmin()  # tie-break rule of section 6.2
     algo, variant = winner.split("|")
+    # The text of "rule" is stored in winner.json, so it is kept as it was written.
     write_json(out / "winner.json", {"best_auc": best, "tied": tied, "winner": winner,
                                      "algo": algo, "variant": variant,
                                      "rule": "maior AUC externa; entre empatados, menor tempo"})
-    print(summary.round(4).to_string(), "\nvencedor:", winner)
+    print(summary.round(4).to_string(), "\nwinner:", winner)
 
 # ---------------------------------------------------------------------------
-# Fase 5: modelos finais, referencia, limiar e congelamento (secao 6.3-6.6)
+# Phase 5: final models, reference model, threshold and freezing (sections 6.3 to 6.6)
 # ---------------------------------------------------------------------------
 
 
 def final_params(view: str, dev: pd.DataFrame, rules: dict, winner: dict) -> dict:
+    """Hyperparameters of the final model of a view: none if the winner uses the defaults,
+    otherwise the best configuration of a new search on the whole development set."""
     if winner["variant"] == "default":
         return {}
     rs = search(winner["algo"], view, dev, rules, seed=SEED)
@@ -453,11 +613,14 @@ def final_params(view: str, dev: pd.DataFrame, rules: dict, winner: dict) -> dic
 
 
 def balanced_accuracy(y: np.ndarray, p: np.ndarray, t: float) -> float:
+    """Mean of the recall of the positives and of the negatives at threshold ``t``."""
     pred = p >= t
     return float((np.mean(pred[y == 1]) + np.mean(~pred[y == 0])) / 2)
 
 
 def threshold_report(y: np.ndarray, p: np.ndarray, t: float) -> dict[str, float]:
+    """Metrics that depend on the decision threshold ``t``: precision, recall, balanced
+    accuracy and the counts of the confusion matrix."""
     pred = p >= t
     tp, fp = int(np.sum(pred & (y == 1))), int(np.sum(pred & (y == 0)))
     fn = int(np.sum(~pred & (y == 1)))
@@ -467,13 +630,23 @@ def threshold_report(y: np.ndarray, p: np.ndarray, t: float) -> dict[str, float]
 
 
 def run_final() -> None:
+    """Final models (command ``skillreuse final``), validated on the development folds.
+
+    The winning algorithm is trained on four sets of columns: ``text`` (the model of the
+    research question), ``origin`` (repository only), ``origin+text`` and ``size`` (only the
+    size of the text, the simple reference). Each one is validated on the 9 partitions.
+    Also tests, on the folds, the hypotheses H1 (text above 0.5), C1 (origin + text above
+    origin) and text above size. Writes ``final_params.json``, ``dev_views_folds.csv``,
+    ``dev_views_summary.csv``, ``dev_oof_text.csv`` (out-of-fold probabilities of the text
+    model, used to choose the threshold) and ``dev_tests.json``.
+    """
     out = OUT / "phase5"
     out.mkdir(parents=True, exist_ok=True)
     dev, rules = load_frame("dev"), load_rules()
     winner = json.loads((OUT / "phase4" / "winner.json").read_text())
     algo, y = winner["algo"], dev["replicated"].to_numpy()
     params = {v: final_params(v, dev, rules, winner) for v in MAIN_VIEWS}
-    params["size"] = params["text"]  # referencia: mesmo algoritmo e hiperparametros do texto
+    params["size"] = params["text"]  # reference: same algorithm and hyperparameters as the text
     write_json(out / "final_params.json", {"algo": algo, "variant": winner["variant"],
                                            "views": params})
     rows, oof = [], []
@@ -503,6 +676,15 @@ def run_final() -> None:
 
 
 def run_freeze() -> None:
+    """Freeze the models and the threshold (command ``skillreuse freeze``), before the holdout.
+
+    Each model is trained on the whole development set and saved in ``models/`` together
+    with its list of columns. The decision threshold is the value between 0.01 and 0.99
+    that maximizes the balanced accuracy of the out-of-fold predictions of the text model.
+    ``freeze.json`` records a SHA-256 of every model and of the inputs (table, window,
+    rules, winner, parameters and protocol), with ``holdout_read`` set to false: from now
+    on any change to a model would be detected.
+    """
     dev, rules = load_frame("dev"), load_rules()
     fp = json.loads((OUT / "phase5" / "final_params.json").read_text())
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -526,31 +708,47 @@ def run_freeze() -> None:
         "frozen_at_local": datetime.now().astimezone().isoformat(), "algo": fp["algo"],
         "models": entries, "threshold": thr, "threshold_dev": threshold_report(yo, po, thr),
         "inputs_sha256": files, "holdout_read": False})
-    print("congelado; limiar", thr)
+    print("frozen; threshold", thr)
 
 # ---------------------------------------------------------------------------
-# Fase 6: avaliacao unica no holdout (secao 7)
+# Phase 6: single evaluation on the holdout (section 7)
 # ---------------------------------------------------------------------------
 
 
 def frozen() -> dict:
+    """Load ``freeze.json`` after checking that no frozen model file was changed."""
     fz = json.loads((OUT / "phase5" / "freeze.json").read_text())
     for view, e in fz["models"].items():
         if sha256(Path(e["file"])) != e["sha256"]:
-            raise RuntimeError(f"modelo congelado alterado: {view}")
+            raise RuntimeError(f"frozen model was changed: {view}")
     return fz
 
 
 def predict(fz: dict, view: str, frame: pd.DataFrame) -> np.ndarray:
+    """Probability of being copied for each row of ``frame``, from the frozen model of a view."""
     m = joblib.load(fz["models"][view]["file"])
     return m["pipeline"].predict_proba(frame[m["columns"]])[:, 1]
 
 
 def run_holdout(allow_reevaluation: bool = False) -> None:
+    """The single evaluation (command ``skillreuse holdout``): the only look at the holdout.
+
+    Applies the frozen models to the holdout and computes the AUC and the other metrics.
+    Confidence intervals come from 2,000 bootstrap resamples of authors. Then tests:
+
+    * H1: the lower end of the interval of the AUC of the text model is above 0.5;
+    * C1: the lower end of the interval of AUC(origin + text) - AUC(origin) is above 0.
+      The control reported in the paper replaces it in ``run_control``;
+
+    both with p < 0.05 after the Holm correction for the two tests. Also reports the gain
+    of the text over the size-only reference and the threshold metrics. After the run, a
+    lock file is written and the command refuses to run again unless
+    ``--allow-reevaluation`` is given (``make rerun`` uses it, to reproduce the numbers).
+    """
     out = OUT / "phase6"
     lock = out / "evaluation_lock.json"
     if lock.exists() and not allow_reevaluation:
-        raise SystemExit(f"Holdout ja avaliado ({lock}). Reavaliar exige declaracao.")
+        raise SystemExit(f"Holdout already evaluated ({lock}). Re-evaluating requires a declaration.")
     fz = frozen()
     hold = load_frame("holdout")
     y, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
@@ -585,14 +783,21 @@ def run_holdout(allow_reevaluation: bool = False) -> None:
                      default=lambda v: v.tolist() if hasattr(v, "tolist") else str(v)))
 
 # ---------------------------------------------------------------------------
-# Desvio da secao 13: controle com a popularidade do repositorio de origem no retrato
+# Control with the popularity of the origin repository (deviation of section 13)
 # ---------------------------------------------------------------------------
 
 
 def run_control() -> None:
-    """Retreina o controle com estrelas e forks no retrato e reavalia so o C1 no holdout.
+    """Control model with stars and forks at the snapshot (command ``skillreuse control``).
 
-    O modelo de texto e a H1 nao mudam. Os resultados originais (phase6) sao preservados.
+    The GitHub API no longer reports when each star was given, so the stars at T0 were not
+    available and the original control (C1) did not include popularity. Here the control
+    is trained again with the stars and forks of the origin repository at the snapshot,
+    which is later than T0. This favors the repository, so if the text still adds
+    information the conclusion is stronger. Only C1 is evaluated again on the holdout; the
+    text model and H1 do not change, and the original results (phase 6) are kept.
+    Writes ``control_rules.json``, ``freeze_control.json``, ``control_popularity.json``
+    and the holdout predictions with the new views.
     """
     dev = load_frame("dev")
     base = eda_rules(dev.assign(**{c: dev[c] for c in POPULARITY}))
@@ -641,8 +846,10 @@ def run_control() -> None:
     c1 = {"diff": float(roc_auc_score(yh, probs["origin_pop+text"])
                         - roc_auc_score(yh, probs["origin_pop"])),
           "ci95": ci(diff), "p_boot": boot_p(diff, 0.0)}
+    # Holm over the same two tests as before: H1 (text) and this C1.
     c1["p_holm_with_H1"] = holm([boot_p(b_text, 0.5), c1["p_boot"]])[1]
     c1["success"] = bool(c1["ci95"][0] > 0 and c1["p_holm_with_H1"] < 0.05)
+    # The text of "note" is stored in control_popularity.json, so it is kept as written.
     write_json(OUT / "phase6" / "control_popularity.json", {
         "note": "desvio da secao 13: popularidade no retrato (posterior a T0) no controle",
         "evaluated_at_local": datetime.now().astimezone().isoformat(),
@@ -659,13 +866,15 @@ def main_control() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Fase 7: sensibilidade e robustez (secao 8)
+# Phase 7: sensitivity and robustness (section 8)
 # ---------------------------------------------------------------------------
 
-N_BOOT_SENS = 500
+N_BOOT_SENS = 500  # bootstrap resamples in the robustness checks (2,000 in the main result)
 
 
 def _auc_ci(y: np.ndarray, p: np.ndarray, owners: np.ndarray) -> dict[str, object]:
+    """AUC with a 95% interval by author bootstrap. If ``y`` has a single class the AUC
+    does not exist and is returned as ``None``."""
     if len(np.unique(y)) < 2:
         return {"rows": len(y), "prevalence": float(np.mean(y)), "auc": None}
     b = owner_bootstrap(owners, lambda w: roc_auc_score(y, p, sample_weight=w), n_boot=N_BOOT_SENS)
@@ -674,6 +883,8 @@ def _auc_ci(y: np.ndarray, p: np.ndarray, owners: np.ndarray) -> dict[str, objec
 
 
 def _retrain_eval(train: pd.DataFrame, test: pd.DataFrame, fz: dict, rules: dict) -> dict:
+    """Train the text model (same algorithm and hyperparameters as the final one) on
+    ``train`` and report its AUC on ``test``."""
     fp = json.loads((OUT / "phase5" / "final_params.json").read_text())
     pipe, cols = pipeline(fp["algo"], "text", rules, fp["views"]["text"])
     pipe.fit(train[cols], train["replicated"].to_numpy())
@@ -683,11 +894,28 @@ def _retrain_eval(train: pd.DataFrame, test: pd.DataFrame, fz: dict, rules: dict
 
 
 def run_sensitivity() -> None:
+    """Robustness checks (command ``skillreuse sensitivity``), done after the single evaluation.
+
+    Does the result depend on our own choices? Seven checks, all on the holdout:
+
+    * aggregator limit of 500 skills, and no exclusion of aggregators (target and T0 are
+      recomputed and the model is trained again);
+    * windows of 30 and 90 days instead of 60 (model trained again);
+    * only skills whose copies could all be dated, since an undated copy could hide the
+      true origin or a copy inside the window (frozen model);
+    * temporal split: train on development skills that appeared before a cutoff (the 70th
+      percentile of T0) and test on holdout skills that appeared after it, which is the
+      closest test of predicting the future (model trained again);
+    * only skills whose front matter name never appears in the development set, to rule
+      out that the model just recognizes variants of known skills (frozen model).
+
+    Writes ``results/phase7/sensitivity.json``.
+    """
     if not (OUT / "phase6" / "evaluation_lock.json").exists():
-        raise SystemExit("As sensibilidades vem depois da avaliacao unica (fase 6).")
+        raise SystemExit("The robustness checks come after the single evaluation (phase 6).")
     fz, rules, w = frozen(), load_rules(), window()
     res: dict[str, object] = {"window_main": w}
-    for variant in ("_agg500", "_aggnone"):  # exige a coleta dos agregadores (cohort --variants)
+    for variant in ("_agg500", "_aggnone"):  # needs the aggregator copies (cohort --variants)
         res[f"aggregators{variant}"] = _retrain_eval(
             load_frame("dev", w, variant), load_frame("holdout", w, variant), fz, rules) \
             if VARIANTS_TABLE.is_file() else "pendente: coleta dos agregadores"
@@ -699,7 +927,7 @@ def run_sensitivity() -> None:
     y, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
     full = hold["all_copies_dated"].to_numpy(dtype=bool)
     res["all_copies_dated"] = _auc_ci(y[full], p[full], owners[full])
-    c = dev["t0_used"].quantile(0.70)
+    c = dev["t0_used"].quantile(0.70)  # cutoff of the temporal split
     res["temporal"] = {"cutoff": str(c), **_retrain_eval(dev[dev["t0_used"] < c],
                                                          hold[hold["t0_used"] >= c], fz, rules)}
     names = set(dev.loc[dev["name_norm"] != "", "name_norm"])
@@ -710,31 +938,45 @@ def run_sensitivity() -> None:
     print(json.dumps(res, indent=2, default=str))
 
 # ---------------------------------------------------------------------------
-# Fase 7: interpretacao do modelo de texto, se H1 confirmada (secao 9)
+# Phase 7: interpretation of the text model, if H1 is confirmed (section 9)
 # ---------------------------------------------------------------------------
 
+# Rows of the interpretation sample, its seed, permutations per attribute, bootstrap resamples.
 INTERP_ROWS, INTERP_SEED, N_PERM, N_BOOT_PERM = 20_000, "20261123", 10, 200
 
 
 def interp_sample(hold: pd.DataFrame) -> pd.DataFrame:
+    """Sample of the holdout used to interpret the model: about 20,000 rows made of whole
+    authors, chosen in the order of ``md5(author + ':' + seed)``. The whole holdout is used
+    if it is not larger than that."""
     if len(hold) <= INTERP_ROWS:
         return hold.reset_index(drop=True)
     keys = hold["owner"].astype(str).map(
         lambda o: hashlib.md5(f"{o}:{INTERP_SEED}".encode()).hexdigest())
     order = hold.assign(_k=keys).sort_values(["_k", "content_hash"])
     sizes = order.groupby("_k", sort=False).size()
+    # Keep every author whose first skill starts before the row limit is reached.
     keep = sizes.index[(sizes.cumsum() - sizes) < INTERP_ROWS]
     return order[order["_k"].isin(keep)].drop(columns="_k").reset_index(drop=True)
 
 
 def permutation_table(pipe, cols: list[str], x: pd.DataFrame, y: np.ndarray, owners: np.ndarray,
                       seed: int, n_boot: int, families_only: bool = False) -> pd.DataFrame:
-    """Queda de AUC ao permutar familias e colunas; IC por reamostragem de autores."""
+    """Permutation importance: how much the AUC drops when an attribute is shuffled.
+
+    The values of an attribute (or of a whole family of attributes at once, since many are
+    correlated) are shuffled among the skills, which breaks their link with the target. The
+    larger the drop in AUC, the more the model relies on that attribute. Each shuffle is
+    repeated ``N_PERM`` times and averaged. The 95% interval resamples authors, using the
+    same resamples for all attributes. Returns one row per family (``family:<name>``) and,
+    unless ``families_only``, per attribute, sorted from the largest drop.
+    """
     rng = np.random.default_rng(seed)
     base = pipe.predict_proba(x[cols])[:, 1]
     targets = {f"family:{k}": v for k, v in FAMILIES.items()}
     if not families_only:
         targets.update({c: [c] for c in TEXT})
+    # Bootstrap weights per skill (the number of times its author is drawn), computed once.
     codes, inv = np.unique(owners, return_inverse=True)
     brng = np.random.default_rng(seed + 1)
     weights = [np.bincount(brng.integers(0, len(codes), len(codes)),
@@ -749,6 +991,7 @@ def permutation_table(pipe, cols: list[str], x: pd.DataFrame, y: np.ndarray, own
         drops, boots = [], []
         for _ in range(N_PERM):
             xp = x[cols].copy()
+            # The same permutation moves all columns of the group together.
             xp[group] = xp[group].iloc[rng.permutation(len(xp))].to_numpy()
             pp = pipe.predict_proba(xp)[:, 1]
             drops.append(base_auc - roc_auc_score(y, pp))
@@ -762,6 +1005,16 @@ def permutation_table(pipe, cols: list[str], x: pd.DataFrame, y: np.ndarray, own
 
 
 def run_interpret() -> None:
+    """Interpret the text model (command ``skillreuse interpret``), answering RQ2.
+
+    Only runs if H1 was confirmed; otherwise it records that RQ2 was not answered. Computes
+    the permutation importance of families and attributes on the interpretation sample of
+    the holdout (``permutation_holdout.csv``), then checks that the ranking of the families
+    is stable by repeating the computation on the validation part of each of the 9
+    development folds (``family_stability.csv``). The SHAP values are computed in
+    ``report.py``. The status is written to ``interpretation_status.json``; its "rq2"
+    values are in Portuguese because they are stored in the file.
+    """
     out = OUT / "phase7"
     out.mkdir(parents=True, exist_ok=True)
     res = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
@@ -786,7 +1039,7 @@ def run_interpret() -> None:
                               dev.iloc[va]["owner"].astype(str).to_numpy(), SEED + 10 * r + f,
                               n_boot=1, families_only=True)
         ranks.append(t.set_index("feature")["auc_drop"].rename(f"r{r}f{f}"))
-        print(f"[interp] estabilidade r{r} f{f}", flush=True)
+        print(f"[interp] stability r{r} f{f}", flush=True)
     fam = pd.concat(ranks, axis=1)
     fam["holdout"] = perm.set_index("feature").loc[fam.index, "auc_drop"]
     fam.to_csv(out / "family_stability.csv")
@@ -796,12 +1049,14 @@ def run_interpret() -> None:
         fam.rank().corr("spearman")["holdout"].drop("holdout").to_dict()})
 
 # ---------------------------------------------------------------------------
-# Reproducao e CLI
+# Reproduction and command line
 # ---------------------------------------------------------------------------
 
 
 def run_reproduce(out: Path = OUT / "reproduce") -> dict[str, object]:
-    """Reaplica os modelos congelados ao holdout e confere com a avaliacao unica."""
+    """Quick check (command ``skillreuse reproduce``): apply the frozen models to the
+    holdout and compare each AUC with the one saved by the single evaluation (tolerance
+    1e-9). This is what ``make verify`` runs first; no model is trained."""
     fz = frozen()
     saved = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
     hold = load_frame("holdout")
@@ -814,6 +1069,9 @@ def run_reproduce(out: Path = OUT / "reproduce") -> dict[str, object]:
     write_json(out / "holdout_check.json", res)
     print(json.dumps(res["matches"]))
     return res
+
+
+# One ``main_*`` function per command of ``cli.py``.
 
 
 def main_eda() -> None:
