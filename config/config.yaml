@@ -7,9 +7,9 @@ tables:
   - repos
 reserve_gib: 8
 
-default_artifacts: "data/raw/gitskills-sample/artifacts/*.parquet"
+default_artifacts: "data/raw/gitskills-full/artifacts/*.parquet"
 
-default_repos: "data/raw/gitskills-sample/repos/*.parquet"
+default_repos: "data/raw/gitskills-full/repos/*.parquet"
 
 # Sampling configuration
 aggregator_min_skills: 100
