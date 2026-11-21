@@ -1,48 +1,54 @@
 \section{Reproducibility}\label{reproducibility}
 
-\textbf{Code, data and models.} All code, the tables produced by the
-collection, the study table, the final models and the result files are
-available at \url{https://github.com/podorize/skillreuse}. The data come
-from a fixed revision of GitSkills
-(\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8}), downloaded and
-verified by SHA-256. The environment is Python 3.12 with every
-dependency pinned in \texttt{uv.lock}. All random choices use fixed
-seeds: \texttt{20261121} for the sample, \texttt{20261122} for the
-split, 2027--2029 for the cross-validation folds, 2027 for models,
-searches and bootstrap, and \texttt{20261123} for the interpretation
-sample.
+\textbf{Code, data and models.} All code, the dates collected through
+the GitHub API (already processed), the study table, the trained models
+and the result files are available at
+\url{https://github.com/podorize/skillreuse}. The data come from a fixed
+revision of GitSkills
+(\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8}), verified by
+SHA-256. The environment is Python 3.12 with every dependency pinned in
+\texttt{uv.lock}. All random choices use fixed seeds: \texttt{20261121}
+for the sample, \texttt{20261122} for the split, 2027--2029 for the
+cross-validation folds, 2027 for models, searches and bootstrap, and
+\texttt{20261123} for the interpretation sample.
 
-\textbf{Quick reproduction.} The dates of all copies were collected once
-through the GitHub API and are published, so the study can be reproduced
-without the API. The Colab notebook \texttt{notebooks/reproduce.ipynb}
-follows this paper section by section: it rebuilds the target from the
-published tables, re-runs the exploratory rules and the spot-check,
-applies the saved models to the holdout and checks every number reported
-here against the result files; automated tests (\texttt{make\ test}) do
-the same.
+\textbf{How to reproduce.} Start with the Colab notebook
+(\url{https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb}):
+with no installation and in a few minutes, it follows this paper section
+by section and compares every number with the result files. Locally,
+after \texttt{uv\ sync}, there are four levels, one command each (times
+on a laptop with 8 GB of memory):
 
-\textbf{Full pipeline.} From the raw data, the study is reproduced with
-five commands; \texttt{make\ collect} requires an authenticated GitHub
-CLI and takes several hours:
-
-\begin{verbatim}
-uv sync
-make data        # download GitSkills
-make collect     # sample and dates (GitHub API)
-make study       # split, EDA, selection, models
-make holdout     # single holdout evaluation
-make robustness  # robustness and interpretation
-\end{verbatim}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \emph{Check the results} (\texttt{make\ verify}, under a minute):
+  applies the trained models to the holdout and checks every number in
+  this paper.
+\item
+  \emph{Redo the analysis} (\texttt{make\ rerun}, about 20 minutes):
+  repeats every step, from the exploratory analysis to the
+  interpretation.
+\item
+  \emph{Redo the processing} (\texttt{make\ rebuild}, about 30 minutes
+  plus a 7 GB download): also rebuilds the sample and the study table
+  from GitSkills.
+\item
+  \emph{Redo from scratch} (\texttt{make\ from-scratch}, about 8 hours):
+  also dates the copies again through the GitHub API; the result is
+  close but not identical, as repositories have changed.
+\end{enumerate}
 
 \textbf{Collection details.} Of the 223,261 copies outside aggregators,
 88.9\% were dated; the others were in repositories deleted or made
 private after the snapshot (9.4\%), had lost the file (0.7\%), failed
 after three retries (0.4\%), had an arrival after the snapshot (0.3\%)
 or no longer contained the exact content (0.2\%). For 11.7\% of the
-dated copies the first commit predated the repository, a sign of
-inherited history, and the arrival rule moved them to the repository's
-creation. Of the 84,995 copies in aggregators, collected for the
-robustness analysis, 86.3\% were dated.
+dated copies the first commit predated the repository (inherited
+history), and the arrival rule moved them to the repository's creation.
+Of the 84,995 copies in aggregators, collected for the robustness
+analysis, 86.3\% were dated.
 
 \textbf{Additional robustness checks.} Two checks complement Section
 4.4, both on the holdout with the frozen text model. Restricting the
