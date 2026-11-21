@@ -4,7 +4,10 @@ This section follows the order of the work: we first built the data (3.1–3.4),
 
 ## 3.1 Data
 
-GitSkills \cite{gitskills2027} lists 3,797,117 `SKILL.md` files found in 282,200 public GitHub repositories. Many of these files are identical copies of each other. Grouping identical files by their content leaves 1,877,981 distinct texts, and each distinct text is one **skill**.
+The GitSkills dataset \cite{gitskills2027}, published on Hugging Face, provides the data used in this study. We used the dataset at revision `ebab17454a7c236f8f26b183567f1a126f42e3f8`, ensuring that all analyses refer to a fixed and reproducible version.
+
+The dataset contains 3,797,117 `SKILL.md` files from 282,200 public GitHub repositories. Identical files are grouped by content hash, leaving 1,877,981 distinct contents.
+Each distinct content is treated as one **skill** in this study, while its occurrences across repositories represent separate copies.
 
 Some repositories do not choose the skills they host. Registries, mirrors and marketplaces collect skills in bulk; the largest one holds 89,908 different skills. We call a repository with 100 or more different skills an **aggregator** (there are 2,867). A copy in an aggregator shows that a skill was collected, not that a developer decided to use it, so aggregators are left out of the main analysis. This leaves 1,163,728 skills that exist in at least one repository outside aggregators.
 
