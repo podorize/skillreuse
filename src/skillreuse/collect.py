@@ -25,28 +25,34 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 import duckdb  # noqa: PLC0415
+import yaml
 
 import pandas as pd
 
-from skillreuse.download import DEFAULT_ARTIFACTS, sql_path
+from skillreuse.download import sql_path
 
-AGGREGATOR_MIN_SKILLS = 100
-SAMPLE_SEED = "20261121"
-SAMPLE_SIZE = 150_000
-SNAPSHOT = pd.Timestamp("2026-07-09", tz="UTC")
-CRAWL_END = pd.Timestamp("2026-07-21", tz="UTC")  # fim da coleta do GitSkills (20/07)
-STAR_CAP = 10_000
-MAX_COMMITS = 500
-HISTORY_PAGE = 100
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
-COLLECTION = Path("data/derived/collection")
-OCCURRENCES = COLLECTION / "sample_occurrences.parquet"
-DATES_DIR = COLLECTION / "dates_parts"
-STARS_DIR = COLLECTION / "stars_parts"
-DATES = COLLECTION / "dates.parquet"
-STARS = COLLECTION / "origin_stars.parquet"
-MANIFEST = Path("results/phase1/manifest.json")
-API = "https://api.github.com/graphql"
+AGGREGATOR_MIN_SKILLS = config["aggregator_min_skills"]
+SAMPLE_SEED = config["sample_seed"]
+SAMPLE_SIZE = config["sample_size"]
+
+SNAPSHOT = pd.Timestamp(config["snapshot"], tz="UTC")
+CRAWL_END = pd.Timestamp(config["crawl_end"], tz="UTC")
+
+STAR_CAP = config["star_cap"]
+MAX_COMMITS = config["max_commits"]
+HISTORY_PAGE = config["history_page"]
+
+COLLECTION = Path(config["collection"])
+OCCURRENCES = Path(config["occurrences"])
+DATES_DIR = Path(config["dates_dir"])
+STARS_DIR = Path(config["stars_dir"])
+DATES = Path(config["dates"])
+STARS = Path(config["stars"])
+MANIFEST = Path(config["manifest"])
+DEFAULT_ARTIFACTS = Path(config["default_artifacts"])
 
 
 # ---------------------------------------------------------------------------
@@ -199,7 +205,9 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
         todo = todo[:limit]
     print(f"[coleta] {scope}: {len(todo):,} ocorrencias a datar ({len(done):,} ja feitas)",
           flush=True)
+    print("[debug] inicializando cliente GitHub...", flush=True)
     client, t0, buf, n_done = Client(), time.time(), [], 0
+    print("[debug] cliente GitHub inicializado.", flush=True)
     lock = threading.Lock()
     part_id = len(list(DATES_DIR.glob("*.parquet")))
 
@@ -213,7 +221,10 @@ def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None
 
     def work(chunk: list[dict]) -> None:
         nonlocal n_done
+
+        print(f"[debug] iniciando lote com {len(chunk)} ocorrencias",flush=True)
         res = date_batch(client, chunk)
+        print(f"[debug] lote finalizado com {len(chunk)} ocorrencias",flush=True)
         with lock:
             buf.extend(res)
             n_done += len(res)

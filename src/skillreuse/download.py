@@ -15,20 +15,28 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+import yaml
 
 from tqdm import tqdm
 
-DATASET_ID = "mvaccargiu/gitskills"
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
-REVISION = "ebab17454a7c236f8f26b183567f1a126f42e3f8"
+DATASET_ID = config["dataset_id"]
 
-DEFAULT_OUTPUT = Path("data/raw/gitskills-full")
+REVISION = config["revision"]
 
-DEFAULT_MANIFEST = Path("data/raw/gitskills-full/download_manifest.json")
+DEFAULT_OUTPUT = Path(config["default_output"])
 
-TABLES = ("artifacts", "repos")
+DEFAULT_MANIFEST = Path(config["default_manifest"])
 
-RESERVE_BYTES = 8 * 1024**3
+DEFAULT_ARTIFACTS = Path(config["default_artifacts"])
+
+DEFAULT_REPOS = Path(config["default_repos"])
+
+TABLES = tuple(config["tables"])
+
+RESERVE_BYTES = config["reserve_gib"] * 1024**3
 
 @dataclass(frozen=True)
 class RemoteFile:
@@ -241,10 +249,6 @@ def download_main() -> None:
         f"Download concluido: {manifest['file_count']} arquivos, "
         f"{manifest['total_bytes'] / 1024**3:.2f} GiB."
     )
-
-DEFAULT_ARTIFACTS = Path("data/raw/gitskills-full/artifacts/*.parquet")
-
-DEFAULT_REPOS = Path("data/raw/gitskills-full/repos/*.parquet")
 
 def sql_path(path: Path) -> str:
     """Escapa um caminho para uso como literal SQL do DuckDB."""

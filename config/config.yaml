@@ -1,0 +1,105 @@
+dataset_id: "mvaccargiu/gitskills"
+revision: "ebab17454a7c236f8f26b183567f1a126f42e3f8"
+default_output: "data/raw/gitskills-full"
+default_manifest: "data/raw/gitskills-full/download_manifest.json"
+tables:
+  - artifacts
+  - repos
+reserve_gib: 8
+
+default_artifacts: "data/raw/gitskills-sample/artifacts/*.parquet"
+
+default_repos: "data/raw/gitskills-sample/repos/*.parquet"
+
+# Sampling configuration
+aggregator_min_skills: 100
+sample_seed: "20261121"
+sample_size: 150000
+
+# Dates
+snapshot: "2026-07-09"
+crawl_end: "2026-07-21"
+
+# Collection limits
+star_cap: 10000
+max_commits: 100
+history_page: 100
+
+# Paths
+collection: "data/derived/collection"
+occurrences: "data/derived/collection/sample_occurrences.parquet"
+dates_dir: "data/derived/collection/dates_parts"
+stars_dir: "data/derived/collection/stars_parts"
+dates: "data/derived/collection/dates.parquet"
+stars: "data/derived/collection/origin_stars.parquet"
+manifest: "results/phase1/manifest.json"
+
+# API
+api: "https://api.github.com/graphql"
+
+tool_dirs: '(?:^|/)\.(?:codex|agents|cursor|gemini|github|opencode|windsurf|kiro|roo)(?:/|$)'
+path_patterns:
+  p_template: '(?:^|/)(?:templates?|examples?|samples?|demos?|fixtures?|tests?|testdata)(?:/|$)'
+  p_plugin: '(?:^|/)(?:plugins?|extensions?|marketplace|packs?)(?:/|$)'
+  p_vendor: '(?:^|/)(?:vendor|node_modules|third_party|site-packages|\.v?env)(?:/|$)'
+  p_docs: '(?:^|/)(?:docs?|documentation)(?:/|$)'
+  p_pkg: '(?:^|/)(?:packages|apps|src|lib)(?:/|$)'
+  p_tool_dir: null
+  p_claude_dir: '(?:^|/)\.claude(?:/|$)'
+
+# Dataset splitting
+split_seed: "20261122"
+holdout_share: 0.30
+cap_per_author: 50
+
+# Phase 2 paths
+table: "data/derived/study_table.parquet"
+variants_table: "data/derived/aggregator_variants.parquet"
+popularity_table: "data/derived/origin_popularity.parquet"
+manifest: "results/phase2/manifest.json"
+
+# Aggregator variants
+variants:
+  "": 100
+  "_agg500": 500
+  "_aggnone": null
+
+word_pattern: '\b[^\W_]+(?:[-''][^\W_]+)*\b'
+sentence_pattern: '[.!?]+(?:\s|$)'
+heading_pattern: '^(#{1,6})\s+\S'
+unordered_list_pattern: '^\s*[-+*]\s+\S'
+ordered_list_pattern: '^\s*\d+[.)]\s+\S'
+fence_pattern: '^\s*(```|~~~)'
+inline_code_pattern: '(?<!`)[^`\n]+`'
+markdown_link_pattern: '!?\\[[^\\]]+\\]\\([^)]+\\)' #'!?\[[^]]+\]\([^)]+\)'
+url_pattern: 'https?://[^\s)>\\]]+'
+blockquote_pattern: '^\s*>\s?'
+checkbox_pattern: '^\s*[-+*]\s+\[[ xX]\]\s+'
+table_row_pattern: '^\s*\|.*\|\s*$'
+shell_prompt_pattern: '^\s*\$\s+\S'
+
+seed: 2027
+n_boot: 2000
+
+out: "results"
+models_dir: "models"
+repeats: 3
+folds: 3
+windows:
+  - 30
+  - 60
+  - 90
+
+tree_algos:
+  - decision_tree
+  - random_forest
+  - hist_gb
+
+algos:
+  - logistic
+  - naive_bayes
+  - knn
+  - decision_tree
+  - random_forest
+  - hist_gb
+  - mlp

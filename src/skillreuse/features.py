@@ -5,32 +5,36 @@ from __future__ import annotations
 import re
 
 import pandas as pd
+import yaml 
 
-WORD_PATTERN = re.compile(r"\b[^\W_]+(?:[-'][^\W_]+)*\b", flags=re.UNICODE)
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
-SENTENCE_PATTERN = re.compile(r"[.!?]+(?:\s|$)")
+WORD_PATTERN = re.compile(config["word_pattern"], flags=re.UNICODE)
 
-HEADING_PATTERN = re.compile(r"^(#{1,6})\s+\S", flags=re.MULTILINE)
+SENTENCE_PATTERN = re.compile(config["sentence_pattern"])
 
-UNORDERED_LIST_PATTERN = re.compile(r"^\s*[-+*]\s+\S", flags=re.MULTILINE)
+HEADING_PATTERN = re.compile(config["heading_pattern"], flags=re.MULTILINE)
 
-ORDERED_LIST_PATTERN = re.compile(r"^\s*\d+[.)]\s+\S", flags=re.MULTILINE)
+UNORDERED_LIST_PATTERN = re.compile(config["unordered_list_pattern"], flags=re.MULTILINE)
 
-FENCE_PATTERN = re.compile(r"^\s*(```|~~~)", flags=re.MULTILINE)
+ORDERED_LIST_PATTERN = re.compile(config["ordered_list_pattern"], flags=re.MULTILINE)
 
-INLINE_CODE_PATTERN = re.compile(r"(?<!`)`[^`\n]+`(?!`)")
+FENCE_PATTERN = re.compile(config["fence_pattern"], flags=re.MULTILINE)
 
-MARKDOWN_LINK_PATTERN = re.compile(r"!?\[[^\]]*\]\([^)]+\)")
+INLINE_CODE_PATTERN = re.compile(config["inline_code_pattern"])
 
-URL_PATTERN = re.compile(r"https?://[^\s)>\]]+")
+MARKDOWN_LINK_PATTERN = re.compile(config["markdown_link_pattern"])
 
-BLOCKQUOTE_PATTERN = re.compile(r"^\s*>\s?", flags=re.MULTILINE)
+URL_PATTERN = re.compile(config["url_pattern"])
 
-CHECKBOX_PATTERN = re.compile(r"^\s*[-+*]\s+\[[ xX]\]\s+", flags=re.MULTILINE)
+BLOCKQUOTE_PATTERN = re.compile(config["blockquote_pattern"], flags=re.MULTILINE)
 
-TABLE_ROW_PATTERN = re.compile(r"^\s*\|.*\|\s*$", flags=re.MULTILINE)
+CHECKBOX_PATTERN = re.compile(config["checkbox_pattern"], flags=re.MULTILINE)
 
-SHELL_PROMPT_PATTERN = re.compile(r"^\s*\$\s+\S", flags=re.MULTILINE)
+TABLE_ROW_PATTERN = re.compile(config["table_row_pattern"], flags=re.MULTILINE)
+
+SHELL_PROMPT_PATTERN = re.compile(config["shell_prompt_pattern"], flags=re.MULTILINE)
 
 def extract_markdown_features(value: object) -> dict[str, int | float]:
     """Extrai medidas simples e auditaveis de texto e estrutura Markdown."""

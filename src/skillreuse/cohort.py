@@ -19,33 +19,38 @@ from pathlib import Path
 import duckdb
 import numpy as np
 import pandas as pd
+import yaml
 
-from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT, STAR_CAP, STARS
-from skillreuse.download import DEFAULT_ARTIFACTS, DEFAULT_REPOS, sql_path
+from skillreuse.download import sql_path
 from skillreuse.features import add_engineered_features
 
-TOOL_DIRS = r"(?:^|/)\.(?:codex|agents|cursor|gemini|github|opencode|windsurf|kiro|roo)(?:/|$)"
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
+DATES = Path(config["dates"])
+OCCURRENCES = Path(config["occurrences"])
+SNAPSHOT = pd.Timestamp(config["snapshot"], tz="UTC")
+STAR_CAP = config["star_cap"]
+STARS = Path(config["stars"])
+
+DEFAULT_ARTIFACTS = Path(config["default_artifacts"])
+DEFAULT_REPOS = Path(config["default_repos"])
+
+TOOL_DIRS = config["tool_dirs"]
 
 PATH_PATTERNS = {
-    "p_template": (
-        r"(?:^|/)(?:templates?|examples?|samples?|demos?|fixtures?|tests?|testdata)(?:/|$)"
-    ),
-    "p_plugin": r"(?:^|/)(?:plugins?|extensions?|marketplace|packs?)(?:/|$)",
-    "p_vendor": r"(?:^|/)(?:vendor|node_modules|third_party|site-packages|\.venv)(?:/|$)",
-    "p_docs": r"(?:^|/)(?:docs?|documentation)(?:/|$)",
-    "p_pkg": r"(?:^|/)(?:packages|apps|src|lib)(?:/|$)",
+    **config["path_patterns"],
     "p_tool_dir": TOOL_DIRS,
-    "p_claude_dir": r"(?:^|/)\.claude(?:/|$)",
 }
 
-SPLIT_SEED = "20261122"
-HOLDOUT_SHARE = 0.30
-CAP_PER_AUTHOR = 50
-TABLE = Path("data/derived/study_table.parquet")
-VARIANTS_TABLE = Path("data/derived/aggregator_variants.parquet")
-POPULARITY_TABLE = Path("data/derived/origin_popularity.parquet")
-MANIFEST = Path("results/phase2/manifest.json")
-VARIANTS = {"": 100, "_agg500": 500, "_aggnone": None}  # limite de agregador por variante
+SPLIT_SEED = config["split_seed"]
+HOLDOUT_SHARE = config["holdout_share"]
+CAP_PER_AUTHOR = config["cap_per_author"]
+TABLE = Path(config["table"])
+VARIANTS_TABLE = Path(config["variants_table"])
+POPULARITY_TABLE = Path(config["popularity_table"])
+MANIFEST = Path(config["manifest"])
+VARIANTS = config["variants"]
 
 
 def _band(n: pd.Series) -> pd.Series:

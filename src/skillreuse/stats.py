@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy import stats
+import yaml
 
 
 def holm(p_values: list[float]) -> list[float]:
@@ -16,9 +17,11 @@ def holm(p_values: list[float]) -> list[float]:
         adjusted[idx] = min(1.0, running)
     return adjusted.tolist()
 
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
-SEED = 2027
-N_BOOT = 2000
+SEED = config["seed"]
+N_BOOT = config["n_boot"]
 
 
 def nb_test(diff: np.ndarray, ratio: float) -> dict[str, float]:

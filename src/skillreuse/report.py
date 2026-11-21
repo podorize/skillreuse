@@ -11,17 +11,26 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+import Path
+import yaml
 from sklearn.metrics import confusion_matrix, precision_recall_curve, roc_curve  # noqa: E402
 
-from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT  # noqa: E402
 from skillreuse.study import (  # noqa: E402
-    OUT,
-    TEXT,
-    TREE_ALGOS,
     interp_sample,
     load_frame,
     write_json,
 )
+
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
+DATES = Path(config["dates"])
+OCCURRENCES = Path(config["occurrences"])
+SNAPSHOT = pd.Timestamp(config["snapshot"], tz="UTC")
+
+TREE_ALGOS = set(config["tree_algos"])
+ALGOS = config["algos"]
+OUT = Path(config["out"])
 
 FIG = OUT / "figures"
 BLUE, LIGHT, GREY = "#2f5d8a", "#9bb7d4", "#999999"

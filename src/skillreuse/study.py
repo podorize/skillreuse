@@ -22,6 +22,7 @@ import matplotlib
 matplotlib.use("Agg")
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+import yaml
 from scipy.stats import loguniform, randint  # noqa: E402
 from sklearn.compose import ColumnTransformer  # noqa: E402
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier  # noqa: E402
@@ -42,17 +43,28 @@ from sklearn.pipeline import Pipeline  # noqa: E402
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler  # noqa: E402
 from sklearn.tree import DecisionTreeClassifier  # noqa: E402
 
-from skillreuse.cohort import POPULARITY_TABLE, TABLE, VARIANTS_TABLE  # noqa: E402
-from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT  # noqa: E402
-from skillreuse.stats import N_BOOT, boot_p, holm, nb_test, owner_bootstrap  # noqa: E402
+from skillreuse.stats import boot_p, holm, nb_test, owner_bootstrap  # noqa: E402
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-OUT = Path("results")
-MODELS_DIR = Path("models")
-SEED = 2027
-REPEATS, FOLDS = 3, 3
-WINDOWS = [30, 60, 90]
+with open("config/config.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
+DATES = Path(config["dates"])
+OCCURRENCES = Path(config["occurrences"])
+SNAPSHOT = pd.Timestamp(config["snapshot"], tz="UTC")
+TABLE = Path(config["table"])
+VARIANTS_TABLE = Path(config["variants_table"])
+POPULARITY_TABLE = Path(config["popularity_table"])
+
+N_BOOT = config["n_boot"]
+
+OUT = Path(config["out"])
+MODELS_DIR = Path(config["models_dir"])
+SEED = config["seed"]
+REPEATS = config["repeats"]
+FOLDS = config["folds"]
+WINDOWS = config["windows"]
 
 # ---------------------------------------------------------------------------
 # Atributos (secao 3)
@@ -239,9 +251,8 @@ def run_eda() -> None:
 # Pre-processamento e algoritmos (secoes 5 e 6)
 # ---------------------------------------------------------------------------
 
-TREE_ALGOS = {"decision_tree", "random_forest", "hist_gb"}
-ALGOS = ["logistic", "naive_bayes", "knn", "decision_tree", "random_forest", "hist_gb", "mlp"]
-
+TREE_ALGOS = set(config["tree_algos"])
+ALGOS = config["algos"]
 
 def _log1p_clip(x: object) -> np.ndarray:
     return np.log1p(np.clip(np.asarray(x, dtype=float), 0, None))
