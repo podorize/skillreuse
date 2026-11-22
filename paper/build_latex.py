@@ -108,11 +108,7 @@ def ascii_symbols(latex: str) -> str:
 def abstract() -> str:
     source = (DRAFT / "00_summary_and_outline.md").read_text(encoding="utf-8")
     body = source.split("## Abstract\n", 1)[1].split("\n## Contents", 1)[0].strip()
-    latex = convert(body).strip()
-    # the Portuguese abstract (Resumo) is hyphenated with the rules of Portuguese
-    english, resumo = latex.split(r"\textbf{Resumo.}", 1)
-    return (english + r"\begin{otherlanguage}{brazilian}" + "\n" + r"\textbf{Resumo.}"
-            + resumo + "\n" + r"\end{otherlanguage}")
+    return convert(body).strip()
 
 
 def main() -> None:
@@ -127,7 +123,7 @@ def main() -> None:
 \usepackage{sbc-template}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[brazilian,english]{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{booktabs,longtable,array,calc}
