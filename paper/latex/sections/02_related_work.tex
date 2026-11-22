@@ -1,7 +1,7 @@
 \section{Related work}\label{related-work}
 
 This study draws on three lines of work: software reuse, agent skills,
-and good practice for machine learning on mined data.
+and good practices for machine learning on mined data.
 
 \textbf{Software reuse and cloning.} Reuse has long been studied as the
 adoption of components and the spread of solutions across open-source
@@ -14,18 +14,17 @@ them, the copied artifact is natural language, and we follow each copy
 in time and by account, to tell real adoption by other developers apart
 from self-copying and bulk collection.
 
-\textbf{Agent skills.} Research on language models that use tools has
-focused on how a model chooses and calls those tools
+Research on language models using tools has focused on how a model
+selects and invokes those tools
 \cite{schick2023toolformer,shen2023hugginggpt,yao2023react,qin2023toolllm}.
-Agent skills are different: they are persistent, human-readable files
-kept in repositories \cite{agentskills_spec}. GitSkills offers the first
-large collection of them \cite{gitskills2027}. Recent studies analyze
-the defects that keep skills from being reused
-\cite{zhang2026keepskillsreuse}, test whether skills help agents solve
-real tasks \cite{han2026sweskillsbench}, and follow how prompts change
-inside software projects \cite{tafreshipour2025prompting}. To our
-knowledge, no study has asked whether the text of a skill anticipates
-its adoption by other developers.
+Agent skills, in contrast, are persistent, human-readable files stored
+in repositories \cite{agentskills_spec}. GitSkills offers the first
+large collection of them \cite{gitskills2027}. Recent studies examine
+barriers to skill reuse \cite{zhang2026keepskillsreuse}, test whether
+skills help agents solve real tasks \cite{han2026sweskillsbench}, and
+track prompt evolution within software projects
+\cite{tafreshipour2025prompting}. To our knowledge, however, no study
+has examined whether skill text predicts adoption by other developers.
 
 \textbf{Machine learning on mined data.} When related examples, such as
 files from the same account, appear in both the training and the test

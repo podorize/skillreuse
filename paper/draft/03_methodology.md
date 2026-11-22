@@ -48,27 +48,34 @@ The models must work for developers they have never seen. Skills by the same aut
 
 The exploratory analysis used only the development set, so that nothing from the test set could influence our choices. We studied the target (how many skills are copied, and how fast) and each attribute: its type and distribution, missing values, outliers, inconsistencies, its correlation with the other attributes, and how the share of copied skills changes across its quartiles (four groups of equal size). Each quartile holds about 12,000 skills, and on average about 930 of them are copied, so the shares are stable.
 
-Four rules, written in advance, turned these findings into preprocessing steps (Table 2). Constant columns carry no information and are removed. Counts that are very skewed — most skills have no links or code, while a few have thousands — would let a handful of extreme skills dominate linear and distance-based models, so columns with skewness above 2 are log-transformed for those models; the extreme values are kept, because they are real skills, not errors. Near-duplicate columns (Spearman correlation above 0.95) make the coefficients of linear models unstable, so those models keep only one column of each pair. Impossible values are treated as missing. We did not resample the data to correct the imbalance between copied and other skills: class weights do the same job inside the learning algorithm and were tuned as a hyperparameter. All steps are fitted inside each training fold, in scikit-learn pipelines \cite{pedregosa2011scikit}, so that no information from the validation data leaks into training.
+Four rules, written in advance, turned these findings into preprocessing steps (Table \ref{tab:preprocessing_steps}). Constant columns carry no information and are removed. Counts that are very skewed — most skills have no links or code, while a few have thousands — would let a handful of extreme skills dominate linear and distance-based models, so columns with skewness above 2 are log-transformed for those models; the extreme values are kept, because they are real skills, not errors. Near-duplicate columns (Spearman correlation above 0.95) make the coefficients of linear models unstable, so those models keep only one column of each pair. Impossible values are treated as missing. We did not resample the data to correct the imbalance between copied and other skills: class weights do the same job inside the learning algorithm and were tuned as a hyperparameter. All steps are fitted inside each training fold, in scikit-learn pipelines \cite{pedregosa2011scikit}, so that no information from the validation data leaks into training.
 
 | Step | Decision (and the finding that motivated it) |
 |----------------------|--------------------------------------------------------------------|
 | Missing values | Median imputation with indicator (numeric), constant category (categorical); only 0.02% missing |
 | Categorical encoding | One-hot, categories with fewer than ten occurrences grouped; long tails of languages and licenses |
 | Normalization | Standardization for scale-sensitive models, none for trees; very different scales |
-| Outliers | Kept, with log transform for scale-sensitive models; 21 text columns with skewness above 2 (Figure 2a) |
+| Outliers | Kept, with log transform for scale-sensitive models; 21 text columns with skewness above 2 (Figure \ref{fig:eda_attributes}a) |
 | Discretization | Not used; trees choose their own cut points, and bins would discard information |
 | Class imbalance | No resampling, class weight tuned, threshold-free main metric; 7.7% of skills copied |
-| Dimensionality | One column of each near-duplicate pair removed for scale-sensitive models; eight pairs above 0.95 (Figure 2b) |
+| Dimensionality | One column of each near-duplicate pair removed for scale-sensitive models; eight pairs above 0.95 (Figure \ref{fig:eda_attributes}b) |
 
 : Preprocessing decisions and the findings that motivated them.
+\label{tab:preprocessing_steps}
 
 ## 3.6 Model development
 
-**Validation.** Every algorithm was trained and validated on exactly the same partitions of the development set: 3-fold cross-validation, repeated three times with different seeds. The folds are grouped by author, for the same reason as the split, and stratified so that each fold has about the same share of copied skills. Each configuration therefore gets nine estimates, which averages out the luck of a single partition.
+All algorithms were trained and evaluated on the same development-set partitions using 3-fold cross-validation repeated three times with different seeds.
+Folds are grouped by author to prevent author overlap and stratified to preserve the proportion of copied skills across folds.
+Each configuration therefore yields nine estimates, reducing dependence on any single partition.
 
-**Spot-check.** We first compared seven algorithms with their default settings, chosen to represent different ways of learning: a linear model (logistic regression), a probabilistic model that treats attributes as independent (Gaussian Naive Bayes), a model based on similar examples (k-nearest neighbors), a single tree of rules (decision tree), two ensembles of trees — one that averages independent trees (random forest) and one that adds trees that correct each other (HistGradientBoosting) — and a neural network (multilayer perceptron). This quick comparison shows which kinds of models suit the problem before any effort goes into tuning.
+As an initial spot-check, we compared seven algorithms with default settings, covering linear (logistic regression), probabilistic (Gaussian Naive Bayes), instance-based (k-nearest neighbors), tree-based (decision tree), ensemble (random forest and HistGradientBoosting), and neural network (multilayer perceptron) approaches. This comparison identified promising algorithms for subsequent hyperparameter tuning.
 
-**Tuning and selection.** The three best algorithms were then tuned with nested cross-validation. In each of six outer folds (the first two repetitions of the partitions above), a random search drew ten hyperparameter configurations (Table 3), scored each on three inner folds of the training part, and kept the best. That configuration was then measured on the outer fold, which the search had never seen, so the estimate is not inflated by the choice. Each algorithm was also evaluated with its default settings. The highest mean AUC wins; if it is not significantly better than the others, the fastest of the tied configurations wins, so that we accept extra complexity only when it pays off.
+The three best-performing algorithms were then tuned using nested cross-validation.
+In each of six outer folds (the first two repetitions of the partitions above), random search sampled ten hyperparameter configurations (Table \ref{tab:random_search}), evaluated each across three inner folds of the training data, and selected the best.
+That configuration was then measured on the outer fold, which the search had never seen, so the estimate is not inflated by the choice.
+Each algorithm was also evaluated using its default settings.
+We selected the configuration with the highest mean AUC; when differences were not statistically significant, we preferred the fastest configuration.
 
 | Algorithm | Hyperparameters searched (10 random configurations) |
 |------------------------------|----------------------------------------------------------|
@@ -77,16 +84,21 @@ Four rules, written in advance, turned these findings into preprocessing steps (
 | Multilayer perceptron | hidden layers (64), (128) or (64, 32); L2 penalty $10^{-5}$–$10^{-2}$ (log); initial learning rate $10^{-4}$–$10^{-2}$ (log); early stopping |
 
 : Search spaces of the three algorithms selected by the spot-check.
+\label{tab:random_search}
 
 **Final models.** The selected configuration was trained on the whole development set with the text attributes. This **text model** answers RQ1 and is the one we interpret for RQ2. For comparison, the same configuration was trained with three other sets of attributes: **size only**, to see whether the text says more than its length; the **origin repository**; and the **origin repository plus the text**. We also fixed a decision threshold, needed only for metrics such as precision and recall, as the one that maximizes balanced accuracy on the development set. All models and the threshold were saved, with a fingerprint of each file, before the test set was opened.
 
 ## 3.7 Evaluation
 
-**Metrics.** Our main metric is the area under the ROC curve (AUC). It is the probability that the model gives a higher score to a randomly chosen copied skill than to a randomly chosen skill that was not copied. It matches our question — whether the text *ranks* skills by their chances of being copied — and it does not depend on a threshold or on how rare copied skills are. Because copied skills are rare, we also report the area under the precision–recall curve (PR AUC), which must be compared with the share of copied skills (what a random model would get); the Brier score, which measures whether predicted probabilities are realistic; and, at the chosen threshold, precision, recall, balanced accuracy and the confusion matrix.
+Our primary metric is the area under the ROC curve (AUC), which measures how well the model ranks copied skills above non-copied ones. This metric captures whether text ranks skills by their likelihood of being copied, independently of the classification threshold or class prevalence. Given the rarity of copied skills, we also report PR AUC (relative to the proportion of copied skills), the Brier score (probability calibration), and, at the selected threshold, precision, recall, balanced accuracy, and the confusion matrix.
 
-**Statistics.** On the development set, two models are compared fold by fold. Because the training sets of the folds overlap, the nine results are not independent and an ordinary paired test would be too optimistic; the Nadeau–Bengio correction accounts for this overlap \cite{nadeau2003inference}, and Holm's method adjusts for several comparisons made at once \cite{holm1979simple}. The test set was evaluated **once**. Its 95% confidence intervals come from 2,000 bootstrap samples drawn by author, since skills of the same author are not independent. RQ1 is answered positively if the interval of the text model's AUC lies above 0.5, the value of a random guess. The control is passed if the interval of the gain from adding the text to the origin repository lies above zero.
+We assess statistical significance using fold-level comparisons on the development set.
+Since fold training sets overlap, the nine results are not independent and an ordinary paired test would be too optimistic; the Nadeau–Bengio correction accounts for this overlap \cite{nadeau2003inference}, and Holm's method adjusts for several comparisons made at once \cite{holm1979simple}.
+The test set is evaluated only once, with 95% confidence intervals estimated from 2,000 bootstrap samples drawn by author, since skills of the same author are not independent. 
+RQ1 is supported if the text model's AUC confidence interval lies above 0.5 (random guess).
+The control is passed if the interval of the gain from adding the text to the origin repository lies above zero.
 
-**Robustness.** Three further analyses, also planned in advance, check whether the result depends on our own choices: a different window (30 or 90 days), a different definition of aggregator (500 skills instead of 100, or no exclusion at all, which required dating the 84,995 copies in aggregators too), and a **split in time**, in which the model learns from skills that appeared earlier and is tested on skills that appeared later. The last one is the closest test of predicting the future.
+Finally, we test robustness through three prespecified analyses: alternative time windows (30 or 90 days), aggregator definitions (500 skills instead of 100, or no exclusion, requiring dates for the 84,995 aggregator copies), and a temporal split (training on earlier skills and testing on later ones). The latter most closely approximates future prediction.
 
 ## 3.8 Interpretation
 

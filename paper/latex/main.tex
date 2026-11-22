@@ -14,10 +14,10 @@
 \sloppy
 
 \title{Does the text of an agent skill predict its replication on GitHub? A predictive study on GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
-\author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
+\author{Pedro Odorize\inst{1}, Rafael Borges Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
-  \email{pedro.odorize@inf.ufrgs.br}
+  \email{pedro.odorize@inf.ufrgs.br, rafael.allgayer12@gmail.com}
 }
 
 \begin{document}
@@ -38,6 +38,25 @@ across time windows, other definitions of bulk repositories and future
 skills. Writing style carried most of the signal: explanatory prose, a
 repetitive vocabulary and valid metadata went with more copying. The
 relation is modest and associative, not causal.
+
+\hfill\break
+
+\textbf{Resumo.}
+
+Skills de agentes são arquivos Markdown que ensinam agentes de
+programação a executar tarefas. Investigamos se seu conteúdo textual
+permite prever se outros desenvolvedores irão copiá-las. Para mensurar
+as cópias, identificamos, via API do GitHub, as datas de cópia de 150
+mil skills do GitSkills. Uma skill foi considerada copiada quando outro
+desenvolvedor a copiou em até 60 dias de sua primeira aparição,
+excluindo repositórios que coletam skills em massa. Entre 20.564 skills
+de autores não vistos, uma regressão logística com 22 atributos textuais
+alcançou AUC de 0,645 (IC 95\%: 0,624--0,666). O resultado se manteve em
+diferentes janelas temporais, definições de repositórios de coleta em
+massa e avaliações com skills futuras. O estilo de escrita concentrou a
+maior parte do sinal: prosa explicativa, vocabulário repetitivo e
+metadados válidos estiveram associados a mais cópias. Essa relação é
+modesta e associativa, não causal.
 
 \end{abstract}
 

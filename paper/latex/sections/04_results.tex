@@ -1,113 +1,115 @@
 \section{Results}\label{results}
 
-We present the results in the order of the method: what the data look
-like (4.1), which model we chose (4.2), how well it predicts (4.3, RQ1),
-whether this depends on our choices (4.4), and what the model learned
-(4.5, RQ2).
+We present the results in five stages: exploratory analysis (Section
+4.1), model selection (Section 4.2), predictive performance (Section
+4.3, RQ1), robustness analyses (Section 4.4), and model interpretation
+(Section 4.5, RQ2).
 
 \subsection{Exploratory analysis}\label{exploratory-analysis}
 
 \textbf{The data.} We dated 198,579 of the 223,261 copies outside
 aggregators (88.9\%). Most of the others were in repositories deleted or
-made private after July 2026 (Figure 1c). In the end, 135,670 of the
-150,000 skills had at least one dated copy, and 135,332 remained after
-limiting each author to 50 skills: 94,683 in the development set, from
-42,872 authors, and 40,649 in the holdout, from 18,373 authors.
+made private after July 2026 (Figure \ref{fig:eda}c). Overall, 135,670
+of the 150,000 skills had at least one dated copy. After limiting each
+author to 50 skills, 135,332 remained: 94,683 in the development set
+(42,872 authors) and 40,649 in the holdout (18,373 authors).
 
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/report_eda.png}
 \caption{Development set: (a) cumulative share of copied skills by days from first appearance to first copy by another developer, among skills with 90 days of observation; (b) first appearance (T0) by month, with the eligibility limit for W = 60 days; (c) outcome of the dating of copies outside aggregators}
-\label{fig:report-1}
+\label{fig:eda}
 \end{figure}
 
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/report_eda_attributes.png}
 \caption{Development set: (a) skewness of the text attributes before and after the log transform; (b) Spearman correlation between the 27 text attributes}
-\label{fig:report-2}
+\label{fig:eda_attributes}
 \end{figure}
 
-\textbf{The target.} When a skill is copied, it is copied fast. Among
-development skills observed for at least 90 days, the first copy by
-another developer arrived after a median of 10.5 days, and a quarter
-arrived within 2.6 days (Figure 1a). A 30-day window would capture
-73.5\% of these first copies and a 60-day window 89.7\%, so the rule of
-Section 3.2 set \textbf{W = 60 days}. The ecosystem is also young:
-almost all skills appeared after October 2025, when the format was
-introduced, and more new skills appeared every month (Figure 1b). With W
-= 60, only skills that appeared until 10 May 2026 are eligible:
-\textbf{48,299 in the development set and 20,564 in the holdout}. Copied
-skills are a minority: \textbf{7.7\%} of the eligible skills were copied
-by another developer within the window.
+\textbf{The target.} Skills are typically copied soon after their first
+appearance. Among development skills observed for at least 90 days, the
+first copy by another developer arrived after a median of 10.5 days, and
+a quarter arrived within 2.6 days (Figure \ref{fig:eda}a). A 30-day
+window would capture 73.5\% of these first copies and a 60-day window
+89.7\%, so the rule of Section 3.2 set \textbf{W = 60 days}. The
+ecosystem is also young: almost all skills appeared after October 2025,
+when the format was introduced, and more new skills appeared every month
+(Figure \ref{fig:eda}b). With W = 60, only skills that appeared until 10
+May 2026 are eligible: \textbf{48,299 in the development set and 20,564
+in the holdout}. Copied skills are a minority: \textbf{7.7\%} of the
+eligible skills were copied by another developer within the window.
 
 \textbf{The attributes.} All 27 text attributes are numbers; three of
 them (a valid front matter, a missing name, a missing description) are
 yes-or-no. They have no missing values, and the origin attributes almost
 none (0.02\%, in language and license). The real problem is their
-distribution (Figure 2a). Most counts are zero for many skills and very
-large for a few --- the typical skill has no links and no inline code,
-while some have thousands --- and 21 of the text columns have skewness
-above 2. The extreme case is the average word length (skewness 218),
-caused by a few files that are not prose at all, such as long encoded
-strings. We kept them, since they are real skills, and the log transform
-reduces their weight. We found no impossible values. The only
-inconsistency, 684 copies dated after the snapshot, had already been
-handled during the collection. Two origin attributes were constant and
-were removed: the fork flag and the stars at T0, which the API could not
-provide (Section 3.3).
+distribution (Figure \ref{fig:eda_attributes}a). Most counts are zero
+for many skills and very large for a few --- the typical skill has no
+links and no inline code, while some have thousands --- and 21 of the
+text columns have skewness above 2. The extreme case is the average word
+length (skewness 218), caused by a few files that are not prose at all,
+such as long encoded strings. We kept them, since they are real skills,
+and the log transform reduces their weight. We found no impossible
+values. The only inconsistency, 684 copies dated after the snapshot, had
+already been handled during the collection. Two origin attributes were
+constant and were removed: the fork flag and the stars at T0, which the
+API could not provide (Section 3.3).
 
-Many attributes measure almost the same thing (Figure 2b). Characters,
-words, unique words and body length are nearly interchangeable measures
-of size, and lexical diversity falls as all of them grow, because longer
-texts repeat more words. Eight pairs exceed a Spearman correlation of
-0.95. Removing five columns (words, unique words, body length, non-empty
-lines, and a missing name, which duplicates an invalid front matter)
-leaves 22 attributes for the scale-sensitive models. The front-matter
-attributes, in contrast, are almost unrelated to size and style, so they
-bring a different kind of information.
+Many attributes measure almost the same thing (Figure
+\ref{fig:eda_attributes}b). Characters, words, unique words and body
+length are nearly interchangeable measures of size, and lexical
+diversity falls as all of them grow, because longer texts repeat more
+words. Eight pairs exceed a Spearman correlation of 0.95. Removing five
+columns (words, unique words, body length, non-empty lines, and a
+missing name, which duplicates an invalid front matter) leaves 22
+attributes for the scale-sensitive models. The front-matter attributes,
+in contrast, are almost unrelated to size and style, so they bring a
+different kind of information.
 
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=0.62\linewidth]{figures/report_eda_univariate.png}
 \caption{Development set: share of copied skills by quartile of each text attribute (ties in zero-inflated attributes are split arbitrarily between the lowest quartiles)}
-\label{fig:report-3}
+\label{fig:eda_univariate}
 \end{figure}
 
 \textbf{First signs of a signal.} Simple tables already suggest that the
-text matters (Figure 3). The share of copied skills more than doubles
-from the shortest to the longest texts (from 5.0\% to 11.0\% across
-quartiles of characters), falls from 10.7\% to 4.8\% as lexical
-diversity grows, and rises with the number of sentences, headings, links
-and code blocks. Skills with an invalid front matter are copied far less
-often than those with a valid one (2.8\% against 8.3\%). But these
-tables look at one attribute at a time, and the attributes move
-together: a longer text also has more sentences, more headings and more
-code. To tell which characteristics carry information of their own, we
-need a model.
+text matters (Figure \ref{fig:eda_univariate}). The share of copied
+skills more than doubles from the shortest to the longest texts (from
+5.0\% to 11.0\% across quartiles of characters), falls from 10.7\% to
+4.8\% as lexical diversity grows, and rises with the number of
+sentences, headings, links and code blocks. Skills with an invalid front
+matter are copied far less often than those with a valid one (2.8\%
+against 8.3\%). But these tables look at one attribute at a time, and
+the attributes move together: a longer text also has more sentences,
+more headings and more code. To tell which characteristics carry
+information of their own, we need a model.
 
 \subsection{Choosing a model}\label{choosing-a-model}
 
-Table 4 and Figure 4 summarize how the model was chosen. In the
-spot-check, HistGradientBoosting (AUC 0.652) and logistic regression
-(0.642) came first, followed by the neural network, Naive Bayes and the
-random forest. k-nearest neighbors and the decision tree came last, and
-both suffered from their default settings. By default, k-nearest
-neighbors looks at only five neighbors, and each prediction is the share
-of them that were copied. Because few skills are copied, many
-predictions are zero and the others take only five other values, so many
-skills tie and the ranking is coarse. The default decision tree has no
-depth limit and accepts leaves with a single skill, so it keeps
-splitting until each leaf holds a single class: it memorizes the
-training data and does not generalize. The results varied little from
-fold to fold (standard deviations of 0.005 to 0.015), so the ranking of
-the default settings is clear.
+Table \ref{tab:model_choose} and Figure \ref{fig:model_selection}
+summarize how the model was chosen. In the spot-check,
+HistGradientBoosting (AUC 0.652) and logistic regression (0.642) came
+first, followed by the neural network, Naive Bayes and the random
+forest. k-nearest neighbors and the decision tree came last, and both
+suffered from their default settings. By default, k-nearest neighbors
+looks at only five neighbors, and each prediction is the share of them
+that were copied. Because few skills are copied, many predictions are
+zero and the others take only five other values, so many skills tie and
+the ranking is coarse. The default decision tree has no depth limit and
+accepts leaves with a single skill, so it keeps splitting until each
+leaf holds a single class: it memorizes the training data and does not
+generalize. The results varied little from fold to fold (standard
+deviations of 0.005 to 0.015), so the ranking of the default settings is
+clear.
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Model selection on the text attributes: spot-check (mean \ensuremath{\pm}
 standard deviation over 9 folds) and nested tuning of the three best
 algorithms (mean over 6 outer folds). The selected configuration is in
-bold.}\tabularnewline
+bold. \label{tab:model_choose}}\tabularnewline
 \toprule\noalign{}
 Algorithm & Spot-check AUC & Nested, default & Nested, tuned \\
 \midrule\noalign{}
@@ -132,7 +134,7 @@ Decision tree & 0.531 \ensuremath{\pm} 0.005 & & \\
 \centering
 \includegraphics[width=0.85\linewidth]{figures/report_model_selection.png}
 \caption{Model selection: (a) spot-check of seven algorithms; (b) nested tuning of the three finalists}
-\label{fig:report-4}
+\label{fig:model_selection}
 \end{figure}
 
 Tuning improved every algorithm a little, and tuned HistGradientBoosting
@@ -162,16 +164,17 @@ about half of the skills (52\%).
 \subsection{Does the text predict whether a skill is copied?
 (RQ1)}\label{does-the-text-predict-whether-a-skill-is-copied-rq1}
 
-The decisive test is the holdout, used once (Table 5 and Figure 5). On
-20,564 skills from 10,386 authors it had never seen, the text model
-reached an \textbf{AUC of 0.645} (95\% CI {[}0.624; 0.666{]}). In plain
-terms: given one skill that other developers copied and one they did
-not, the model gives the copied one a higher score about 65\% of the
-time. The interval lies well above 0.5, so the answer to RQ1 is yes: the
-text of a skill carries information about whether other developers will
-copy it (Holm-adjusted p = 0.002, the smallest value that 2,000
-bootstrap samples can give). The holdout result is close to the
-development one (0.642 \ensuremath{\pm} 0.014), so the model did not overfit.
+The decisive test is the holdout, used once (Table
+\ref{tab:final_models} and Figure \ref{fig:results}). On 20,564 skills
+from 10,386 authors it had never seen, the text model reached an
+\textbf{AUC of 0.645} (95\% CI {[}0.624; 0.666{]}). In plain terms:
+given one skill that other developers copied and one they did not, the
+model gives the copied one a higher score about 65\% of the time. The
+interval lies well above 0.5, so the answer to RQ1 is yes: the text of a
+skill carries information about whether other developers will copy it
+(Holm-adjusted p = 0.002, the smallest value that 2,000 bootstrap
+samples can give). The holdout result is close to the development one
+(0.642 \ensuremath{\pm} 0.014), so the model did not overfit.
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3200}}
@@ -181,7 +184,7 @@ development one (0.642 \ensuremath{\pm} 0.014), so the model did not overfit.
 \caption{Final models (logistic regression) on the development set (mean
 \ensuremath{\pm} standard deviation over 9 author-grouped folds) and on the holdout
 (20,564 skills from 10,386 authors; 7.8\% copied; 95\% CIs from author
-bootstrap).}\tabularnewline
+bootstrap). \label{tab:final_models}}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Model
@@ -221,7 +224,7 @@ Origin repository + text & 0.725 \ensuremath{\pm} 0.012 & 0.734 {[}0.714; 0.753{
 \centering
 \includegraphics[width=0.95\linewidth]{figures/report_results.png}
 \caption{Holdout: (a) ROC curves and (b) precision--recall curves of the final models, drawn from a recall of 0.01 (about 16 copied skills); (c) confusion matrix of the text model at the threshold chosen on the development set}
-\label{fig:report-5}
+\label{fig:results}
 \end{figure}
 
 Two comparisons show what kind of information the text carries.
@@ -234,28 +237,28 @@ and adding the text raised it to 0.734, a gain of \textbf{0.049} (95\%
 CI {[}0.035; 0.063{]}; Holm-adjusted p = 0.002). Recall that the
 repository's popularity was measured after T0, which favors the
 repository; the text adds information even so. The precision--recall
-curves agree (Figure 5b): every model is above the line of a random
-guess, and from a recall of about 0.13 on, the text improves the origin
-model at every level.
+curves agree (Figure \ref{fig:results}b): every model is above the line
+of a random guess, and from a recall of about 0.13 on, the text improves
+the origin model at every level.
 
 What the model offers is a ranking, not a reliable yes-or-no answer. Its
 PR AUC (0.130) is 1.7 times the share of copied skills. At the threshold
 chosen on the development set (a probability of 0.07), it flags 10,761
 holdout skills as likely to be copied. Among them are 1,137 of the 1,594
 skills that were copied (recall 71\%), but most flagged skills were not
-copied (precision 10.6\%; balanced accuracy 0.603; Figure 5c). Its
-probabilities also stay close to the average (Brier score 0.0701,
-against 0.0715 for predicting 7.8\% for every skill): the model
-separates skills, but it never finds one that is very likely to be
-copied. In practice, it can help decide which skills to look at first,
-not decide on its own.
+copied (precision 10.6\%; balanced accuracy 0.603; Figure
+\ref{fig:results}c). Its probabilities also stay close to the average
+(Brier score 0.0701, against 0.0715 for predicting 7.8\% for every
+skill): the model separates skills, but it never finds one that is very
+likely to be copied. In practice, it can help decide which skills to
+look at first, not decide on its own.
 
 \subsection{How robust is the result?}\label{how-robust-is-the-result}
 
 The answer to RQ1 rests on several choices of ours: the window, the
 definition of aggregator, and a split by author that mixes old and new
-skills. Table 6 shows the text model when each of them changes. None
-changes the conclusion.
+skills. Table \ref{tab:robustness_analysis} shows the text model when
+each of them changes. None changes the conclusion.
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.5349}}
@@ -265,7 +268,7 @@ changes the conclusion.
 \caption{Text model under the robustness analyses (holdout; CIs from 500
 author-bootstrap samples, 2,000 for the main analysis). Each analysis
 retrains the model on the development set with the selected
-configuration.}\tabularnewline
+configuration. \label{tab:robustness_analysis}}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Analysis
@@ -326,59 +329,61 @@ characteristics of the text the model relies on, and in which direction
 they act.
 
 \textbf{Which characteristics.} Writing style is the most important
-family by far (Figure 6a). Shuffling it lowers the AUC by 0.092 (95\% CI
-{[}0.071; 0.109{]}), about twice as much as size (0.047), and more than
-front matter (0.035), links (0.022), code (0.020) and Markdown structure
-(0.012). This ranking is stable: style comes first in all nine
-development folds, and the order of the six families in each fold agrees
-with the order on the holdout (Spearman correlation 0.71 to 1.00). Among
-single attributes, the number of sentences matters most (0.074),
-followed by lexical diversity, words per sentence, average word length
-and a valid front matter (Figure 6b); the SHAP values agree on four of
-these five, with inline code spans in place of average word length. Note
-that the whole size family matters less than the number of sentences
-alone. The reason is that its correlated attributes act in opposite
-directions in the model, so shuffling them together partly cancels out.
+family by far (Figure \ref{fig:importance}a). Shuffling it lowers the
+AUC by 0.092 (95\% CI {[}0.071; 0.109{]}), about twice as much as size
+(0.047), and more than front matter (0.035), links (0.022), code (0.020)
+and Markdown structure (0.012). This ranking is stable: style comes
+first in all nine development folds, and the order of the six families
+in each fold agrees with the order on the holdout (Spearman correlation
+0.71 to 1.00). Among single attributes, the number of sentences matters
+most (0.074), followed by lexical diversity, words per sentence, average
+word length and a valid front matter (Figure \ref{fig:importance}b); the
+SHAP values agree on four of these five, with inline code spans in place
+of average word length. Note that the whole size family matters less
+than the number of sentences alone. The reason is that its correlated
+attributes act in opposite directions in the model, so shuffling them
+together partly cancels out.
 
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/report_importance.png}
 \caption{Permutation importance of the text model on the holdout: (a) attribute families; (b) ten most important attributes (AUC drop, 95\% CI)}
-\label{fig:report-6}
+\label{fig:importance}
 \end{figure}
 
-\textbf{In which direction.} Figure 7 shows how each attribute moves the
-predictions. Skills with \textbf{more sentences}, \textbf{more words per
-sentence}, \textbf{longer words} and a \textbf{valid front matter} are
-pushed toward being copied; skills with a \textbf{more varied
-vocabulary} or a \textbf{missing description} are pushed away (Figure
-7a). The dependence plots show the shape of the main effects (Figure
-7b). More sentences help a lot among short texts, and the gain levels
-off beyond about 50 sentences. The effect of lexical diversity is linear
-over its whole range. An invalid front matter lowers the log-odds by
-about 0.9 compared with a valid one. For the number of sentences,
-lexical diversity and the front matter, these directions agree with the
-simple tables of Section 4.1.
+\textbf{In which direction.} Figure \ref{fig:shap} shows how each
+attribute moves the predictions. Skills with \textbf{more sentences},
+\textbf{more words per sentence}, \textbf{longer words} and a
+\textbf{valid front matter} are pushed toward being copied; skills with
+a \textbf{more varied vocabulary} or a \textbf{missing description} are
+pushed away (Figure \ref{fig:shap}a). The dependence plots show the
+shape of the main effects (Figure \ref{fig:shap}b). More sentences help
+a lot among short texts, and the gain levels off beyond about 50
+sentences. The effect of lexical diversity is linear over its whole
+range. An invalid front matter lowers the log-odds by about 0.9 compared
+with a valid one. For the number of sentences, lexical diversity and the
+front matter, these directions agree with the simple tables of Section
+4.1.
 
 \begin{figure}[!tbp]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/report_shap.png}
 \caption{SHAP values of the text model on the holdout: (a) distribution of SHAP values of the 12 most influential attributes (by mean absolute SHAP value), colored by the value of the attribute; (b) dependence plots of the five most important attributes, 1st to 99th percentiles}
-\label{fig:report-7}
+\label{fig:shap}
 \end{figure}
 
 \textbf{Unexpected relations.} For four attributes, the direction flips
 between the simple tables and the model. On their own, longer texts,
 longer descriptions, more headings and more inline code go with
-\emph{more} copying (Figure 3); in the model, they push predictions
-\emph{down} (Figure 7a). Both views are correct, because they answer
-different questions. A table compares skills that differ in everything
-at once: longer texts also have more sentences. The model compares
-skills with the same amount of prose. Among those, a skill with more
-characters, more headings and more inline code is a denser, more
-technical text, and such texts are copied less. The same holds for the
-description: having one matters a great deal, but a longer one does not
-help once everything else is taken into account.
+\emph{more} copying (Figure \ref{fig:eda_univariate}); in the model,
+they push predictions \emph{down} (Figure \ref{fig:shap}a). Both views
+are correct, because they answer different questions. A table compares
+skills that differ in everything at once: longer texts also have more
+sentences. The model compares skills with the same amount of prose.
+Among those, a skill with more characters, more headings and more inline
+code is a denser, more technical text, and such texts are copied less.
+The same holds for the description: having one matters a great deal, but
+a longer one does not help once everything else is taken into account.
 
 Taken together, these effects draw a clear picture. The skills that
 other developers copy read like explanations: several full sentences, a

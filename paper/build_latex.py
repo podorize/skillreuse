@@ -37,15 +37,17 @@ def preprocess(markdown: str) -> str:
     markdown = re.sub(r"(?m)^(#{1,2})\s+(?:\d+(?:\.\d+)?\.?|[AB]\.\d+)\s+", r"\1 ", markdown)
     markdown = re.sub(r"(?m)^# Appendix [AB] —\s*", "# ", markdown)
 
-    figure_number = 0
-
+    figure_labels = set()
     def figure(match: re.Match[str]) -> str:
-        nonlocal figure_number
         caption, relative_path = match.groups()
         source = (DRAFT / relative_path).resolve()
         if not source.is_file() or source.suffix.lower() != ".png":
             raise FileNotFoundError(source)
-        figure_number += 1
+        slug = re.sub(r"[^a-zA-Z0-9_-]+", "-", source.stem).strip("-").lower()
+        label = f"fig:{slug}"
+        if label in figure_labels:
+            raise ValueError(f"Duplicate figure label: {label}")
+        figure_labels.add(label)
         caption = re.sub(r"`([^`]+)`", lambda m: r"\texttt{" + m.group(1).replace("_", r"\_") + "}",
                          caption).replace("%", r"\%")
         output_name = f"report_{source.name}"
@@ -55,7 +57,7 @@ def preprocess(markdown: str) -> str:
             "\n\\begin{figure}[!tbp]\n\\centering\n"
             f"\\includegraphics[width={width}\\linewidth]{{figures/{output_name}}}\n"
             f"\\caption{{{caption}}}\n"
-            f"\\label{{fig:report-{figure_number}}}\n"
+            f"\\label{{{label}}}\n"
             "\\end{figure}\n"
         )
 
@@ -133,10 +135,10 @@ def main() -> None:
 \sloppy
 
 \title{Does the text of an agent skill predict its replication on GitHub? A predictive study on GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
-\author{Pedro Odorize\inst{1}, Rafael Allgayer\inst{1}}
+\author{Pedro Odorize\inst{1}, Rafael Borges Allgayer\inst{1}}
 \address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
   Porto Alegre, RS -- Brazil
-  \email{pedro.odorize@inf.ufrgs.br}
+  \email{pedro.odorize@inf.ufrgs.br, rafael.allgayer12@gmail.com}
 }
 
 \begin{document}
