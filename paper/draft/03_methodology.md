@@ -4,14 +4,19 @@ This section follows the order of the work: we first built the data (3.1–3.4),
 
 ## 3.1 Data
 
-The GitSkills dataset \cite{gitskills2027}, published on Hugging Face, provides the data used in this study. We used the dataset at revision `ebab17454a7c236f8f26b183567f1a126f42e3f8`, ensuring that all analyses refer to a fixed and reproducible version.
-
+We use the GitSkills dataset \cite{gitskills2027}, published on Hugging Face, at a fixed revision to ensure reproducibility across all analyses.
 The dataset contains 3,797,117 `SKILL.md` files from 282,200 public GitHub repositories. Identical files are grouped by content hash, leaving 1,877,981 distinct contents.
-Each distinct content is treated as one **skill** in this study, while its occurrences across repositories represent separate copies.
+In this study, each distinct content is defined as a skill, and its occurrences across repositories are considered separate copies.
 
-Some repositories do not choose the skills they host. Registries, mirrors and marketplaces collect skills in bulk; the largest one holds 89,908 different skills. We call a repository with 100 or more different skills an **aggregator** (there are 2,867). A copy in an aggregator shows that a skill was collected, not that a developer decided to use it, so aggregators are left out of the main analysis. This leaves 1,163,728 skills that exist in at least one repository outside aggregators.
+Some repositories collect skills in bulk rather than hosting them as a result of individual developer decisions. These include registries, mirrors, and marketplaces, with the largest containing 89,908 distinct skills.
+We classify repositories containing at least 100 distinct skills as aggregators (2,867 repositories).
+Since copies in aggregators reflect bulk collection rather than individual adoption, these repositories are excluded from the main analysis.
+This leaves 1,163,728 skills with at least one occurrence in a non-aggregator repository.
 
-To know when each skill was copied, we must date its copies (Section 3.2), and dating a copy means querying the history of its file through the GitHub API, which limits how many queries an account can make per hour. Together, the 1,163,728 skills have 2,395,296 copies. Dating the copies of our sample took about seven hours at the API's limit; dating all of them would take about eight times longer, more than two days of uninterrupted queries, while a random sample is enough to answer our question. We therefore drew a random sample of **150,000 skills**. They have 308,256 copies in total: 223,261 in ordinary repositories and 84,995 in aggregators.
+Determining when each skill was copied requires querying its file history through the GitHub API, which imposes hourly rate limits (Section 3.2).
+The 1,163,728 skills have a total of 2,395,296 copies.
+Dating all copies would require more than two days of continuous API queries, whereas dating the copies in our random sample took approximately seven hours. 
+We therefore selected a random sample of 150,000 skills, comprising 308,256 copies: 223,261 in non-aggregator repositories and 84,995 in aggregators.
 
 ## 3.2 Measuring whether a skill was copied
 
@@ -27,9 +32,11 @@ The window W makes the comparison fair: every skill gets the same amount of time
 
 ## 3.3 Attributes
 
-The model reads only the `SKILL.md` itself. From its Markdown we extracted the 27 attributes of Table 1: measures of size, writing style, structure, code, links and front matter (the header with the skill's name and description). Since all copies of a skill have the same text, these attributes describe exactly what other developers saw when they decided to copy it, and they contain no information from the future. GitSkills also describes the folder and companion files of one representative copy of each skill, but that copy is chosen by a rule that depends on how many copies exist, so its attributes would reveal the answer; we do not use them.
+From the content of a skill’s Markdown file, we extracted the 27 attributes, listed in Table 1: measures of size, writing style, structure, code, links and front matter (the header with the skill's name and description).
+Because all copies of a skill share identical text, these attributes represent the information available to other developers when deciding whether to copy it and do not incorporate future information.
+GitSkills also describes the folder and companion files of one representative copy of each skill, but that copy is chosen by a rule that depends on how many copies exist, so its attributes would reveal the answer; we do not use them.
 
-| Group | Columns | What they describe |
+| Group | Columns | Description |
 |----------------------|-----------:|-------------------------------------------------------------------|
 | Size | 7 | Characters, lines, non-empty lines, words, unique words, sentences, body length |
 | Text style | 3 | Lexical diversity (unique words over all words), average word length, average words per sentence |
@@ -39,7 +46,7 @@ The model reads only the `SKILL.md` itself. From its Markdown we extracted the 2
 | Front matter | 5 | Whether it is valid; length and absence of the name and of the description |
 | Origin repository (control only) | 14 | Age of the repository at T0, language, license, fork flag, folder of the file (depth, root, template, plugin, vendor, documentation, package, other-tool and `.claude` folders), stars and forks |
 
-: Attributes. The 27 text attributes form the main model; the origin repository is used only as a control.
+: Overview of the extracted attributes. The 27 text attributes constitute the main feature set, while origin-repository attributes are used only as controls
 
 A natural objection is that skills from popular repositories may be copied simply because of where they are. To test it, a second group of attributes describes the **origin repository** (Table 1, last row). We planned to measure its popularity by the stars it had at T0, but the GitHub API no longer reports when each star was given. We used instead the stars and forks of the repository in July 2026. This popularity was measured after T0 and may even be partly caused by the copies, so it gives the repository an advantage: if the text still adds information in this comparison, the conclusion only becomes stronger.
 
