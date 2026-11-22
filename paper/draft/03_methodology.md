@@ -1,6 +1,8 @@
 # 3. Materials and methods
 
-This section follows the order of the work: we first built the data (3.1–3.4), then explored and prepared it (3.5), developed the models (3.6), evaluated them (3.7) and interpreted the final one (3.8). The whole analysis plan was written down before any model was trained.
+This section follows the order of the work: we first built the data (3.1–3.4), then explored and prepared it (3.5), developed the models (3.6), evaluated them (3.7) and interpreted the final one (3.8). Figure \ref{fig:workflow} summarizes this workflow. The whole analysis plan was written down before any model was trained.
+
+![Study workflow, by section of the paper. Yellow: external sources. Blue: steps on the holdout, used once at the end. Aggregator filtering keeps the skills with at least one copy outside aggregators. Sections 3.5 and 3.6 use only the development set.](../diagrams/workflow.png)
 
 ## 3.1 Data
 
