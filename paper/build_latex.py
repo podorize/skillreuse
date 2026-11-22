@@ -108,7 +108,11 @@ def ascii_symbols(latex: str) -> str:
 def abstract() -> str:
     source = (DRAFT / "00_summary_and_outline.md").read_text(encoding="utf-8")
     body = source.split("## Abstract\n", 1)[1].split("\n## Contents", 1)[0].strip()
-    return convert(body).strip()
+    latex = convert(body).strip()
+    # the Portuguese abstract (Resumo) is hyphenated with the rules of Portuguese
+    english, resumo = latex.split(r"\textbf{Resumo.}", 1)
+    return (english + r"\begin{otherlanguage}{brazilian}" + "\n" + r"\textbf{Resumo.}"
+            + resumo + "\n" + r"\end{otherlanguage}")
 
 
 def main() -> None:
@@ -123,22 +127,24 @@ def main() -> None:
 \usepackage{sbc-template}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[english]{babel}
+\usepackage[brazilian,english]{babel}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{booktabs,longtable,array,calc}
 \usepackage{amsmath,amssymb}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
+% hyperref puts the [Author year] label back in front of each reference; the SBC style lists
+% the references without labels, with a hanging indent
+\makeatletter\AtBeginDocument{\renewcommand\@biblabel[1]{}\let\@BIBLABEL\@biblabel}\makeatother
 \providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setlength{\emergencystretch}{3em}
 \sloppy
 
 \title{Does the text of an agent skill predict its replication on GitHub? A predictive study on GitSkills\footnote{Data and code: \protect\url{https://github.com/podorize/skillreuse}.}}
-\author{Pedro Odorize\inst{1}, Rafael Borges Allgayer\inst{1}}
-\address{Institute of Informatics -- Federal University of Rio Grande do Sul (UFRGS)\\
-  Porto Alegre, RS -- Brazil
-  \email{pedro.odorize@inf.ufrgs.br, rafael.allgayer12@gmail.com}
+\author{Pedro de Paula Odorize\inst{1}, Rafael Borges Allgayer\inst{1}}
+\address{Instituto de Informática -- Universidade Federal do Rio Grande do Sul (UFRGS)\\
+  Porto Alegre, RS -- Brasil
 }
 
 \begin{document}
