@@ -22,6 +22,12 @@ This supplement accompanies the CMP263 paper *"Does the text of an agent skill p
 
 8. "Help draft and revise the text of the paper for clarity and cohesion."
 
+## Potential observed
+
+- **Checking the paper against the results.** The assistant helped write tests and a notebook that recompute every number of the paper from the result files. This is how the mistakes listed in the next section were found.
+- **Reviewing changes before merging them.** In one review, the assistant found regular expressions in a configuration file that would have silently changed the text attributes, before the change reached the main branch.
+- **Quick diagnostics.** Once asked to test an explanation, the assistant ran small experiments, such as the one that showed why k-nearest neighbors did poorly in the spot-check.
+
 ## Limitations identified
 
 - **Wrong numbers in the text.** We compared every number of the paper with the result files, using automated tests and the Colab notebook. This found mistakes in sentences written by us or with the assistant: a percentage over the wrong denominator (11.7% of the dated copies, when it is 13.0%; we removed that paragraph), a rounding error (5.8% instead of 5.7%), a count that mixed text and repository columns (22 instead of 21), and a claim that the SHAP and permutation rankings share their top five attributes (they share four). No number is accepted without being recomputed.
