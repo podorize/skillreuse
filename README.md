@@ -12,7 +12,7 @@ Datamos pela API do GitHub as cópias de 150.000 skills e marcamos como copiada 
 
 ## Como reproduzir
 
-**Comece pelo Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab/badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb). Abra o notebook e execute todas as células; não é preciso instalar nada, e leva alguns minutos. Ele segue o artigo seção por seção, recalcula os números a partir dos dados publicados, aplica os modelos treinados ao conjunto de teste e termina com um placar que compara cada número com o artigo.
+**Comece pelo Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab/badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb). Abra o notebook e execute as células enquanto lê o artigo. Ele acompanha as seções do texto, mostra o código da análise e recalcula os resultados a partir dos dados derivados publicados, incluindo o treino e a avaliação no conjunto de teste. A coleta original pela API do GitHub está documentada separadamente. As etapas de seleção e interpretação dos modelos podem levar vários minutos; o tempo total depende do ambiente do Colab.
 
 Para reproduzir no seu computador (Python 3.12 e [uv](https://docs.astral.sh/uv/)), clone o repositório, rode `uv sync` e escolha um dos quatro níveis. Cada nível é um único comando; os tempos foram medidos num notebook com 8 GB de memória.
 
