@@ -26,7 +26,8 @@ SECTIONS = (
 APPENDICES = ("07_appendix_reproducibility", "08_appendix_ai_usage")
 FIGURE_DIR = PAPER / "figures"
 # figuras pequenas nao precisam da largura toda (evita estouro de pagina)
-FIGURE_WIDTH: dict[str, float] = {"eda_univariate.png": 0.62, "eda_attributes.png": 0.95,
+FIGURE_WIDTH: dict[str, float] = {"diagram_drawio.png": 0.8,
+                                  "eda_univariate.png": 0.62, "eda_attributes.png": 0.95,
                                    "shap.png": 0.9, "importance.png": 0.85,
                                    "eda.png": 0.95, "model_selection.png": 0.85,
                                    "results.png": 0.95}
