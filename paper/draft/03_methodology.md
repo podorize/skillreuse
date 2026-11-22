@@ -46,7 +46,7 @@ The models must work for developers they have never seen. Skills by the same aut
 
 ## 3.5 Exploratory analysis and preprocessing
 
-The exploratory analysis used only the development set, so that nothing from the test set could influence our choices. We studied the target (how many skills are copied, and how fast) and each attribute: its type and distribution, missing values, outliers, inconsistencies, its correlation with the other attributes, and how the share of copied skills changes across its quartiles (four groups of equal size). Each quartile holds about 12,000 skills, about 930 of them copied, so the shares are stable.
+The exploratory analysis used only the development set, so that nothing from the test set could influence our choices. We studied the target (how many skills are copied, and how fast) and each attribute: its type and distribution, missing values, outliers, inconsistencies, its correlation with the other attributes, and how the share of copied skills changes across its quartiles (four groups of equal size). Each quartile holds about 12,000 skills, and on average about 930 of them are copied, so the shares are stable.
 
 Four rules, written in advance, turned these findings into preprocessing steps (Table 2). Constant columns carry no information and are removed. Counts that are very skewed — most skills have no links or code, while a few have thousands — would let a handful of extreme skills dominate linear and distance-based models, so columns with skewness above 2 are log-transformed for those models; the extreme values are kept, because they are real skills, not errors. Near-duplicate columns (Spearman correlation above 0.95) make the coefficients of linear models unstable, so those models keep only one column of each pair. Impossible values are treated as missing. We did not resample the data to correct the imbalance between copied and other skills: class weights do the same job inside the learning algorithm and were tuned as a hyperparameter. All steps are fitted inside each training fold, in scikit-learn pipelines \cite{pedregosa2011scikit}, so that no information from the validation data leaks into training.
 
@@ -55,7 +55,7 @@ Four rules, written in advance, turned these findings into preprocessing steps (
 | Missing values | Median imputation with indicator (numeric), constant category (categorical); only 0.02% missing |
 | Categorical encoding | One-hot, categories with fewer than ten occurrences grouped; long tails of languages and licenses |
 | Normalization | Standardization for scale-sensitive models, none for trees; very different scales |
-| Outliers | Kept, with log transform for scale-sensitive models; 22 columns with skewness above 2 (Figure 2a) |
+| Outliers | Kept, with log transform for scale-sensitive models; 21 text columns with skewness above 2 (Figure 2a) |
 | Discretization | Not used; trees choose their own cut points, and bins would discard information |
 | Class imbalance | No resampling, class weight tuned, threshold-free main metric; 7.7% of skills copied |
 | Dimensionality | One column of each near-duplicate pair removed for scale-sensitive models; eight pairs above 0.95 (Figure 2b) |

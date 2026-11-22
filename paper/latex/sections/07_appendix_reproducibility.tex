@@ -40,26 +40,16 @@ on a laptop with 8 GB of memory):
   close but not identical, as repositories have changed.
 \end{enumerate}
 
-\textbf{Collection details.} Of the 223,261 copies outside aggregators,
-88.9\% were dated; the others were in repositories deleted or made
-private after the snapshot (9.4\%), had lost the file (0.7\%), failed
-after three retries (0.4\%), had an arrival after the snapshot (0.3\%)
-or no longer contained the exact content (0.2\%). For 11.7\% of the
-dated copies the first commit predated the repository (inherited
-history), and the arrival rule moved them to the repository's creation.
-Of the 84,995 copies in aggregators, collected for the robustness
-analysis, 86.3\% were dated.
-
-\textbf{Additional robustness checks.} Two checks complement Section
-4.4, both on the holdout with the frozen text model. Restricting the
-holdout to the 19,862 skills whose copies could all be dated, since an
-undated copy could hide the true origin or a copy within the window,
-gives an AUC of 0.626 (95\% CI {[}0.600; 0.649{]}); these skills are
-copied less often (5.5\%), since skills with more copies more often lost
-one to a deleted repository. Restricting it to the 15,154 skills
-(73.7\%) whose front-matter name never appears in the development set,
-to rule out the recognition of variants of known skills, gives 0.622
-(95\% CI {[}0.593; 0.651{]}).
+\textbf{Additional robustness checks.} Two further checks, both on the
+holdout with the frozen text model. Restricting the holdout to the
+19,862 skills whose copies could all be dated, since an undated copy
+could hide the true origin or a copy within the window, gives an AUC of
+0.626 (95\% CI {[}0.600; 0.649{]}); these skills are copied less often
+(5.5\%), since skills with more copies more often lost one to a deleted
+repository. Restricting it to the 15,154 skills (73.7\%) whose
+front-matter name never appears in the development set, to rule out the
+recognition of variants of known skills, gives 0.622 (95\% CI {[}0.593;
+0.651{]}).
 
 \textbf{Safeguards.} The analysis plan was written down before any model
 was trained (\texttt{paper/protocol.md}). The final models were saved

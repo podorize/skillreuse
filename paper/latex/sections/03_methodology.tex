@@ -169,8 +169,8 @@ from the test set could influence our choices. We studied the target
 and distribution, missing values, outliers, inconsistencies, its
 correlation with the other attributes, and how the share of copied
 skills changes across its quartiles (four groups of equal size). Each
-quartile holds about 12,000 skills, about 930 of them copied, so the
-shares are stable.
+quartile holds about 12,000 skills, and on average about 930 of them are
+copied, so the shares are stable.
 
 Four rules, written in advance, turned these findings into preprocessing
 steps (Table 2). Constant columns carry no information and are removed.
@@ -217,7 +217,7 @@ Categorical encoding & One-hot, categories with fewer than ten
 occurrences grouped; long tails of languages and licenses \\
 Normalization & Standardization for scale-sensitive models, none for
 trees; very different scales \\
-Outliers & Kept, with log transform for scale-sensitive models; 22
+Outliers & Kept, with log transform for scale-sensitive models; 21 text
 columns with skewness above 2 (Figure 2a) \\
 Discretization & Not used; trees choose their own cut points, and bins
 would discard information \\
