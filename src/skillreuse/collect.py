@@ -41,28 +41,30 @@ from pathlib import Path
 
 import pandas as pd
 
+from skillreuse.config import CONFIG
 from skillreuse.download import DEFAULT_ARTIFACTS, sql_path
 
-# A repository with at least this many distinct skills is an aggregator.
-AGGREGATOR_MIN_SKILLS = 100
-# Seed of the sample: skills are sorted by md5(hash + ':' + seed) and the first are kept.
-SAMPLE_SEED = "20261121"
-SAMPLE_SIZE = 150_000
-# Start of the GitSkills crawl. A skill is eligible only if its whole window ends before it.
-SNAPSHOT = pd.Timestamp("2026-07-09", tz="UTC")
-# End of the GitSkills crawl (20 July). A copy seen in the snapshot cannot have arrived later.
-CRAWL_END = pd.Timestamp("2026-07-21", tz="UTC")
-STAR_CAP = 10_000  # stars are counted up to this number
-MAX_COMMITS = 500  # most recent commits read in the history of one file
-HISTORY_PAGE = 20  # commits per GraphQL page
+# The sample (config/config.yaml, "sample"): a repository with at least this many distinct
+# skills is an aggregator; skills are sorted by md5(hash + ':' + seed) and the first are kept.
+AGGREGATOR_MIN_SKILLS = CONFIG["sample"]["aggregator_min_skills"]
+SAMPLE_SEED = CONFIG["sample"]["seed"]
+SAMPLE_SIZE = CONFIG["sample"]["size"]
 
-COLLECTION = Path("data/derived/collection")
-OCCURRENCES = COLLECTION / "sample_occurrences.parquet"
-DATES_DIR = COLLECTION / "dates_parts"
-DATES = COLLECTION / "dates.parquet"
-STARS = COLLECTION / "origin_stars.parquet"
-MANIFEST = Path("results/phase1/manifest.json")
-API = "https://api.github.com/graphql"
+# The dating ("dating"): start and end of the GitSkills crawl, and the limits of the API.
+SNAPSHOT = pd.Timestamp(CONFIG["dating"]["snapshot"], tz="UTC")
+CRAWL_END = pd.Timestamp(CONFIG["dating"]["crawl_end"], tz="UTC")
+STAR_CAP = CONFIG["dating"]["star_cap"]
+MAX_COMMITS = CONFIG["dating"]["max_commits"]
+HISTORY_PAGE = CONFIG["dating"]["history_page"]
+API = CONFIG["dating"]["api"]
+
+# Files of the collection ("paths").
+COLLECTION = Path(CONFIG["paths"]["collection"])
+OCCURRENCES = Path(CONFIG["paths"]["occurrences"])
+DATES_DIR = Path(CONFIG["paths"]["dates_parts"])
+DATES = Path(CONFIG["paths"]["dates"])
+STARS = Path(CONFIG["paths"]["stars"])
+MANIFEST = Path(CONFIG["paths"]["collection_manifest"])
 
 
 # ---------------------------------------------------------------------------
@@ -70,42 +72,48 @@ API = "https://api.github.com/graphql"
 # ---------------------------------------------------------------------------
 
 def build_sample() -> tuple[pd.DataFrame, dict[str, int]]:
-    """Choose the sample and list every occurrence of its skills.
+    """Choose the sample and list every copy of its skills.
 
-    Returns the occurrences (one row per file in a repository) and a dictionary with the
-    counts written to the phase 1 manifest. The work is done in SQL (DuckDB) because the
-    GitSkills table is too large for memory.
+    Returns the copies (one row per file in a repository) and the counts written to the
+    phase 1 manifest. The work is done in SQL (DuckDB) because the GitSkills table does not
+    fit in memory.
     """
     import duckdb  # noqa: PLC0415
 
     con = duckdb.connect()
     con.sql("pragma threads=4; pragma memory_limit='3GB'")
-    # o: every file of GitSkills (h = hash of the content, r = repository)
-    con.sql(f"""create table o as select file_sha as h, repo_full_name as r,
-                split_part(repo_full_name, '/', 1) as owner, path, filename, dedup_primary
+    # every SKILL.md file of GitSkills: the hash of its content, its repository and owner
+    con.sql(f"""create table copies as
+                select file_sha as h, repo_full_name as r,
+                       split_part(repo_full_name, '/', 1) as owner, path, filename, dedup_primary
                 from read_parquet('{sql_path(DEFAULT_ARTIFACTS)}')""")
-    # rs: number of distinct skills in each repository (>= 100 means aggregator)
-    con.sql("create table rs as select r, count(distinct h) as repo_skills from o group by r")
-    # pop: the population, skills found in at least one repository that is not an aggregator
-    con.sql(f"""create table pop as select h from o join rs using (r)
+    # number of distinct skills in each repository: 100 or more means an aggregator
+    con.sql("""create table repo_sizes as
+               select r, count(distinct h) as repo_skills from copies group by r""")
+    # the population: skills with at least one copy outside aggregators
+    con.sql(f"""create table population as
+                select h from copies join repo_sizes using (r)
                 group by h having bool_or(repo_skills < {AGGREGATOR_MIN_SKILLS})""")
-    # sample: the first SAMPLE_SIZE skills in a pseudo-random but reproducible order
-    con.sql(f"""create table sample as select h from pop
+    # the sample: the first SAMPLE_SIZE skills in a fixed pseudo-random order
+    con.sql(f"""create table sample as
+                select h from population
                 order by md5(h || ':{SAMPLE_SEED}'), h limit {SAMPLE_SIZE}""")
-    # occurrences: every copy of the sampled skills, with a flag for aggregators
-    occ = con.sql(f"""
-        select o.h as content_hash, o.r as repo_full_name, o.owner, o.path, o.filename,
-               o.dedup_primary, rs.repo_skills,
+    sample_copies = con.sql(f"""
+        select c.h as content_hash, c.r as repo_full_name, c.owner, c.path, c.filename,
+               c.dedup_primary, rs.repo_skills,
                rs.repo_skills >= {AGGREGATOR_MIN_SKILLS} as aggregator
-        from o join rs using (r) where o.h in (select h from sample)
-        order by o.h, o.r, o.path
+        from copies c join repo_sizes rs using (r)
+        where c.h in (select h from sample)
+        order by c.h, c.r, c.path
     """).df()
-    counts = {"population_contents": int(con.sql("select count(*) from pop").fetchone()[0]),
-              "sample_contents": int(occ["content_hash"].nunique()),
-              "occurrences": len(occ), "occurrences_outside_aggregators":
-              int((~occ["aggregator"]).sum()), "occurrences_in_aggregators":
-              int(occ["aggregator"].sum())}
-    return occ, counts
+    counts = {
+        "population_contents": int(con.sql("select count(*) from population").fetchone()[0]),
+        "sample_contents": int(sample_copies["content_hash"].nunique()),
+        "occurrences": len(sample_copies),
+        "occurrences_outside_aggregators": int((~sample_copies["aggregator"]).sum()),
+        "occurrences_in_aggregators": int(sample_copies["aggregator"].sum()),
+    }
+    return sample_copies, counts
 
 
 # ---------------------------------------------------------------------------
@@ -177,76 +185,90 @@ HISTORY = """createdAt defaultBranchRef {{ target {{ ... on Commit {{
 # Step 2: dates of the copies
 # ---------------------------------------------------------------------------
 
-def date_batch(client: Client, rows: list[dict]) -> list[dict]:
-    """Date a batch of occurrences: when did each copy first have the content of the skill?
+def history_query(rows: list[dict], positions: list[int], progress: dict) -> tuple[str, dict]:
+    """One GraphQL query that reads the next page of history of several files at once.
 
-    For every occurrence, read the history of the file on the default branch (newest commit
-    first, ``HISTORY_PAGE`` commits per query, up to ``MAX_COMMITS``) and keep the earliest
-    commit whose file has exactly the hash of the skill. Each occurrence ends with a status:
-
-    * ``datada``: dated (a commit with the hash was found);
-    * ``repositorio_inacessivel``: the repository is gone or private;
-    * ``arquivo_ausente``: the repository exists but the file has no history;
-    * ``hash_nao_encontrado``: the file has history but no commit with this exact content;
-    * ``falha_de_coleta``: the query failed after all retries.
-
-    These Portuguese codes are stored in the data files, so they are kept as they are.
+    Each file gets an alias ``f{i}`` (its position in the batch) and its own variables:
+    owner ``o{i}``, repository name ``n{i}``, path ``p{i}`` and page cursor ``c{i}``.
     """
-    # Reading state of each occurrence of the batch.
-    state = {i: {"nodes": [], "cursor": None, "status": None, "created": None, "commits": None}
-             for i in range(len(rows))}
-    pending = list(state)  # occurrences that still have more pages to read
+    declarations, parts, variables = [], [], {}
+    for i in positions:
+        owner, name = rows[i]["repo_full_name"].split("/", 1)
+        variables.update({f"o{i}": owner, f"n{i}": name, f"p{i}": rows[i]["path"],
+                          f"c{i}": progress[i]["cursor"]})
+        declarations += [f"$o{i}: String!", f"$n{i}: String!", f"$p{i}: String!", f"$c{i}: String"]
+        parts.append(f"f{i}: repository(owner: $o{i}, name: $n{i}) {{ "
+                     + HISTORY.format(page=HISTORY_PAGE, i=i) + " }")
+    query = ("query(" + ", ".join(declarations) + ") { rateLimit { cost remaining resetAt } "
+             + " ".join(parts) + " }")
+    return query, variables
+
+
+def date_batch(client: Client, rows: list[dict]) -> list[dict]:
+    """Date a batch of copies: when did each file first have the content of the skill?
+
+    For every copy, read the history of the file on the default branch, newest commit
+    first, ``HISTORY_PAGE`` commits per query and up to ``MAX_COMMITS``, and keep the
+    earliest commit whose file has exactly the hash of the skill. Each copy ends with a
+    status, stored in Portuguese in the data files:
+
+    * ``datada``: dated, a commit with the hash was found;
+    * ``repositorio_inacessivel``: the repository is gone or private;
+    * ``arquivo_ausente``: the file has no history;
+    * ``hash_nao_encontrado``: the file has history but never this exact content;
+    * ``falha_de_coleta``: the query failed after all retries.
+    """
+    progress = {i: {"commits": [], "cursor": None, "status": None, "created": None, "total": None}
+                for i in range(len(rows))}
+    to_read = list(progress)  # copies whose history may have more pages
     for _page in range(MAX_COMMITS // HISTORY_PAGE):
-        if not pending:
+        if not to_read:
             break
-        # Build one query with an alias (f0, f1, ...) for each pending occurrence.
-        decl, parts, var = [], [], {}
-        for i in pending:
-            owner, name = rows[i]["repo_full_name"].split("/", 1)
-            var.update({f"o{i}": owner, f"n{i}": name, f"p{i}": rows[i]["path"],
-                        f"c{i}": state[i]["cursor"]})
-            decl += [f"$o{i}: String!", f"$n{i}: String!", f"$p{i}: String!", f"$c{i}: String"]
-            parts.append(f"f{i}: repository(owner: $o{i}, name: $n{i}) {{ "
-                         + HISTORY.format(page=HISTORY_PAGE, i=i) + " }")
-        q = "query(" + ", ".join(decl) + ") { rateLimit { cost remaining resetAt } " \
-            + " ".join(parts) + " }"
-        res = client.query(q, var)
-        data = res.get("data")
-        nxt = []  # occurrences that need another page
-        for i in pending:
+        query, variables = history_query(rows, to_read, progress)
+        data = client.query(query, variables).get("data")
+        still_to_read = []
+        for i in to_read:
+            copy = progress[i]
             if data is None:
-                state[i]["status"] = "falha_de_coleta"
+                copy["status"] = "falha_de_coleta"
                 continue
             repo = data.get(f"f{i}")
             if repo is None:
-                state[i]["status"] = "repositorio_inacessivel"
+                copy["status"] = "repositorio_inacessivel"
                 continue
-            state[i]["created"] = repo["createdAt"]
-            hist = ((repo.get("defaultBranchRef") or {}).get("target") or {}).get("history")
-            if not hist:
-                state[i]["status"] = "arquivo_ausente"
+            copy["created"] = repo["createdAt"]
+            history = ((repo.get("defaultBranchRef") or {}).get("target") or {}).get("history")
+            if not history:
+                copy["status"] = "arquivo_ausente"
                 continue
-            state[i]["commits"] = hist["totalCount"]
-            state[i]["nodes"] += hist["nodes"]
-            if hist["pageInfo"]["hasNextPage"]:
-                state[i]["cursor"] = hist["pageInfo"]["endCursor"]
-                nxt.append(i)
-        pending = nxt
-    # Decide the final status and the date of each occurrence.
-    out = []
-    for i, r in enumerate(rows):
-        s = state[i]
-        # Dates of the commits in which the file has exactly the hash of the skill.
-        match = [n["committedDate"] for n in s["nodes"]
-                 if (n.get("file") or {}).get("oid") == r["content_hash"]]
-        status = s["status"] or ("datada" if match else
-                                 "arquivo_ausente" if not s["nodes"] else "hash_nao_encontrado")
-        out.append({"content_hash": r["content_hash"], "repo_full_name": r["repo_full_name"],
-                    "path": r["path"], "status": status, "repo_created_at": s["created"],
-                    # ISO 8601 dates sort correctly as text, so min() gives the earliest.
-                    "first_hash_commit_at": min(match) if match else None,
-                    "commits_on_path": s["commits"], "commits_read": len(s["nodes"])})
-    return out
+            copy["total"] = history["totalCount"]
+            copy["commits"] += history["nodes"]
+            if history["pageInfo"]["hasNextPage"]:
+                copy["cursor"] = history["pageInfo"]["endCursor"]
+                still_to_read.append(i)
+        to_read = still_to_read
+
+    results = []
+    for i, row in enumerate(rows):
+        copy = progress[i]
+        # dates of the commits in which the file has exactly the content of the skill
+        matching = [c["committedDate"] for c in copy["commits"]
+                    if (c.get("file") or {}).get("oid") == row["content_hash"]]
+        if copy["status"]:
+            status = copy["status"]
+        elif matching:
+            status = "datada"
+        elif not copy["commits"]:
+            status = "arquivo_ausente"
+        else:
+            status = "hash_nao_encontrado"
+        results.append({"content_hash": row["content_hash"],
+                        "repo_full_name": row["repo_full_name"], "path": row["path"],
+                        "status": status, "repo_created_at": copy["created"],
+                        # ISO 8601 dates sort correctly as text, so min() is the earliest
+                        "first_hash_commit_at": min(matching) if matching else None,
+                        "commits_on_path": copy["total"], "commits_read": len(copy["commits"])})
+    return results
 
 
 def collect_dates(scope: str, batch: int, workers: int, limit: int | None = None) -> None:

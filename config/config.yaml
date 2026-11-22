@@ -1,0 +1,193 @@
+# Settings of the SkillReuse study, read by every module of src/skillreuse (through
+# skillreuse/config.py). The numbers of the paper were produced with these values: changing
+# any of them changes the results.
+#
+# Paths are relative to the root of the repository. Regular expressions are written in
+# single quotes, so a backslash is kept as it is ('\d' is the regex \d); a single quote
+# inside them is written twice ('').
+
+# --- GitSkills (download.py) ----------------------------------------------------------
+dataset:
+  id: mvaccargiu/gitskills
+  # Fixed revision of the dataset. Changing it would change every number of the paper.
+  revision: ebab17454a7c236f8f26b183567f1a126f42e3f8
+  tables: [artifacts, repos]
+  folder: data/raw/gitskills-full
+  manifest: data/raw/gitskills-full/download_manifest.json
+  # Glob patterns of the downloaded tables, read by DuckDB in collect.py and cohort.py.
+  artifacts: data/raw/gitskills-full/artifacts/*.parquet
+  repos: data/raw/gitskills-full/repos/*.parquet
+  # The download is refused if it would leave less free disk space than this (GiB).
+  reserve_gib: 8
+
+# --- Sample and dating of the copies (collect.py, paper section 3.1 and 3.2) -----------
+sample:
+  # A repository with at least this many distinct skills is an aggregator.
+  aggregator_min_skills: 100
+  # Skills are sorted by md5(hash + ':' + seed) and the first ones are kept.
+  seed: "20261121"
+  size: 150000
+
+dating:
+  # Start of the GitSkills crawl. A skill is eligible only if its whole window ends before it.
+  snapshot: "2026-07-09"
+  # End of the GitSkills crawl (20 July). A copy seen in the snapshot cannot have arrived later.
+  crawl_end: "2026-07-21"
+  max_commits: 500     # most recent commits read in the history of one file
+  history_page: 20     # commits per GraphQL page
+  star_cap: 10000      # stars are counted up to this number
+  api: https://api.github.com/graphql
+
+# --- Files written and read by the study ----------------------------------------------
+paths:
+  collection: data/derived/collection
+  occurrences: data/derived/collection/sample_occurrences.parquet
+  dates_parts: data/derived/collection/dates_parts
+  dates: data/derived/collection/dates.parquet
+  stars: data/derived/collection/origin_stars.parquet
+  collection_manifest: results/phase1/manifest.json
+  study_table: data/derived/study_table.parquet
+  aggregator_variants: data/derived/aggregator_variants.parquet
+  origin_popularity: data/derived/origin_popularity.parquet
+  table_manifest: results/phase2/manifest.json
+  results: results      # one folder per phase: results/phase3, results/phase4, ...
+  models: models        # frozen models (phase 5)
+
+# --- Table of the study and split by author (cohort.py, sections 3.2 to 3.4) ----------
+cohort:
+  split_seed: "20261122"   # seed of the author split
+  holdout_share: 0.30      # share of the authors that go to the holdout
+  cap_per_author: 50       # at most this many skills per author
+  # Aggregator limit of each variant: "" is the main analysis (100 skills), "_agg500" uses
+  # 500 skills and "_aggnone" does not exclude any aggregator (null = no limit).
+  aggregator_variants:
+    "": 100
+    "_agg500": 500
+    "_aggnone": null
+  # Attributes of the origin repository taken from the path of the file. Each one is 1
+  # when the path has a folder of that kind and 0 otherwise. p_tool_dir marks folders of
+  # other agent tools (.codex, .cursor, ...): a skill kept there was probably written for
+  # that tool or installed by it.
+  folder_patterns:
+    p_template: '(?:^|/)(?:templates?|examples?|samples?|demos?|fixtures?|tests?|testdata)(?:/|$)'
+    p_plugin: '(?:^|/)(?:plugins?|extensions?|marketplace|packs?)(?:/|$)'
+    p_vendor: '(?:^|/)(?:vendor|node_modules|third_party|site-packages|\.venv)(?:/|$)'
+    p_docs: '(?:^|/)(?:docs?|documentation)(?:/|$)'
+    p_pkg: '(?:^|/)(?:packages|apps|src|lib)(?:/|$)'
+    p_tool_dir: '(?:^|/)\.(?:codex|agents|cursor|gemini|github|opencode|windsurf|kiro|roo)(?:/|$)'
+    p_claude_dir: '(?:^|/)\.claude(?:/|$)'
+
+# --- Text attributes (features.py, section 3.3) ---------------------------------------
+text_patterns:
+  # A word: letters and digits, with hyphens or apostrophes inside ("don't", "built-in").
+  # Underscores are not part of a word.
+  word: '\b[^\W_]+(?:[-''][^\W_]+)*\b'
+  # The end of a sentence: one or more of . ! ? followed by a space or the end of the text.
+  sentence: '[.!?]+(?:\s|$)'
+  # A Markdown heading: 1 to 6 # at the start of a line, a space and some text.
+  heading: '^(#{1,6})\s+\S'
+  # An item of a bulleted list (-, + or *) or of a numbered list (1. or 1)).
+  unordered_list: '^\s*[-+*]\s+\S'
+  ordered_list: '^\s*\d+[.)]\s+\S'
+  # The opening or closing line of a code block (``` or ~~~).
+  fence: '^\s*(```|~~~)'
+  # Inline code between single backticks, on one line, such as `git status`. Double
+  # backticks are ignored.
+  inline_code: '(?<!`)`[^`\n]+`(?!`)'
+  # A Markdown link [text](url) or image ![text](url).
+  markdown_link: '!?\[[^\]]*\]\([^)]+\)'
+  url: 'https?://[^\s)>\]]+'
+  # A quoted line (starting with >).
+  blockquote: '^\s*>\s?'
+  # A task-list checkbox: - [ ] or - [x].
+  checkbox: '^\s*[-+*]\s+\[[ xX]\]\s+'
+  # A row of a Markdown table: a line that starts and ends with |. The separator line
+  # |---|---| also matches, so a table with a header has one more row than it shows.
+  table_row: '^\s*\|.*\|\s*$'
+  # A shell prompt at the start of a line: $ followed by a command.
+  shell_prompt: '^\s*\$\s+\S'
+
+# --- Attributes used by the models (study.py, section 3.3 and Table 1) ----------------
+attributes:
+  # The 27 attributes of the text, by family. The families are also used to measure the
+  # importance of a whole group of attributes (phase 7).
+  families:
+    Size: [text_char_count, text_line_count, text_nonempty_line_count, text_word_count,
+           text_unique_word_count, text_sentence_count, body_chars]
+    Text style: [text_lexical_diversity, text_average_word_length, text_average_sentence_words]
+    Markdown structure: [markdown_heading_count, markdown_max_heading_depth,
+                         markdown_unordered_list_items, markdown_ordered_list_items,
+                         markdown_table_row_count, markdown_blockquote_count,
+                         markdown_checkbox_count]
+    Code: [markdown_fenced_code_blocks, markdown_inline_code_count, markdown_shell_prompt_count]
+    Links: [markdown_link_count, markdown_url_count]
+    Front matter: [frontmatter_valid, frontmatter_name_char_count,
+                   frontmatter_description_char_count, frontmatter_name_missing,
+                   frontmatter_description_missing]
+  # The 14 attributes of the origin repository, used only by the control model.
+  origin: [log_stars_at_t0, repo_age_days_at_t0, repo_language, repo_license, repo_is_fork,
+           path_depth, path_is_root, p_template, p_plugin, p_vendor, p_docs, p_pkg,
+           p_tool_dir, p_claude_dir]
+  categorical: [repo_language, repo_license]
+  # Deviation of protocol section 13: stars and forks at the snapshot replace the stars at T0.
+  popularity: [log_stars_snapshot, log_forks_snapshot]
+
+# --- Models and their validation (study.py, sections 3.5 and 3.6) ---------------------
+models:
+  seed: 2027               # seed of the models, the searches and the bootstrap
+  windows: [30, 60, 90]    # candidate windows W, in days
+  repeats: 3               # repetitions of the cross-validation
+  folds: 3                 # folds of each repetition
+  algorithms: [logistic, naive_bayes, knn, decision_tree, random_forest, hist_gb, mlp]
+  # Tree models need no scaling, no log and no removal of correlated columns.
+  tree_algorithms: [decision_tree, random_forest, hist_gb]
+  # Nested search: configurations tried, inner folds and parallel jobs.
+  search_iterations: 10
+  inner_folds: 3
+  parallel_jobs: 4
+  # Hyperparameters searched in phase 4 (Table 3). A list is a choice among its values;
+  # loguniform [a, b] draws on a log scale between a and b; randint [a, b] draws an
+  # integer from a to b - 1. A list inside a list is a tuple (layer sizes of the MLP).
+  search_spaces:
+    logistic:
+      C: {loguniform: [0.001, 100.0]}
+      class_weight: [null, balanced]
+    naive_bayes:
+      var_smoothing: {loguniform: [1.0e-12, 1.0e-06]}
+    knn:
+      n_neighbors: {randint: [5, 102]}
+      weights: [uniform, distance]
+      p: [1, 2]
+    decision_tree:
+      max_depth: {randint: [3, 26]}
+      min_samples_leaf: {randint: [1, 61]}
+      class_weight: [null, balanced]
+    random_forest:
+      n_estimators: [100, 200, 300]
+      max_depth: {randint: [5, 26]}
+      min_samples_leaf: {randint: [1, 31]}
+      max_features: [sqrt, 0.5]
+      class_weight: [null, balanced_subsample]
+    hist_gb:
+      learning_rate: {loguniform: [0.02, 0.2]}
+      max_iter: {randint: [100, 501]}
+      max_leaf_nodes: {randint: [8, 65]}
+      min_samples_leaf: {randint: [5, 101]}
+      l2_regularization: {loguniform: [0.001, 10.0]}
+      class_weight: [null, balanced]
+    mlp:
+      hidden_layer_sizes: [[64], [128], [64, 32]]
+      alpha: {loguniform: [1.0e-05, 0.01]}
+      learning_rate_init: {loguniform: [0.0001, 0.01]}
+      early_stopping: [true]
+
+# --- Evaluation and interpretation (study.py, sections 3.7 and 3.8) -------------------
+evaluation:
+  n_boot: 2000             # bootstrap resamples of the main result
+  n_boot_robustness: 500   # bootstrap resamples in the robustness checks
+
+interpretation:
+  rows: 20000              # skills of the holdout sample used to interpret the model
+  seed: "20261123"         # the sample takes whole authors in the order of md5(author + ':' + seed)
+  permutations: 10         # shuffles of each attribute
+  n_boot: 200              # bootstrap resamples of the permutation importance

@@ -29,40 +29,29 @@ import numpy as np
 import pandas as pd
 
 from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT, STAR_CAP, STARS
+from skillreuse.config import CONFIG
 from skillreuse.download import DEFAULT_ARTIFACTS, DEFAULT_REPOS, sql_path
 from skillreuse.features import add_engineered_features
 
-# Folders of other agent tools (.codex, .cursor, ...). A skill kept there was probably
-# written for that tool or installed by it.
-TOOL_DIRS = r"(?:^|/)\.(?:codex|agents|cursor|gemini|github|opencode|windsurf|kiro|roo)(?:/|$)"
-
 # Attributes of the origin repository taken from the path of the file. Each one is 1 when
-# the path has a folder of that kind and 0 otherwise.
-PATH_PATTERNS = {
-    "p_template": (
-        r"(?:^|/)(?:templates?|examples?|samples?|demos?|fixtures?|tests?|testdata)(?:/|$)"
-    ),
-    "p_plugin": r"(?:^|/)(?:plugins?|extensions?|marketplace|packs?)(?:/|$)",
-    "p_vendor": r"(?:^|/)(?:vendor|node_modules|third_party|site-packages|\.venv)(?:/|$)",
-    "p_docs": r"(?:^|/)(?:docs?|documentation)(?:/|$)",
-    "p_pkg": r"(?:^|/)(?:packages|apps|src|lib)(?:/|$)",
-    "p_tool_dir": TOOL_DIRS,
-    "p_claude_dir": r"(?:^|/)\.claude(?:/|$)",
-}
+# the path has a folder of that kind and 0 otherwise (config/config.yaml, "cohort").
+PATH_PATTERNS = CONFIG["cohort"]["folder_patterns"]
 
-SPLIT_SEED = "20261122"  # seed of the author split
-HOLDOUT_SHARE = 0.30  # share of the authors that go to the holdout
-CAP_PER_AUTHOR = 50  # at most this many skills per author
-TABLE = Path("data/derived/study_table.parquet")
-VARIANTS_TABLE = Path("data/derived/aggregator_variants.parquet")
-POPULARITY_TABLE = Path("data/derived/origin_popularity.parquet")
-MANIFEST = Path("results/phase2/manifest.json")
+# The split by author: its seed, the share of authors in the holdout and the cap of skills.
+SPLIT_SEED = CONFIG["cohort"]["split_seed"]
+HOLDOUT_SHARE = CONFIG["cohort"]["holdout_share"]
+CAP_PER_AUTHOR = CONFIG["cohort"]["cap_per_author"]
 # Aggregator limit of each variant: "" is the main analysis (100 skills), "_agg500" uses
 # 500 skills and "_aggnone" does not exclude any aggregator (None = no limit).
-VARIANTS = {"": 100, "_agg500": 500, "_aggnone": None}
+VARIANTS = CONFIG["cohort"]["aggregator_variants"]
+
+TABLE = Path(CONFIG["paths"]["study_table"])
+VARIANTS_TABLE = Path(CONFIG["paths"]["aggregator_variants"])
+POPULARITY_TABLE = Path(CONFIG["paths"]["origin_popularity"])
+MANIFEST = Path(CONFIG["paths"]["table_manifest"])
 
 
-def _band(n: pd.Series) -> pd.Series:
+def size_band(n: pd.Series) -> pd.Series:
     """Size band of an author, from the number of skills: 1, 2-3, 4-10, 11-50 or 51+."""
     return pd.cut(n, [0, 1, 3, 10, 50, np.inf], labels=["1", "2-3", "4-10", "11-50", "51+"])
 
@@ -70,34 +59,38 @@ def _band(n: pd.Series) -> pd.Series:
 def timing(dates: pd.DataFrame, limit: int | None) -> pd.DataFrame:
     """T0, origin, author and time to first copy of each skill.
 
-    ``dates`` has one row per copy. ``limit`` is the aggregator limit: copies in
-    repositories with ``limit`` or more skills are ignored (``None`` keeps all of them).
-    Columns of the result:
+    ``dates`` has one row per copy. Copies in repositories with ``limit`` or more skills
+    (aggregators) are left out; ``None`` keeps all of them. For each skill:
 
-    * ``t0``, ``origin_repo``, ``origin_path``, ``author``, ``origin_repo_created_at``:
-      the copy that arrived first. Ties are broken by repository name and then by path, so
-      the result is always the same;
-    * ``first_copy_lag_days``: days from T0 until the first copy by an owner other than
-      the author (empty if there is none). Copies by the author do not count;
-    * ``all_copies_dated``: True if every copy outside aggregators could be dated.
+    * the dated copy that arrived first is the origin; its arrival is T0 and its owner is the
+      author. Ties are broken by repository name and then by path;
+    * ``first_copy_lag_days`` is the number of days from T0 to the first copy by another
+      owner (empty if there is none). Copies by the author do not count;
+    * ``all_copies_dated`` is True if every copy could be dated.
     """
-    d = dates if limit is None else dates[dates["repo_skills"] < limit]
-    dated = d[d["arrival"].notna()].sort_values(["content_hash", "arrival", "repo_full_name",
-                                                 "path"])
-    first = dated.drop_duplicates("content_hash", keep="first")
-    out = first[["content_hash", "arrival", "repo_full_name", "path", "owner",
-                 "repo_created_at"]].rename(columns={
-                     "arrival": "t0", "repo_full_name": "origin_repo", "path": "origin_path",
-                     "owner": "author", "repo_created_at": "origin_repo_created_at"})
-    # Copies by other owners, with the author and T0 of their skill.
-    other = dated.merge(out[["content_hash", "author", "t0"]], on="content_hash")
-    other = other[other["owner"] != other["author"]]
-    lag = (other.groupby("content_hash")["arrival"].min()
-           - other.groupby("content_hash")["t0"].first()).dt.total_seconds() / 86400
-    out["first_copy_lag_days"] = out["content_hash"].map(lag)
-    complete = d.groupby("content_hash")["arrival"].apply(lambda s: bool(s.notna().all()))
-    out["all_copies_dated"] = out["content_hash"].map(complete)
-    return out
+    copies = dates if limit is None else dates[dates["repo_skills"] < limit]
+    dated = copies[copies["arrival"].notna()].sort_values(
+        ["content_hash", "arrival", "repo_full_name", "path"])
+
+    # the first dated copy of each skill is its origin
+    origin = dated.drop_duplicates("content_hash", keep="first")
+    result = origin[["content_hash", "arrival", "repo_full_name", "path", "owner",
+                     "repo_created_at"]].rename(columns={
+        "arrival": "t0", "repo_full_name": "origin_repo", "path": "origin_path",
+        "owner": "author", "repo_created_at": "origin_repo_created_at"})
+
+    # days from T0 to the first copy by an owner other than the author
+    others = dated.merge(result[["content_hash", "author", "t0"]], on="content_hash")
+    others = others[others["owner"] != others["author"]]
+    first_other_copy = others.groupby("content_hash")["arrival"].min()
+    t0 = others.groupby("content_hash")["t0"].first()
+    lag_days = (first_other_copy - t0).dt.total_seconds() / 86400
+    result["first_copy_lag_days"] = result["content_hash"].map(lag_days)
+
+    every_copy_dated = copies.groupby("content_hash")["arrival"].apply(
+        lambda arrivals: bool(arrivals.notna().all()))
+    result["all_copies_dated"] = result["content_hash"].map(every_copy_dated)
+    return result
 
 
 def text_features(hashes: pd.Series) -> pd.DataFrame:
@@ -170,21 +163,23 @@ def split_authors(t: pd.DataFrame) -> pd.Series:
     """Choose the authors of the holdout: 30% of the authors of each size band (section 4).
 
     The split is by author: all skills of an author go to the same side, so the model is
-    tested on developers it has never seen. Inside each band, authors are ordered by
-    ``md5(author + ':' + seed)`` and the first 30% go to the holdout. Doing this band by
-    band gives both sides the same mix of small and large accounts.
+    tested on developers it has never seen. Inside each band (1, 2-3, 4-10, 11-50 skills),
+    authors are ordered by ``md5(author + ':' + seed)`` and the first 30% go to the holdout,
+    which gives both sides the same mix of small and large accounts.
 
-    Returns a table indexed by author with ``True`` for the holdout authors.
+    Returns a series indexed by author, True for the holdout authors.
     """
-    sizes = t.groupby("author").size()
-    a = pd.DataFrame({"author": sizes.index, "n": sizes.to_numpy()})
-    a["band"] = _band(a["n"]).astype(str)
-    a["h"] = [hashlib.md5(f"{x}:{SPLIT_SEED}".encode()).hexdigest() for x in a["author"]]
-    a = a.sort_values(["band", "h", "author"])
-    a["rank"] = a.groupby("band").cumcount() + 1  # position of the author inside its band
-    a["nb"] = a.groupby("band")["author"].transform("size")  # number of authors in the band
-    a["holdout"] = a["rank"] <= (HOLDOUT_SHARE * a["nb"]).round()
-    return a.set_index("author")["holdout"]
+    skills_per_author = t.groupby("author").size()
+    authors = pd.DataFrame({"author": skills_per_author.index, "n": skills_per_author.to_numpy()})
+    authors["band"] = size_band(authors["n"]).astype(str)
+    authors["hash"] = [hashlib.md5(f"{author}:{SPLIT_SEED}".encode()).hexdigest()
+                       for author in authors["author"]]
+    authors = authors.sort_values(["band", "hash", "author"])
+    authors["position_in_band"] = authors.groupby("band").cumcount() + 1
+    authors["authors_in_band"] = authors.groupby("band")["author"].transform("size")
+    holdout_size = (HOLDOUT_SHARE * authors["authors_in_band"]).round()
+    authors["holdout"] = authors["position_in_band"] <= holdout_size
+    return authors.set_index("author")["holdout"]
 
 
 def build() -> None:
@@ -215,7 +210,8 @@ def build() -> None:
     # Invariants of the split (section 4).
     dev, hold = table[table["split"] == "dev"], table[table["split"] == "holdout"]
     sizes = main.groupby("author").size()
-    share = pd.DataFrame({"band": _band(sizes).astype(str), "hold": holdout.reindex(sizes.index)})
+    share = pd.DataFrame({"band": size_band(sizes).astype(str),
+                          "hold": holdout.reindex(sizes.index)})
     by_band = share.groupby("band")["hold"].mean().to_dict()
     inv = {"author_overlap": len(set(dev["owner"]) & set(hold["owner"])),
            "hash_overlap": len(set(dev["content_hash"]) & set(hold["content_hash"])),

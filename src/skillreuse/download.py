@@ -23,19 +23,19 @@ from typing import Any
 
 from tqdm import tqdm
 
-DATASET_ID = "mvaccargiu/gitskills"
+from skillreuse.config import CONFIG
 
-# Fixed revision of the dataset. Changing it would change every number of the paper.
-REVISION = "ebab17454a7c236f8f26b183567f1a126f42e3f8"
-
-DEFAULT_OUTPUT = Path("data/raw/gitskills-full")
-
-DEFAULT_MANIFEST = Path("data/raw/gitskills-full/download_manifest.json")
-
-TABLES = ("artifacts", "repos")
-
+# The dataset, its fixed revision and where it is saved (config/config.yaml, "dataset").
+DATASET_ID = CONFIG["dataset"]["id"]
+REVISION = CONFIG["dataset"]["revision"]
+DEFAULT_OUTPUT = Path(CONFIG["dataset"]["folder"])
+DEFAULT_MANIFEST = Path(CONFIG["dataset"]["manifest"])
+TABLES = tuple(CONFIG["dataset"]["tables"])
 # The download is refused if it would leave less free disk space than this.
-RESERVE_BYTES = 8 * 1024**3
+RESERVE_BYTES = CONFIG["dataset"]["reserve_gib"] * 1024**3
+# Glob patterns of the downloaded tables, read by DuckDB in collect.py and cohort.py.
+DEFAULT_ARTIFACTS = Path(CONFIG["dataset"]["artifacts"])
+DEFAULT_REPOS = Path(CONFIG["dataset"]["repos"])
 
 
 @dataclass(frozen=True)
@@ -261,11 +261,6 @@ def download_main() -> None:
         f"{manifest['total_bytes'] / 1024**3:.2f} GiB."
     )
 
-
-# Glob patterns of the downloaded tables, read by DuckDB in collect.py and cohort.py.
-DEFAULT_ARTIFACTS = Path("data/raw/gitskills-full/artifacts/*.parquet")
-
-DEFAULT_REPOS = Path("data/raw/gitskills-full/repos/*.parquet")
 
 
 def sql_path(path: Path) -> str:

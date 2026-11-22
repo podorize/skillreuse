@@ -64,47 +64,32 @@ from sklearn.tree import DecisionTreeClassifier  # noqa: E402
 
 from skillreuse.cohort import POPULARITY_TABLE, TABLE, VARIANTS_TABLE  # noqa: E402
 from skillreuse.collect import DATES, OCCURRENCES, SNAPSHOT  # noqa: E402
+from skillreuse.config import CONFIG  # noqa: E402
 from skillreuse.stats import N_BOOT, boot_p, holm, nb_test, owner_bootstrap  # noqa: E402
 
 # Some models do not always converge in the iterations given; this is not an error here.
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
-OUT = Path("results")  # one folder per phase: results/phase3, results/phase4, ...
-MODELS_DIR = Path("models")  # frozen models (phase 5)
-SEED = 2027  # seed of the models, the searches and the bootstrap
-REPEATS, FOLDS = 3, 3  # repetitions and folds of the cross-validation
-WINDOWS = [30, 60, 90]  # candidate windows W, in days
+OUT = Path(CONFIG["paths"]["results"])  # one folder per phase: results/phase3, ...
+MODELS_DIR = Path(CONFIG["paths"]["models"])  # frozen models (phase 5)
+SEED = CONFIG["models"]["seed"]  # seed of the models, the searches and the bootstrap
+REPEATS = CONFIG["models"]["repeats"]  # repetitions of the cross-validation
+FOLDS = CONFIG["models"]["folds"]  # folds of each repetition
+WINDOWS = CONFIG["models"]["windows"]  # candidate windows W, in days
 
 # ---------------------------------------------------------------------------
-# Attributes (section 3)
+# Attributes (section 3; the lists are in config/config.yaml, "attributes")
 # ---------------------------------------------------------------------------
 
 # The 27 attributes of the text, by family. The families are also used to measure the
 # importance of a whole group of attributes (phase 7).
-FAMILIES = {
-    "Size": ["text_char_count", "text_line_count", "text_nonempty_line_count",
-             "text_word_count", "text_unique_word_count", "text_sentence_count", "body_chars"],
-    "Text style": ["text_lexical_diversity", "text_average_word_length",
-                   "text_average_sentence_words"],
-    "Markdown structure": ["markdown_heading_count", "markdown_max_heading_depth",
-                           "markdown_unordered_list_items", "markdown_ordered_list_items",
-                           "markdown_table_row_count", "markdown_blockquote_count",
-                           "markdown_checkbox_count"],
-    "Code": ["markdown_fenced_code_blocks", "markdown_inline_code_count",
-             "markdown_shell_prompt_count"],
-    "Links": ["markdown_link_count", "markdown_url_count"],
-    "Front matter": ["frontmatter_valid", "frontmatter_name_char_count",
-                     "frontmatter_description_char_count", "frontmatter_name_missing",
-                     "frontmatter_description_missing"],
-}
+FAMILIES = CONFIG["attributes"]["families"]
 TEXT = [c for fam in FAMILIES.values() for c in fam]
 # The 14 attributes of the origin repository, used only by the control model.
-ORIGIN = ["log_stars_at_t0", "repo_age_days_at_t0", "repo_language", "repo_license",
-          "repo_is_fork", "path_depth", "path_is_root", "p_template", "p_plugin", "p_vendor",
-          "p_docs", "p_pkg", "p_tool_dir", "p_claude_dir"]
-CATEGORICAL = {"repo_language", "repo_license"}
+ORIGIN = CONFIG["attributes"]["origin"]
+CATEGORICAL = set(CONFIG["attributes"]["categorical"])
 # Deviation of section 13: stars and forks at the snapshot replace the stars at T0.
-POPULARITY = ["log_stars_snapshot", "log_forks_snapshot"]
+POPULARITY = CONFIG["attributes"]["popularity"]
 ORIGIN_POP = [c for c in ORIGIN if c != "log_stars_at_t0"] + POPULARITY
 # Columns of each view. "size" is the simple reference model (only the size of the text).
 VIEWS = {"text": TEXT, "origin": ORIGIN, "origin+text": ORIGIN + TEXT, "size": FAMILIES["Size"],
@@ -129,15 +114,12 @@ def load_frame(split: str, w: int | None = None, variant: str = "",
     ``split`` is ``"dev"``, ``"holdout"`` or ``"all"``. ``w`` is the window in days
     (default: the window chosen in phase 3). ``variant`` selects the definition of
     aggregator: ``""`` is the main one (100 skills), ``"_agg500"`` and ``"_aggnone"`` are
-    the robustness variants.
-
-    Two columns are computed here, from T0 and the time to first copy (section 2.3):
+    the robustness variants. Two columns are computed here (section 2.3):
 
     * ``eligible``: T0 is at least ``w`` days before the snapshot, so the whole window was
-      observed. A skill that appeared later could not have been copied within the window;
+      observed;
     * ``replicated``: the target, 1 if the first copy by another developer arrived within
-      ``w`` days of T0 (a skill with no copy by another developer has no time and counts
-      as 0).
+      ``w`` days of T0, and 0 otherwise (also when no other developer copied the skill).
 
     Only eligible skills are returned, unless ``eligible_only`` is false.
     """
@@ -146,14 +128,18 @@ def load_frame(split: str, w: int | None = None, variant: str = "",
         frame = frame.merge(pd.read_parquet(POPULARITY_TABLE), on="content_hash", how="left")
     if variant:
         frame = frame.merge(pd.read_parquet(VARIANTS_TABLE), on="content_hash", how="left")
-    frame = frame[frame["split"] == split].copy() if split != "all" else frame.copy()
+    if split == "all":
+        frame = frame.copy()
+    else:
+        frame = frame[frame["split"] == split].copy()
+
     t0 = pd.to_datetime(frame[f"t0{variant}"], utc=True)
-    lag = frame[f"first_copy_lag_days{variant}"]
+    days_to_first_copy = frame[f"first_copy_lag_days{variant}"]
     if w is None and eligible_only:
         w = window()
     if w is not None:
         frame["eligible"] = t0.notna() & (t0 <= SNAPSHOT - pd.Timedelta(days=w))
-        frame["replicated"] = (lag <= w).fillna(False).astype(int)
+        frame["replicated"] = (days_to_first_copy <= w).fillna(False).astype(int)
         if eligible_only:
             frame = frame[frame["eligible"]]
     frame["t0_used"] = t0
@@ -161,21 +147,23 @@ def load_frame(split: str, w: int | None = None, variant: str = "",
 
 
 def folds(frame: pd.DataFrame, repeats: int = REPEATS, n_folds: int = FOLDS, seed: int = SEED):
-    """Generate the cross-validation partitions as ``(repeat, fold, train_idx, valid_idx)``.
+    """Cross-validation partitions, as ``(repetition, fold, train_idx, valid_idx)``.
 
-    Each repetition is a different shuffle (seed, seed + 1, ...). Folds are grouped by
-    author, so an author is never in training and validation at the same time, and
-    stratified by the target, so each fold has about the same share of copied skills. The
-    same partitions are used for every algorithm, so their results can be compared.
+    Each repetition shuffles the authors with its own seed (seed, seed + 1, ...). The folds
+    are grouped by author, so an author is never in training and validation at once, and
+    stratified by the target, so each fold has about the same share of copied skills. All
+    algorithms are trained on these same partitions, so their results can be compared.
     """
-    groups = frame["owner"].astype(str).to_numpy()
+    authors = frame["owner"].astype(str).to_numpy()
     y = frame["replicated"].to_numpy()
-    for r in range(1, repeats + 1):
-        splitter = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=seed + r - 1)
-        for f, (tr, va) in enumerate(splitter.split(frame, y=y, groups=groups), 1):
-            if set(groups[tr]) & set(groups[va]):
+    for repetition in range(1, repeats + 1):
+        splitter = StratifiedGroupKFold(n_splits=n_folds, shuffle=True,
+                                        random_state=seed + repetition - 1)
+        partitions = splitter.split(frame, y=y, groups=authors)
+        for fold, (train_idx, valid_idx) in enumerate(partitions, 1):
+            if set(authors[train_idx]) & set(authors[valid_idx]):
                 raise RuntimeError("an author is shared between training and validation")
-            yield r, f, tr, va
+            yield repetition, fold, train_idx, valid_idx
 
 
 def clf_metrics(y: np.ndarray, p: np.ndarray, w: np.ndarray | None = None) -> dict[str, float]:
@@ -219,53 +207,59 @@ def ci(samples: np.ndarray) -> list[float]:
 def choose_window(dev: pd.DataFrame) -> dict[str, object]:
     """Choose the window W by the rule written in the protocol.
 
-    Take the development skills observed for at least 90 days (T0 at least 90 days before
-    the snapshot) that were copied within 90 days. Among the candidates 30, 60 and 90 days,
-    W is the smallest one that covers at least 80% of their times to first copy. Looking
-    only at skills with 90 days of observation avoids bias: recent skills have not had
-    time to show a late first copy.
+    Among the development skills observed for at least 90 days that were copied within
+    90 days, W is the smallest of 30, 60 and 90 days that covers at least 80% of their
+    times to first copy. Recent skills are left out because they have not had time to show
+    a late first copy.
     """
     t0 = pd.to_datetime(dev["t0"], utc=True)
-    obs = dev[t0 <= SNAPSHOT - pd.Timedelta(days=90)]
-    lags = obs.loc[obs["first_copy_lag_days"] <= 90, "first_copy_lag_days"]
-    cover = {w: float((lags <= w).mean()) for w in WINDOWS}
-    w = next((w for w in WINDOWS if cover[w] >= 0.80), 90)
-    # The text of "rule" is stored in window.json, so it is kept as it was written.
-    return {"W": w, "coverage": cover, "skills_with_90d": len(obs),
-            "copied_within_90d": len(lags), "lag_quantiles": lags.quantile([.25, .5, .75, .8, .9])
-            .round(1).to_dict(), "rule": "menor W em {30,60,90} com >= 80% dos tempos"}
+    observed_90_days = dev[t0 <= SNAPSHOT - pd.Timedelta(days=90)]
+    lags = observed_90_days["first_copy_lag_days"]
+    lags = lags[lags <= 90]
+    coverage = {w: float((lags <= w).mean()) for w in WINDOWS}
+    chosen = next((w for w in WINDOWS if coverage[w] >= 0.80), 90)
+    # the text of "rule" is stored in window.json, so it is kept as it was written
+    return {"W": chosen, "coverage": coverage, "skills_with_90d": len(observed_90_days),
+            "copied_within_90d": len(lags),
+            "lag_quantiles": lags.quantile([.25, .5, .75, .8, .9]).round(1).to_dict(),
+            "rule": "menor W em {30,60,90} com >= 80% dos tempos"}
 
 
 def eda_rules(dev: pd.DataFrame) -> dict[str, object]:
     """Derive the preprocessing rules from the development data (section 5).
 
     * ``constant``: columns with a single value, which carry no information;
-    * ``skewed_log1p_nontree``: numeric columns with only non-negative values and skewness
-      above 2, which get a log transform in models that are sensitive to scale (the very
-      long tail would let a few extreme skills dominate them);
+    * ``skewed_log1p_nontree``: numeric columns with no negative values, more than two
+      values and skewness above 2; they get a log transform in models that are sensitive
+      to scale, so that a few extreme skills do not dominate them;
     * ``collinear_pairs``: pairs of columns with absolute Spearman correlation above 0.95;
-    * ``drop_collinear_nontree``: columns removed from scale-sensitive models, so that
-      only one column of each correlated group stays. A column is kept unless it correlates
-      above 0.95 with a column that was already kept (greedy, in the order of ``TEXT``).
+    * ``drop_collinear_nontree``: columns removed from scale-sensitive models. Going through
+      the columns in order, a column is kept unless it correlates above 0.95 with a column
+      already kept.
 
     Tree models ignore the last two rules: they do not mind skewness or correlation.
     """
-    cols = TEXT + ORIGIN
-    numeric = [c for c in cols if c not in CATEGORICAL]
-    constant = [c for c in cols if dev[c].nunique(dropna=True) <= 1]
-    order = [c for c in numeric if c not in constant]
-    skewed = [c for c in order if dev[c].dropna().min() >= 0 and dev[c].nunique() > 2
+    columns = TEXT + ORIGIN
+    numeric = [c for c in columns if c not in CATEGORICAL]
+    constant = [c for c in columns if dev[c].nunique(dropna=True) <= 1]
+    candidates = [c for c in numeric if c not in constant]
+    skewed = [c for c in candidates if dev[c].dropna().min() >= 0 and dev[c].nunique() > 2
               and dev[c].dropna().astype(float).skew() > 2]
-    corr = dev[order].astype(float).corr("spearman").abs()
-    pairs, kept, drop = [], [], []
-    for i, a in enumerate(order):
-        for b in order[i + 1:]:
-            if corr.loc[a, b] > 0.95:
-                pairs.append({"a": a, "b": b, "abs_spearman": float(corr.loc[a, b])})
-    for c in order:
-        (drop if any(corr.loc[c, k] > 0.95 for k in kept) else kept).append(c)
+
+    correlation = dev[candidates].astype(float).corr("spearman").abs()
+    pairs = []
+    for i, a in enumerate(candidates):
+        for b in candidates[i + 1:]:
+            if correlation.loc[a, b] > 0.95:
+                pairs.append({"a": a, "b": b, "abs_spearman": float(correlation.loc[a, b])})
+    kept, dropped = [], []
+    for c in candidates:
+        if any(correlation.loc[c, k] > 0.95 for k in kept):
+            dropped.append(c)
+        else:
+            kept.append(c)
     return {"constant": constant, "skewed_log1p_nontree": skewed, "collinear_pairs": pairs,
-            "drop_collinear_nontree": drop,
+            "drop_collinear_nontree": dropped,
             "inconsistent_to_missing": {"repo_age_days_at_t0": "negativo"}}
 
 
@@ -283,54 +277,59 @@ def run_eda() -> None:
     win = choose_window(dev_all)
     write_json(out / "window.json", win)
     dev = load_frame("dev", w=win["W"])
-    # A negative age means T0 is before the creation of the repository: impossible, so missing.
+    # a negative age means T0 is before the creation of the repository: impossible, so missing
     dev.loc[dev["repo_age_days_at_t0"] < 0, "repo_age_days_at_t0"] = np.nan
-    rules = eda_rules(dev)
-    write_json(out / "eda_rules.json", rules)
-    # Outcome of the dating of the copies outside aggregators, for the paper.
+    write_json(out / "eda_rules.json", eda_rules(dev))
+
+    # outcome of the dating of the development copies outside aggregators
     occ = pd.read_parquet(OCCURRENCES,
                           columns=["content_hash", "repo_full_name", "path", "aggregator"])
-    status = pd.read_parquet(DATES).merge(occ, on=["content_hash", "repo_full_name", "path"]) \
-        .merge(pd.read_parquet(TABLE, columns=["content_hash", "split"]), on="content_hash")
-    status = status[(status["split"] == "dev") & ~status["aggregator"].astype(bool)]
-    status = status["status"].value_counts(normalize=True).to_dict()
-    # Profile of each attribute: missing values, distribution and skewness.
-    prof = []
+    split = pd.read_parquet(TABLE, columns=["content_hash", "split"])
+    copies = pd.read_parquet(DATES).merge(occ, on=["content_hash", "repo_full_name", "path"])
+    copies = copies.merge(split, on="content_hash")
+    copies = copies[(copies["split"] == "dev") & ~copies["aggregator"].astype(bool)]
+    status_shares = copies["status"].value_counts(normalize=True).to_dict()
+
+    # profile of each attribute: missing values, distribution and skewness
+    profile = []
     for c in TEXT + ORIGIN:
-        s = dev[c]
-        row = {"feature": c, "missing_share": float(s.isna().mean()), "n_unique": int(s.nunique())}
+        column = dev[c]
+        row = {"feature": c, "missing_share": float(column.isna().mean()),
+               "n_unique": int(column.nunique())}
         if c not in CATEGORICAL:
-            v = s.dropna().astype(float)
-            row.update({"min": float(v.min()), "median": float(v.median()),
-                        "p99": float(v.quantile(.99)), "max": float(v.max()),
-                        "skew": float(v.skew())})
-        prof.append(row)
-    pd.DataFrame(prof).to_csv(out / "feature_profile.csv", index=False)
-    # Share of copied skills in each quartile of an attribute. Ranking with "first" breaks
-    # ties by order, so zero-heavy attributes are split arbitrarily between quartiles.
-    uni = []
+            values = column.dropna().astype(float)
+            row.update({"min": float(values.min()), "median": float(values.median()),
+                        "p99": float(values.quantile(.99)), "max": float(values.max()),
+                        "skew": float(values.skew())})
+        profile.append(row)
+    pd.DataFrame(profile).to_csv(out / "feature_profile.csv", index=False)
+
+    # share of copied skills in each quartile of each text attribute; ranking with "first"
+    # breaks ties by order, so zero-heavy attributes are split arbitrarily between quartiles
+    rates = []
     for c in [c for c in TEXT if dev[c].nunique() > 4]:
-        q = pd.qcut(dev[c].rank(method="first"), 4, labels=False)
-        uni.append({"feature": c, **{f"q{int(k) + 1}": float(v) for k, v in
-                                     dev.groupby(q)["replicated"].mean().items()}})
-    pd.DataFrame(uni).to_csv(out / "univariate_rates.csv", index=False)
+        quartile = pd.qcut(dev[c].rank(method="first"), 4, labels=False)
+        by_quartile = dev.groupby(quartile)["replicated"].mean()
+        rates.append({"feature": c, **{f"q{int(q) + 1}": float(v) for q, v in by_quartile.items()}})
+    pd.DataFrame(rates).to_csv(out / "univariate_rates.csv", index=False)
+
+    t0_by_month = dev["t0_used"].dt.strftime("%Y-%m").value_counts().sort_index().to_dict()
     summary = {"dev_eligible_rows": len(dev), "dev_authors": int(dev["owner"].nunique()),
                "dev_all_rows": len(dev_all), "replicated_rate": float(dev["replicated"].mean()),
-               "collection_status_dev": status,
-               "t0_by_month": dev["t0_used"].dt.strftime("%Y-%m").value_counts().sort_index()
-               .to_dict(),
+               "collection_status_dev": status_shares, "t0_by_month": t0_by_month,
                "all_copies_dated_share": float(dev["all_copies_dated"].mean())}
     write_json(out / "eda_summary.json", summary)
-    print(json.dumps({"window": win, **{k: summary[k] for k in ("dev_eligible_rows",
-                                                                "replicated_rate")}}, indent=2))
+    print(json.dumps({"window": win, "dev_eligible_rows": summary["dev_eligible_rows"],
+                      "replicated_rate": summary["replicated_rate"]}, indent=2))
+
 
 # ---------------------------------------------------------------------------
 # Preprocessing and algorithms (sections 5 and 6)
 # ---------------------------------------------------------------------------
 
 # Tree models need no scaling, no log and no removal of correlated columns.
-TREE_ALGOS = {"decision_tree", "random_forest", "hist_gb"}
-ALGOS = ["logistic", "naive_bayes", "knn", "decision_tree", "random_forest", "hist_gb", "mlp"]
+TREE_ALGOS = set(CONFIG["models"]["tree_algorithms"])
+ALGOS = CONFIG["models"]["algorithms"]
 
 
 def _log1p_clip(x: object) -> np.ndarray:
@@ -408,33 +407,38 @@ def preprocessor(columns: list[str], algo: str, rules: dict[str, object]) -> Col
 
 def estimator(algo: str, threads: int = -1) -> object:
     """A new model with the default hyperparameters of scikit-learn (and fixed seeds)."""
-    return {
-        "logistic": lambda: LogisticRegression(max_iter=2000),
-        "naive_bayes": lambda: GaussianNB(),
-        "knn": lambda: KNeighborsClassifier(n_jobs=threads),
-        "decision_tree": lambda: DecisionTreeClassifier(random_state=SEED),
-        "random_forest": lambda: RandomForestClassifier(random_state=SEED, n_jobs=threads),
-        "hist_gb": lambda: HistGradientBoostingClassifier(random_state=SEED),
-        "mlp": lambda: MLPClassifier(random_state=SEED),
-    }[algo]()
+    if algo == "logistic":
+        return LogisticRegression(max_iter=2000)
+    if algo == "naive_bayes":
+        return GaussianNB()
+    if algo == "knn":
+        return KNeighborsClassifier(n_jobs=threads)
+    if algo == "decision_tree":
+        return DecisionTreeClassifier(random_state=SEED)
+    if algo == "random_forest":
+        return RandomForestClassifier(random_state=SEED, n_jobs=threads)
+    if algo == "hist_gb":
+        return HistGradientBoostingClassifier(random_state=SEED)
+    if algo == "mlp":
+        return MLPClassifier(random_state=SEED)
+    raise KeyError(algo)
+
+
+def search_space(values: object) -> object:
+    """One search space of config/config.yaml: a list of values to choose from, or a
+    distribution written as {loguniform: [low, high]} or {randint: [low, high]}."""
+    if isinstance(values, dict):
+        (name, (low, high)), = values.items()
+        return {"loguniform": loguniform, "randint": randint}[name](low, high)
+    # a list inside the list is a tuple, such as the layer sizes (64, 32) of the MLP
+    return [tuple(v) if isinstance(v, list) else v for v in values]
 
 
 # Hyperparameters searched in phase 4 (10 random configurations per algorithm).
 # ``loguniform`` draws on a log scale, ``randint`` an integer, a list one of its values.
 SPACES: dict[str, dict[str, object]] = {
-    "logistic": {"C": loguniform(1e-3, 1e2), "class_weight": [None, "balanced"]},
-    "naive_bayes": {"var_smoothing": loguniform(1e-12, 1e-6)},
-    "knn": {"n_neighbors": randint(5, 102), "weights": ["uniform", "distance"], "p": [1, 2]},
-    "decision_tree": {"max_depth": randint(3, 26), "min_samples_leaf": randint(1, 61),
-                      "class_weight": [None, "balanced"]},
-    "random_forest": {"n_estimators": [100, 200, 300], "max_depth": randint(5, 26),
-                      "min_samples_leaf": randint(1, 31), "max_features": ["sqrt", 0.5],
-                      "class_weight": [None, "balanced_subsample"]},
-    "hist_gb": {"learning_rate": loguniform(0.02, 0.2), "max_iter": randint(100, 501),
-                "max_leaf_nodes": randint(8, 65), "min_samples_leaf": randint(5, 101),
-                "l2_regularization": loguniform(1e-3, 10.0), "class_weight": [None, "balanced"]},
-    "mlp": {"hidden_layer_sizes": [(64,), (128,), (64, 32)], "alpha": loguniform(1e-5, 1e-2),
-            "learning_rate_init": loguniform(1e-4, 1e-2), "early_stopping": [True]},
+    algo: {name: search_space(values) for name, values in space.items()}
+    for algo, space in CONFIG["models"]["search_spaces"].items()
 }
 
 
@@ -458,26 +462,27 @@ def pipeline(algo: str, view: str, rules: dict[str, object], params: dict | None
     return pipe, cols
 
 
-def _ratio(rows: pd.DataFrame) -> float:
+def validation_ratio(rows: pd.DataFrame) -> float:
     """Mean ratio (validation size / training size) of the folds, used by ``nb_test``."""
     return float((rows["validation_rows"] / rows["train_rows"]).mean())
 
 
 def compare_to_best(folds_df: pd.DataFrame, key: str = "config") -> pd.DataFrame:
-    """Compare the best configuration (highest mean AUC) with each of the others.
+    """Compare the configuration with the highest mean AUC with each of the others.
 
-    Uses a paired Nadeau-Bengio test on the AUC of each fold, and adjusts the p-values for
-    the number of comparisons with Holm's method.
+    Uses the paired Nadeau-Bengio test on the AUC of each fold, and adjusts the p-values
+    for the number of comparisons with Holm's method.
     """
-    wide = folds_df.pivot_table(index=["repeat", "fold"], columns=key, values="roc_auc")
-    best = wide.mean().idxmax()
-    ratio = _ratio(folds_df)
-    rows = [{"best": best, "other": o, **nb_test((wide[best] - wide[o]).to_numpy(), ratio)}
-            for o in wide.columns if o != best]
-    out = pd.DataFrame(rows)
-    if len(out):
-        out["p_holm"] = holm(out["p_nb"].tolist())
-    return out
+    auc = folds_df.pivot_table(index=["repeat", "fold"], columns=key, values="roc_auc")
+    best = auc.mean().idxmax()
+    ratio = validation_ratio(folds_df)
+    rows = [{"best": best, "other": other, **nb_test((auc[best] - auc[other]).to_numpy(), ratio)}
+            for other in auc.columns if other != best]
+    tests = pd.DataFrame(rows)
+    if len(tests):
+        tests["p_holm"] = holm(tests["p_nb"].tolist())
+    return tests
+
 
 # ---------------------------------------------------------------------------
 # Phase 4: spot-check and nested search (sections 6.1 and 6.2)
@@ -487,38 +492,41 @@ def compare_to_best(folds_df: pd.DataFrame, key: str = "config") -> pd.DataFrame
 def run_spot(repeats: int = REPEATS, out: Path = OUT / "phase4") -> None:
     """Spot-check (command ``skillreuse spot``): the 7 algorithms with default settings.
 
-    Each algorithm is trained and validated on exactly the same 9 partitions of the
-    development set, using the text attributes. The 3 with the highest mean AUC go on to
-    the nested search. Writes ``spot_folds.csv`` (one row per fold and algorithm),
-    ``spot_summary.csv``, ``spot_tests.csv`` and ``selection.json``.
+    Each algorithm is trained and validated on the same 9 partitions of the development
+    set, with the text attributes. The 3 with the highest mean AUC go on to the nested
+    search. Writes ``spot_folds.csv``, ``spot_summary.csv``, ``spot_tests.csv`` and
+    ``selection.json``.
     """
     out.mkdir(parents=True, exist_ok=True)
     dev, rules = load_frame("dev"), load_rules()
     y = dev["replicated"].to_numpy()
     rows = []
-    for r, f, tr, va in folds(dev, repeats=repeats):
+    for repetition, fold, train_idx, valid_idx in folds(dev, repeats=repeats):
         for algo in ALGOS:
-            t = time.monotonic()
-            pipe, cols = pipeline(algo, "text", rules)
-            pipe.fit(dev.iloc[tr][cols], y[tr])
-            p = pipe.predict_proba(dev.iloc[va][cols])[:, 1]
-            rows.append({"repeat": r, "fold": f, "config": algo, "train_rows": len(tr),
-                         "validation_rows": len(va), "seconds": time.monotonic() - t,
-                         **clf_metrics(y[va], p)})
-        print(f"[spot] r{r} f{f}", flush=True)
-    df = pd.DataFrame(rows)
-    df.to_csv(out / "spot_folds.csv", index=False)
-    summary = df.groupby("config")[["roc_auc", "pr_auc", "brier", "seconds"]].agg(["mean", "std"])
+            start = time.monotonic()
+            model, cols = pipeline(algo, "text", rules)
+            model.fit(dev.iloc[train_idx][cols], y[train_idx])
+            p = model.predict_proba(dev.iloc[valid_idx][cols])[:, 1]
+            rows.append({"repeat": repetition, "fold": fold, "config": algo,
+                         "train_rows": len(train_idx), "validation_rows": len(valid_idx),
+                         "seconds": time.monotonic() - start, **clf_metrics(y[valid_idx], p)})
+        print(f"[spot] r{repetition} f{fold}", flush=True)
+    results = pd.DataFrame(rows)
+    results.to_csv(out / "spot_folds.csv", index=False)
+    metrics = ["roc_auc", "pr_auc", "brier", "seconds"]
+    summary = results.groupby("config")[metrics].agg(["mean", "std"])
     summary.columns = ["_".join(c) for c in summary.columns]
     summary = summary.sort_values("roc_auc_mean", ascending=False)
     summary.to_csv(out / "spot_summary.csv")
-    compare_to_best(df).to_csv(out / "spot_tests.csv", index=False)
+    compare_to_best(results).to_csv(out / "spot_tests.csv", index=False)
     write_json(out / "selection.json", {"ranking": summary.index.tolist(),
                                         "selected_top3": summary.index[:3].tolist()})
     print(summary.round(4).to_string())
 
 
-N_ITER, INNER_FOLDS, N_JOBS = 10, 3, 4  # configurations tried, inner folds, parallel jobs
+N_ITER = CONFIG["models"]["search_iterations"]  # configurations tried
+INNER_FOLDS = CONFIG["models"]["inner_folds"]
+N_JOBS = CONFIG["models"]["parallel_jobs"]
 
 
 def inner_cv(train: pd.DataFrame, seed: int) -> list[tuple[np.ndarray, np.ndarray]]:
@@ -544,59 +552,61 @@ def search(algo: str, view: str, train: pd.DataFrame, rules: dict, seed: int
 def run_tune() -> None:
     """Nested search (command ``skillreuse tune``) of the 3 best algorithms of the spot-check.
 
-    In each of 6 outer folds (2 repetitions x 3 folds) the search picks its best
-    configuration using only the training part, and that configuration is then measured on
-    the outer validation fold, which the search never saw. The default version of each
-    algorithm is measured on the same folds. The outer result is an honest estimate of
-    "search, then train", while the inner score of the search would be optimistic.
-
-    The winner is chosen by the rule of the protocol: the configuration with the highest
-    mean AUC wins, unless it is not significantly better than others (Nadeau-Bengio with
-    Holm); among the tied configurations, the one that trains fastest wins. Simplicity is
-    accepted when the extra complexity does not pay off. Writes ``nested_folds.csv``,
-    ``nested_summary.csv``, ``nested_tests.csv`` and ``winner.json``.
+    In each of 6 outer folds (the first 2 repetitions x 3 folds), the search chooses its
+    best configuration using only the training part, and that configuration is measured on
+    the outer fold, which the search never saw. The default version of each algorithm is
+    measured on the same folds. The winner follows the rule of the protocol: the highest
+    mean AUC, unless it is not significantly better than the others (Nadeau-Bengio with
+    Holm); among the tied configurations, the one that trains fastest. Writes
+    ``nested_folds.csv``, ``nested_summary.csv``, ``nested_tests.csv`` and ``winner.json``.
     """
     out = OUT / "phase4"
     dev, rules = load_frame("dev"), load_rules()
     top3 = json.loads((out / "selection.json").read_text())["selected_top3"]
     y = dev["replicated"].to_numpy()
     rows = []
-    for r, f, tr, va in folds(dev, repeats=2):
-        train, valid = dev.iloc[tr], dev.iloc[va]
-        base = {"repeat": r, "fold": f, "train_rows": len(tr), "validation_rows": len(va)}
+    for repetition, fold, train_idx, valid_idx in folds(dev, repeats=2):
+        train, valid = dev.iloc[train_idx], dev.iloc[valid_idx]
+        fold_info = {"repeat": repetition, "fold": fold, "train_rows": len(train_idx),
+                     "validation_rows": len(valid_idx)}
         for algo in top3:
-            pipe, cols = pipeline(algo, "text", rules)
-            t = time.monotonic()
-            pipe.fit(train[cols], y[tr])
-            secs = time.monotonic() - t
-            rows.append({**base, "config": f"{algo}|default", "fit_seconds": secs,
-                         **clf_metrics(y[va], pipe.predict_proba(valid[cols])[:, 1])})
-            rs = search(algo, "text", train, rules, seed=SEED + r - 1)
-            rows.append({**base, "config": f"{algo}|tuned", "fit_seconds": rs.refit_time_,
-                         **clf_metrics(y[va], rs.best_estimator_.predict_proba(valid[cols])[:, 1]),
-                         "inner_auc": float(rs.best_score_),
-                         "best_params": json.dumps({k.removeprefix("model__"): v for k, v in
-                                                    rs.best_params_.items()}, default=str)})
-            print(f"[tune] r{r} f{f} {algo}: default {rows[-2]['roc_auc']:.4f} "
+            default_model, cols = pipeline(algo, "text", rules)
+            start = time.monotonic()
+            default_model.fit(train[cols], y[train_idx])
+            seconds = time.monotonic() - start
+            p_default = default_model.predict_proba(valid[cols])[:, 1]
+            rows.append({**fold_info, "config": f"{algo}|default", "fit_seconds": seconds,
+                         **clf_metrics(y[valid_idx], p_default)})
+
+            tuned = search(algo, "text", train, rules, seed=SEED + repetition - 1)
+            p_tuned = tuned.best_estimator_.predict_proba(valid[cols])[:, 1]
+            best_params = {k.removeprefix("model__"): v for k, v in tuned.best_params_.items()}
+            rows.append({**fold_info, "config": f"{algo}|tuned", "fit_seconds": tuned.refit_time_,
+                         **clf_metrics(y[valid_idx], p_tuned),
+                         "inner_auc": float(tuned.best_score_),
+                         "best_params": json.dumps(best_params, default=str)})
+            print(f"[tune] r{repetition} f{fold} {algo}: default {rows[-2]['roc_auc']:.4f} "
                   f"tuned {rows[-1]['roc_auc']:.4f}", flush=True)
-    df = pd.DataFrame(rows)
-    df.to_csv(out / "nested_folds.csv", index=False)
-    summary = df.groupby("config").agg(mean=("roc_auc", "mean"), std=("roc_auc", "std"),
-                                       fit_seconds=("fit_seconds", "mean")) \
-        .sort_values("mean", ascending=False)
+    results = pd.DataFrame(rows)
+    results.to_csv(out / "nested_folds.csv", index=False)
+    summary = results.groupby("config").agg(mean=("roc_auc", "mean"), std=("roc_auc", "std"),
+                                            fit_seconds=("fit_seconds", "mean"))
+    summary = summary.sort_values("mean", ascending=False)
     summary.to_csv(out / "nested_summary.csv")
-    tests = compare_to_best(df)
+    tests = compare_to_best(results)
     tests.to_csv(out / "nested_tests.csv", index=False)
+
+    # tied: the best configuration and every one that is not significantly worse
     best = summary.index[0]
-    # Tied configurations: the best one and every one that is not significantly worse.
     tied = [best] + tests.loc[tests["p_holm"] >= 0.05, "other"].tolist()
-    winner = summary.loc[tied, "fit_seconds"].idxmin()  # tie-break rule of section 6.2
+    winner = summary.loc[tied, "fit_seconds"].idxmin()  # the fastest of the tied ones
     algo, variant = winner.split("|")
-    # The text of "rule" is stored in winner.json, so it is kept as it was written.
+    # the text of "rule" is stored in winner.json, so it is kept as it was written
     write_json(out / "winner.json", {"best_auc": best, "tied": tied, "winner": winner,
                                      "algo": algo, "variant": variant,
                                      "rule": "maior AUC externa; entre empatados, menor tempo"})
     print(summary.round(4).to_string(), "\nwinner:", winner)
+
 
 # ---------------------------------------------------------------------------
 # Phase 5: final models, reference model, threshold and freezing (sections 6.3 to 6.6)
@@ -632,83 +642,84 @@ def threshold_report(y: np.ndarray, p: np.ndarray, t: float) -> dict[str, float]
 def run_final() -> None:
     """Final models (command ``skillreuse final``), validated on the development folds.
 
-    The winning algorithm is trained on four sets of columns: ``text`` (the model of the
-    research question), ``origin`` (repository only), ``origin+text`` and ``size`` (only the
-    size of the text, the simple reference). Each one is validated on the 9 partitions.
-    Also tests, on the folds, the hypotheses H1 (text above 0.5), C1 (origin + text above
-    origin) and text above size. Writes ``final_params.json``, ``dev_views_folds.csv``,
-    ``dev_views_summary.csv``, ``dev_oof_text.csv`` (out-of-fold probabilities of the text
-    model, used to choose the threshold) and ``dev_tests.json``.
+    The winning algorithm is trained with four sets of columns: ``text`` (the model of the
+    research question), ``origin`` (repository only), ``origin+text`` and ``size`` (only
+    the size of the text). Each is validated on the 9 partitions. Writes the parameters,
+    the results per fold and per view, the out-of-fold probabilities of the text model
+    (used to choose the threshold) and the tests of H1, C1 and text against size.
     """
     out = OUT / "phase5"
     out.mkdir(parents=True, exist_ok=True)
     dev, rules = load_frame("dev"), load_rules()
     winner = json.loads((OUT / "phase4" / "winner.json").read_text())
     algo, y = winner["algo"], dev["replicated"].to_numpy()
-    params = {v: final_params(v, dev, rules, winner) for v in MAIN_VIEWS}
-    params["size"] = params["text"]  # reference: same algorithm and hyperparameters as the text
+    params = {view: final_params(view, dev, rules, winner) for view in MAIN_VIEWS}
+    params["size"] = params["text"]  # the reference uses the hyperparameters of the text model
     write_json(out / "final_params.json", {"algo": algo, "variant": winner["variant"],
                                            "views": params})
-    rows, oof = [], []
-    for r, f, tr, va in folds(dev):
+    rows, out_of_fold = [], []
+    for repetition, fold, train_idx, valid_idx in folds(dev):
         for view in [*MAIN_VIEWS, "size"]:
-            pipe, cols = pipeline(algo, view, rules, params[view])
-            p = pipe.fit(dev.iloc[tr][cols], y[tr]).predict_proba(dev.iloc[va][cols])[:, 1]
-            rows.append({"repeat": r, "fold": f, "config": view, "train_rows": len(tr),
-                         "validation_rows": len(va), **clf_metrics(y[va], p)})
+            model, cols = pipeline(algo, view, rules, params[view])
+            model.fit(dev.iloc[train_idx][cols], y[train_idx])
+            p = model.predict_proba(dev.iloc[valid_idx][cols])[:, 1]
+            rows.append({"repeat": repetition, "fold": fold, "config": view,
+                         "train_rows": len(train_idx), "validation_rows": len(valid_idx),
+                         **clf_metrics(y[valid_idx], p)})
             if view == "text":
-                oof.append(pd.DataFrame({"repeat": r, "fold": f, "y": y[va], "prob": p}))
-        print(f"[final] r{r} f{f}", flush=True)
-    df = pd.DataFrame(rows)
-    df.to_csv(out / "dev_views_folds.csv", index=False)
-    pd.concat(oof).to_csv(out / "dev_oof_text.csv", index=False)
-    s = df.groupby("config")[["roc_auc", "pr_auc", "brier"]].agg(["mean", "std"])
-    s.columns = ["_".join(c) for c in s.columns]
-    s.to_csv(out / "dev_views_summary.csv")
-    wide, ratio = df.pivot_table(index=["repeat", "fold"], columns="config",
-                                 values="roc_auc"), _ratio(df)
+                out_of_fold.append(pd.DataFrame({"repeat": repetition, "fold": fold,
+                                                 "y": y[valid_idx], "prob": p}))
+        print(f"[final] r{repetition} f{fold}", flush=True)
+    results = pd.DataFrame(rows)
+    results.to_csv(out / "dev_views_folds.csv", index=False)
+    pd.concat(out_of_fold).to_csv(out / "dev_oof_text.csv", index=False)
+    summary = results.groupby("config")[["roc_auc", "pr_auc", "brier"]].agg(["mean", "std"])
+    summary.columns = ["_".join(c) for c in summary.columns]
+    summary.to_csv(out / "dev_views_summary.csv")
+    auc = results.pivot_table(index=["repeat", "fold"], columns="config", values="roc_auc")
+    ratio = validation_ratio(results)
     write_json(out / "dev_tests.json", {
-        "H1_text_vs_0.5": nb_test((wide["text"] - 0.5).to_numpy(), ratio),
-        "C1_origin+text_vs_origin": nb_test((wide["origin+text"] - wide["origin"]).to_numpy(),
-                                            ratio),
-        "text_vs_size": nb_test((wide["text"] - wide["size"]).to_numpy(), ratio)})
-    print(s.round(4).to_string())
+        "H1_text_vs_0.5": nb_test((auc["text"] - 0.5).to_numpy(), ratio),
+        "C1_origin+text_vs_origin": nb_test((auc["origin+text"] - auc["origin"]).to_numpy(), ratio),
+        "text_vs_size": nb_test((auc["text"] - auc["size"]).to_numpy(), ratio)})
+    print(summary.round(4).to_string())
 
 
 def run_freeze() -> None:
     """Freeze the models and the threshold (command ``skillreuse freeze``), before the holdout.
 
-    Each model is trained on the whole development set and saved in ``models/`` together
-    with its list of columns. The decision threshold is the value between 0.01 and 0.99
-    that maximizes the balanced accuracy of the out-of-fold predictions of the text model.
-    ``freeze.json`` records a SHA-256 of every model and of the inputs (table, window,
-    rules, winner, parameters and protocol), with ``holdout_read`` set to false: from now
-    on any change to a model would be detected.
+    Each model is trained on the whole development set and saved in ``models/`` with its
+    list of columns. The decision threshold is the value between 0.01 and 0.99 that
+    maximizes the balanced accuracy of the out-of-fold probabilities of the text model.
+    ``freeze.json`` records a SHA-256 of every model and input, with ``holdout_read`` set
+    to false.
     """
     dev, rules = load_frame("dev"), load_rules()
-    fp = json.loads((OUT / "phase5" / "final_params.json").read_text())
+    final = json.loads((OUT / "phase5" / "final_params.json").read_text())
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     y, entries = dev["replicated"].to_numpy(), {}
     for view in [*MAIN_VIEWS, "size"]:
-        pipe, cols = pipeline(fp["algo"], view, rules, fp["views"][view])
-        pipe.fit(dev[cols], y)
+        model, cols = pipeline(final["algo"], view, rules, final["views"][view])
+        model.fit(dev[cols], y)
         path = MODELS_DIR / f"{view.replace('+', '_')}.joblib"
-        joblib.dump({"pipeline": pipe, "columns": cols, "view": view}, path, compress=3)
-        entries[view] = {"file": str(path), "sha256": sha256(path), "params": fp["views"][view]}
-    oof = pd.read_csv(OUT / "phase5" / "dev_oof_text.csv")
+        joblib.dump({"pipeline": model, "columns": cols, "view": view}, path, compress=3)
+        entries[view] = {"file": str(path), "sha256": sha256(path), "params": final["views"][view]}
+
+    out_of_fold = pd.read_csv(OUT / "phase5" / "dev_oof_text.csv")
+    y_oof, p_oof = out_of_fold["y"].to_numpy(), out_of_fold["prob"].to_numpy()
     grid = np.round(np.arange(0.01, 1.0, 0.01), 2)
-    yo, po = oof["y"].to_numpy(), oof["prob"].to_numpy()
-    thr = float(grid[np.argmax([balanced_accuracy(yo, po, t) for t in grid])])
-    files = {str(p): sha256(p) for p in [TABLE, OUT / "phase3" / "window.json",
-                                         OUT / "phase3" / "eda_rules.json",
-                                         OUT / "phase4" / "winner.json",
-                                         OUT / "phase5" / "final_params.json",
-                                         Path("paper/protocol.md")]}
+    threshold = float(grid[np.argmax([balanced_accuracy(y_oof, p_oof, t) for t in grid])])
+
+    inputs = [TABLE, OUT / "phase3" / "window.json", OUT / "phase3" / "eda_rules.json",
+              OUT / "phase4" / "winner.json", OUT / "phase5" / "final_params.json",
+              Path("paper/protocol.md")]
     write_json(OUT / "phase5" / "freeze.json", {
-        "frozen_at_local": datetime.now().astimezone().isoformat(), "algo": fp["algo"],
-        "models": entries, "threshold": thr, "threshold_dev": threshold_report(yo, po, thr),
-        "inputs_sha256": files, "holdout_read": False})
-    print("frozen; threshold", thr)
+        "frozen_at_local": datetime.now().astimezone().isoformat(), "algo": final["algo"],
+        "models": entries, "threshold": threshold,
+        "threshold_dev": threshold_report(y_oof, p_oof, threshold),
+        "inputs_sha256": {str(p): sha256(p) for p in inputs}, "holdout_read": False})
+    print("frozen; threshold", threshold)
+
 
 # ---------------------------------------------------------------------------
 # Phase 6: single evaluation on the holdout (section 7)
@@ -724,25 +735,26 @@ def frozen() -> dict:
     return fz
 
 
-def predict(fz: dict, view: str, frame: pd.DataFrame) -> np.ndarray:
+def predict(frozen_info: dict, view: str, frame: pd.DataFrame) -> np.ndarray:
     """Probability of being copied for each row of ``frame``, from the frozen model of a view."""
-    m = joblib.load(fz["models"][view]["file"])
-    return m["pipeline"].predict_proba(frame[m["columns"]])[:, 1]
+    saved = joblib.load(frozen_info["models"][view]["file"])
+    return saved["pipeline"].predict_proba(frame[saved["columns"]])[:, 1]
+
+
+def auc_bootstrap(y: np.ndarray, p: np.ndarray, owners: np.ndarray, n_boot: int = N_BOOT
+                  ) -> np.ndarray:
+    """AUC of the probabilities ``p`` in each bootstrap resample of authors."""
+    return owner_bootstrap(owners, lambda weights: roc_auc_score(y, p, sample_weight=weights),
+                           n_boot=n_boot)
 
 
 def run_holdout(allow_reevaluation: bool = False) -> None:
     """The single evaluation (command ``skillreuse holdout``): the only look at the holdout.
 
-    Applies the frozen models to the holdout and computes the AUC and the other metrics.
-    Confidence intervals come from 2,000 bootstrap resamples of authors. Then tests:
-
-    * H1: the lower end of the interval of the AUC of the text model is above 0.5;
-    * C1: the lower end of the interval of AUC(origin + text) - AUC(origin) is above 0.
-      The control reported in the paper replaces it in ``run_control``;
-
-    both with p < 0.05 after the Holm correction for the two tests. Also reports the gain
-    of the text over the size-only reference and the threshold metrics. After the run, a
-    lock file is written and the command refuses to run again unless
+    Applies the frozen models to the holdout, computes the metrics and 95% intervals from
+    2,000 bootstrap resamples of authors, and tests H1 (the AUC of the text model is above
+    0.5) and C1 (adding the text to the origin repository raises the AUC), with Holm's
+    correction for the two. A lock file then stops the command from running again unless
     ``--allow-reevaluation`` is given (``make rerun`` uses it, to reproduce the numbers).
     """
     out = OUT / "phase6"
@@ -750,38 +762,40 @@ def run_holdout(allow_reevaluation: bool = False) -> None:
     if lock.exists() and not allow_reevaluation:
         raise SystemExit(f"Holdout already evaluated ({lock}). "
                          "Re-evaluating requires a declaration.")
-    fz = frozen()
+    frozen_info = frozen()
     hold = load_frame("holdout")
     y, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
-    probs = {v: predict(fz, v, hold) for v in fz["models"]}
-    point = {v: clf_metrics(y, p) for v, p in probs.items()}
-    boot = {v: owner_bootstrap(owners, lambda w, p=p: roc_auc_score(y, p, sample_weight=w))
-            for v, p in probs.items()}
-    diff = boot["origin+text"] - boot["origin"]
+    probs = {view: predict(frozen_info, view, hold) for view in frozen_info["models"]}
+    point = {view: clf_metrics(y, p) for view, p in probs.items()}
+    boot = {view: auc_bootstrap(y, p, owners) for view, p in probs.items()}
+
+    gain = boot["origin+text"] - boot["origin"]
     h1 = {"auc": point["text"]["roc_auc"], "ci95": ci(boot["text"]),
           "p_boot": boot_p(boot["text"], 0.5)}
     c1 = {"diff": point["origin+text"]["roc_auc"] - point["origin"]["roc_auc"],
-          "ci95": ci(diff), "p_boot": boot_p(diff, 0.0)}
+          "ci95": ci(gain), "p_boot": boot_p(gain, 0.0)}
     h1["p_holm"], c1["p_holm"] = holm([h1["p_boot"], c1["p_boot"]])
     h1["success"] = bool(h1["ci95"][0] > 0.5 and h1["p_holm"] < 0.05)
     c1["success"] = bool(c1["ci95"][0] > 0 and c1["p_holm"] < 0.05)
     size = {"diff": point["text"]["roc_auc"] - point["size"]["roc_auc"],
             "ci95": ci(boot["text"] - boot["size"])}
+
     result = {"evaluated_at_local": datetime.now().astimezone().isoformat(), "window": window(),
               "holdout_rows": len(hold), "holdout_authors": int(len(set(owners))),
               "prevalence": float(y.mean()), "point": point,
-              "view_ci95": {v: ci(b) for v, b in boot.items()}, "H1": h1, "C1": c1,
-              "text_minus_size": size, "threshold": threshold_report(y, probs["text"],
-                                                                     fz["threshold"]),
+              "view_ci95": {view: ci(b) for view, b in boot.items()}, "H1": h1, "C1": c1,
+              "text_minus_size": size,
+              "threshold": threshold_report(y, probs["text"], frozen_info["threshold"]),
               "n_boot": N_BOOT}
     write_json(out / "holdout_results.json", result)
-    pd.DataFrame({"content_hash": hold["content_hash"], "y": y,
-                  **{f"prob_{v.replace('+', '_')}": p for v, p in probs.items()}}) \
-        .to_parquet(out / "holdout_predictions.parquet", index=False)
+    predictions = {f"prob_{view.replace('+', '_')}": p for view, p in probs.items()}
+    pd.DataFrame({"content_hash": hold["content_hash"], "y": y, **predictions}).to_parquet(
+        out / "holdout_predictions.parquet", index=False)
     write_json(lock, {"evaluated_at_local": result["evaluated_at_local"],
                       "freeze_sha256": sha256(OUT / "phase5" / "freeze.json")})
     print(json.dumps({"H1": h1, "C1": c1, "text_minus_size": size}, indent=2,
                      default=lambda v: v.tolist() if hasattr(v, "tolist") else str(v)))
+
 
 # ---------------------------------------------------------------------------
 # Control with the popularity of the origin repository (deviation of section 13)
@@ -792,73 +806,73 @@ def run_control() -> None:
     """Control model with stars and forks at the snapshot (command ``skillreuse control``).
 
     The GitHub API no longer reports when each star was given, so the stars at T0 were not
-    available and the original control (C1) did not include popularity. Here the control
-    is trained again with the stars and forks of the origin repository at the snapshot,
-    which is later than T0. This favors the repository, so if the text still adds
-    information the conclusion is stronger. Only C1 is evaluated again on the holdout; the
-    text model and H1 do not change, and the original results (phase 6) are kept.
-    Writes ``control_rules.json``, ``freeze_control.json``, ``control_popularity.json``
-    and the holdout predictions with the new views.
+    available. The control is trained again with the stars and forks of the origin
+    repository at the snapshot, which favors the repository, and only C1 is evaluated
+    again on the holdout; the text model and H1 do not change (deviation of section 13).
     """
     dev = load_frame("dev")
     base = eda_rules(dev.assign(**{c: dev[c] for c in POPULARITY}))
-    extra = {"constant": [c for c in base["constant"] if c in POPULARITY],
-             "skewed_log1p_nontree": [c for c in base["skewed_log1p_nontree"] if c in POPULARITY],
-             "drop_collinear_nontree": [c for c in base["drop_collinear_nontree"]
-                                        if c in POPULARITY]}
-    write_json(OUT / "phase5" / "control_rules.json", extra)
-    rules, fp = load_rules(), json.loads((OUT / "phase5" / "final_params.json").read_text())
+    extra_rules = {rule: [c for c in base[rule] if c in POPULARITY]
+                   for rule in ("constant", "skewed_log1p_nontree", "drop_collinear_nontree")}
+    write_json(OUT / "phase5" / "control_rules.json", extra_rules)
+    rules = load_rules()
+    final = json.loads((OUT / "phase5" / "final_params.json").read_text())
     winner = json.loads((OUT / "phase4" / "winner.json").read_text())
     y, views = dev["replicated"].to_numpy(), ["origin_pop", "origin_pop+text"]
-    params = {v: final_params(v, dev, rules, winner) for v in views}
+    params = {view: final_params(view, dev, rules, winner) for view in views}
+
     rows = []
-    for r, f, tr, va in folds(dev):
-        for v in views:
-            pipe, cols = pipeline(fp["algo"], v, rules, params[v])
-            p = pipe.fit(dev.iloc[tr][cols], y[tr]).predict_proba(dev.iloc[va][cols])[:, 1]
-            rows.append({"repeat": r, "fold": f, "config": v, "train_rows": len(tr),
-                         "validation_rows": len(va), **clf_metrics(y[va], p)})
-    df = pd.DataFrame(rows)
-    wide = df.pivot_table(index=["repeat", "fold"], columns="config", values="roc_auc")
-    dev_test = nb_test((wide["origin_pop+text"] - wide["origin_pop"]).to_numpy(), _ratio(df))
+    for repetition, fold, train_idx, valid_idx in folds(dev):
+        for view in views:
+            model, cols = pipeline(final["algo"], view, rules, params[view])
+            model.fit(dev.iloc[train_idx][cols], y[train_idx])
+            p = model.predict_proba(dev.iloc[valid_idx][cols])[:, 1]
+            rows.append({"repeat": repetition, "fold": fold, "config": view,
+                         "train_rows": len(train_idx), "validation_rows": len(valid_idx),
+                         **clf_metrics(y[valid_idx], p)})
+    results = pd.DataFrame(rows)
+    auc = results.pivot_table(index=["repeat", "fold"], columns="config", values="roc_auc")
+    dev_test = nb_test((auc["origin_pop+text"] - auc["origin_pop"]).to_numpy(),
+                       validation_ratio(results))
+
     entries = {}
-    for v in views:
-        pipe, cols = pipeline(fp["algo"], v, rules, params[v])
-        pipe.fit(dev[cols], y)
-        path = MODELS_DIR / f"{v.replace('+', '_')}.joblib"
-        joblib.dump({"pipeline": pipe, "columns": cols, "view": v}, path, compress=3)
-        entries[v] = {"file": str(path), "sha256": sha256(path), "params": params[v]}
+    for view in views:
+        model, cols = pipeline(final["algo"], view, rules, params[view])
+        model.fit(dev[cols], y)
+        path = MODELS_DIR / f"{view.replace('+', '_')}.joblib"
+        joblib.dump({"pipeline": model, "columns": cols, "view": view}, path, compress=3)
+        entries[view] = {"file": str(path), "sha256": sha256(path), "params": params[view]}
     write_json(OUT / "phase5" / "freeze_control.json", {
         "frozen_at_local": datetime.now().astimezone().isoformat(), "models": entries,
-        "dev_auc": df.groupby("config")["roc_auc"].agg(["mean", "std"]).to_dict("index"),
+        "dev_auc": results.groupby("config")["roc_auc"].agg(["mean", "std"]).to_dict("index"),
         "dev_C1": dev_test})
+
     hold = load_frame("holdout")
-    yh, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
+    y_hold, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
     probs = {}
-    for v, e in entries.items():
-        m = joblib.load(e["file"])
-        probs[v] = m["pipeline"].predict_proba(hold[m["columns"]])[:, 1]
-    fz = frozen()
-    p_text = predict(fz, "text", hold)
-    boot = {v: owner_bootstrap(owners, lambda w, p=p: roc_auc_score(yh, p, sample_weight=w))
-            for v, p in probs.items()}
-    b_text = owner_bootstrap(owners, lambda w: roc_auc_score(yh, p_text, sample_weight=w))
-    diff = boot["origin_pop+text"] - boot["origin_pop"]
-    c1 = {"diff": float(roc_auc_score(yh, probs["origin_pop+text"])
-                        - roc_auc_score(yh, probs["origin_pop"])),
-          "ci95": ci(diff), "p_boot": boot_p(diff, 0.0)}
-    # Holm over the same two tests as before: H1 (text) and this C1.
-    c1["p_holm_with_H1"] = holm([boot_p(b_text, 0.5), c1["p_boot"]])[1]
+    for view, entry in entries.items():
+        saved = joblib.load(entry["file"])
+        probs[view] = saved["pipeline"].predict_proba(hold[saved["columns"]])[:, 1]
+    p_text = predict(frozen(), "text", hold)
+    boot = {view: auc_bootstrap(y_hold, p, owners) for view, p in probs.items()}
+    boot_text = auc_bootstrap(y_hold, p_text, owners)
+    gain = boot["origin_pop+text"] - boot["origin_pop"]
+    c1 = {"diff": float(roc_auc_score(y_hold, probs["origin_pop+text"])
+                        - roc_auc_score(y_hold, probs["origin_pop"])),
+          "ci95": ci(gain), "p_boot": boot_p(gain, 0.0)}
+    # Holm over the same two tests as before: H1 (text) and this C1
+    c1["p_holm_with_H1"] = holm([boot_p(boot_text, 0.5), c1["p_boot"]])[1]
     c1["success"] = bool(c1["ci95"][0] > 0 and c1["p_holm_with_H1"] < 0.05)
-    # The text of "note" is stored in control_popularity.json, so it is kept as written.
+    # the text of "note" is stored in control_popularity.json, so it is kept as written
     write_json(OUT / "phase6" / "control_popularity.json", {
         "note": "desvio da secao 13: popularidade no retrato (posterior a T0) no controle",
         "evaluated_at_local": datetime.now().astimezone().isoformat(),
-        "point": {v: clf_metrics(yh, p) for v, p in probs.items()},
-        "view_ci95": {v: ci(b) for v, b in boot.items()}, "C1_popularity": c1})
-    pd.read_parquet(OUT / "phase6" / "holdout_predictions.parquet").assign(
-        **{f"prob_{v.replace('+', '_')}": p for v, p in probs.items()}).to_parquet(
-        OUT / "phase6" / "holdout_predictions_control.parquet", index=False)
+        "point": {view: clf_metrics(y_hold, p) for view, p in probs.items()},
+        "view_ci95": {view: ci(b) for view, b in boot.items()}, "C1_popularity": c1})
+    predictions = {f"prob_{view.replace('+', '_')}": p for view, p in probs.items()}
+    with_control = pd.read_parquet(OUT / "phase6" / "holdout_predictions.parquet")
+    with_control = with_control.assign(**predictions)
+    with_control.to_parquet(OUT / "phase6" / "holdout_predictions_control.parquet", index=False)
     print(json.dumps({"dev": dev_test, "C1_popularity": c1}, indent=2, default=str))
 
 
@@ -870,184 +884,185 @@ def main_control() -> None:
 # Phase 7: sensitivity and robustness (section 8)
 # ---------------------------------------------------------------------------
 
-N_BOOT_SENS = 500  # bootstrap resamples in the robustness checks (2,000 in the main result)
+# bootstrap resamples in the robustness checks (2,000 in the main result)
+N_BOOT_SENS = CONFIG["evaluation"]["n_boot_robustness"]
 
 
-def _auc_ci(y: np.ndarray, p: np.ndarray, owners: np.ndarray) -> dict[str, object]:
-    """AUC with a 95% interval by author bootstrap. If ``y`` has a single class the AUC
-    does not exist and is returned as ``None``."""
+def auc_with_interval(y: np.ndarray, p: np.ndarray, owners: np.ndarray) -> dict[str, object]:
+    """AUC with a 95% interval from 500 bootstrap resamples of authors. With a single class
+    in ``y`` the AUC does not exist and is returned as ``None``."""
     if len(np.unique(y)) < 2:
         return {"rows": len(y), "prevalence": float(np.mean(y)), "auc": None}
-    b = owner_bootstrap(owners, lambda w: roc_auc_score(y, p, sample_weight=w), n_boot=N_BOOT_SENS)
+    boot = auc_bootstrap(y, p, owners, n_boot=N_BOOT_SENS)
     return {"rows": len(y), "prevalence": float(y.mean()), "auc": float(roc_auc_score(y, p)),
-            "ci95": ci(b)}
+            "ci95": ci(boot)}
 
 
-def _retrain_eval(train: pd.DataFrame, test: pd.DataFrame, fz: dict, rules: dict) -> dict:
+def retrain_and_evaluate(train: pd.DataFrame, test: pd.DataFrame, rules: dict) -> dict:
     """Train the text model (same algorithm and hyperparameters as the final one) on
-    ``train`` and report its AUC on ``test``."""
-    fp = json.loads((OUT / "phase5" / "final_params.json").read_text())
-    pipe, cols = pipeline(fp["algo"], "text", rules, fp["views"]["text"])
-    pipe.fit(train[cols], train["replicated"].to_numpy())
-    p = pipe.predict_proba(test[cols])[:, 1]
-    return {"train_rows": len(train), **_auc_ci(test["replicated"].to_numpy(), p,
-                                                test["owner"].astype(str).to_numpy())}
+    ``train`` and report its AUC with a 95% interval on ``test``."""
+    final = json.loads((OUT / "phase5" / "final_params.json").read_text())
+    model, cols = pipeline(final["algo"], "text", rules, final["views"]["text"])
+    model.fit(train[cols], train["replicated"].to_numpy())
+    p = model.predict_proba(test[cols])[:, 1]
+    return {"train_rows": len(train), **auc_with_interval(test["replicated"].to_numpy(), p,
+                                                          test["owner"].astype(str).to_numpy())}
 
 
 def run_sensitivity() -> None:
-    """Robustness checks (command ``skillreuse sensitivity``), done after the single evaluation.
+    """Robustness checks (command ``skillreuse sensitivity``), after the single evaluation.
 
-    Does the result depend on our own choices? Seven checks, all on the holdout:
-
-    * aggregator limit of 500 skills, and no exclusion of aggregators (target and T0 are
-      recomputed and the model is trained again);
-    * windows of 30 and 90 days instead of 60 (model trained again);
-    * only skills whose copies could all be dated, since an undated copy could hide the
-      true origin or a copy inside the window (frozen model);
-    * temporal split: train on development skills that appeared before a cutoff (the 70th
-      percentile of T0) and test on holdout skills that appeared after it, which is the
-      closest test of predicting the future (model trained again);
-    * only skills whose front matter name never appears in the development set, to rule
-      out that the model just recognizes variants of known skills (frozen model).
-
-    Writes ``results/phase7/sensitivity.json``.
+    Seven checks on the holdout: aggregator limits of 500 skills and of none, windows of
+    30 and 90 days, and the temporal split (train on development skills that appeared
+    before the 70th percentile of T0, test on holdout skills that appeared after it) retrain
+    the text model; only skills whose copies were all dated, and only skills whose name
+    never appears in the development set, use the frozen model.
     """
     if not (OUT / "phase6" / "evaluation_lock.json").exists():
         raise SystemExit("The robustness checks come after the single evaluation (phase 6).")
-    fz, rules, w = frozen(), load_rules(), window()
+    frozen_info, rules, w = frozen(), load_rules(), window()
     res: dict[str, object] = {"window_main": w}
     for variant in ("_agg500", "_aggnone"):  # needs the aggregator copies (cohort --variants)
-        res[f"aggregators{variant}"] = _retrain_eval(
-            load_frame("dev", w, variant), load_frame("holdout", w, variant), fz, rules) \
-            if VARIANTS_TABLE.is_file() else "pendente: coleta dos agregadores"
-    for alt in [x for x in WINDOWS if x != w]:
-        res[f"window_{alt}"] = _retrain_eval(load_frame("dev", alt), load_frame("holdout", alt),
-                                             fz, rules)
+        if VARIANTS_TABLE.is_file():
+            res[f"aggregators{variant}"] = retrain_and_evaluate(
+                load_frame("dev", w, variant), load_frame("holdout", w, variant), rules)
+        else:
+            res[f"aggregators{variant}"] = "pendente: coleta dos agregadores"
+    for other_w in [x for x in WINDOWS if x != w]:
+        res[f"window_{other_w}"] = retrain_and_evaluate(
+            load_frame("dev", other_w), load_frame("holdout", other_w), rules)
+
     hold, dev = load_frame("holdout"), load_frame("dev")
-    p = predict(fz, "text", hold)
+    p = predict(frozen_info, "text", hold)
     y, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
-    full = hold["all_copies_dated"].to_numpy(dtype=bool)
-    res["all_copies_dated"] = _auc_ci(y[full], p[full], owners[full])
-    c = dev["t0_used"].quantile(0.70)  # cutoff of the temporal split
-    res["temporal"] = {"cutoff": str(c), **_retrain_eval(dev[dev["t0_used"] < c],
-                                                         hold[hold["t0_used"] >= c], fz, rules)}
-    names = set(dev.loc[dev["name_norm"] != "", "name_norm"])
-    unseen = ~(hold["name_norm"].ne("") & hold["name_norm"].isin(names)).to_numpy()
+    all_dated = hold["all_copies_dated"].to_numpy(dtype=bool)
+    res["all_copies_dated"] = auc_with_interval(y[all_dated], p[all_dated], owners[all_dated])
+    cutoff = dev["t0_used"].quantile(0.70)
+    res["temporal"] = {"cutoff": str(cutoff), **retrain_and_evaluate(
+        dev[dev["t0_used"] < cutoff], hold[hold["t0_used"] >= cutoff], rules)}
+    names_in_dev = set(dev.loc[dev["name_norm"] != "", "name_norm"])
+    unseen = ~(hold["name_norm"].ne("") & hold["name_norm"].isin(names_in_dev)).to_numpy()
     res["name_unseen"] = {"share": float(unseen.mean()),
-                          **_auc_ci(y[unseen], p[unseen], owners[unseen])}
+                          **auc_with_interval(y[unseen], p[unseen], owners[unseen])}
     write_json(OUT / "phase7" / "sensitivity.json", res)
     print(json.dumps(res, indent=2, default=str))
+
 
 # ---------------------------------------------------------------------------
 # Phase 7: interpretation of the text model, if H1 is confirmed (section 9)
 # ---------------------------------------------------------------------------
 
 # Rows of the interpretation sample, its seed, permutations per attribute, bootstrap resamples.
-INTERP_ROWS, INTERP_SEED, N_PERM, N_BOOT_PERM = 20_000, "20261123", 10, 200
+INTERP_ROWS = CONFIG["interpretation"]["rows"]
+INTERP_SEED = CONFIG["interpretation"]["seed"]
+N_PERM = CONFIG["interpretation"]["permutations"]
+N_BOOT_PERM = CONFIG["interpretation"]["n_boot"]
 
 
 def interp_sample(hold: pd.DataFrame) -> pd.DataFrame:
     """Sample of the holdout used to interpret the model: about 20,000 rows made of whole
-    authors, chosen in the order of ``md5(author + ':' + seed)``. The whole holdout is used
-    if it is not larger than that."""
+    authors, taken in the order of ``md5(author + ':' + seed)``. The whole holdout is used
+    when it is not larger than that."""
     if len(hold) <= INTERP_ROWS:
         return hold.reset_index(drop=True)
     keys = hold["owner"].astype(str).map(
-        lambda o: hashlib.md5(f"{o}:{INTERP_SEED}".encode()).hexdigest())
-    order = hold.assign(_k=keys).sort_values(["_k", "content_hash"])
-    sizes = order.groupby("_k", sort=False).size()
-    # Keep every author whose first skill starts before the row limit is reached.
-    keep = sizes.index[(sizes.cumsum() - sizes) < INTERP_ROWS]
-    return order[order["_k"].isin(keep)].drop(columns="_k").reset_index(drop=True)
+        lambda owner: hashlib.md5(f"{owner}:{INTERP_SEED}".encode()).hexdigest())
+    ordered = hold.assign(_k=keys).sort_values(["_k", "content_hash"])
+    skills_per_author = ordered.groupby("_k", sort=False).size()
+    # keep every author whose first skill comes before the row limit
+    keep = skills_per_author.index[(skills_per_author.cumsum() - skills_per_author) < INTERP_ROWS]
+    return ordered[ordered["_k"].isin(keep)].drop(columns="_k").reset_index(drop=True)
 
 
-def permutation_table(pipe, cols: list[str], x: pd.DataFrame, y: np.ndarray, owners: np.ndarray,
+def permutation_table(model, cols: list[str], x: pd.DataFrame, y: np.ndarray, owners: np.ndarray,
                       seed: int, n_boot: int, families_only: bool = False) -> pd.DataFrame:
     """Permutation importance: how much the AUC drops when an attribute is shuffled.
 
-    The values of an attribute (or of a whole family of attributes at once, since many are
-    correlated) are shuffled among the skills, which breaks their link with the target. The
-    larger the drop in AUC, the more the model relies on that attribute. Each shuffle is
-    repeated ``N_PERM`` times and averaged. The 95% interval resamples authors, using the
-    same resamples for all attributes. Returns one row per family (``family:<name>``) and,
-    unless ``families_only``, per attribute, sorted from the largest drop.
+    The values of an attribute, or of a whole family at once, are shuffled among the skills,
+    which breaks their link with the target. Each shuffle is repeated ``N_PERM`` times and
+    averaged. The 95% interval comes from resampling authors, with the same resamples for
+    every attribute. Returns one row per family (``family:<name>``) and, unless
+    ``families_only``, per attribute, from the largest drop to the smallest.
     """
     rng = np.random.default_rng(seed)
-    base = pipe.predict_proba(x[cols])[:, 1]
-    targets = {f"family:{k}": v for k, v in FAMILIES.items()}
+    p_base = model.predict_proba(x[cols])[:, 1]
+    targets = {f"family:{name}": columns for name, columns in FAMILIES.items()}
     if not families_only:
         targets.update({c: [c] for c in TEXT})
-    # Bootstrap weights per skill (the number of times its author is drawn), computed once.
-    codes, inv = np.unique(owners, return_inverse=True)
-    brng = np.random.default_rng(seed + 1)
-    weights = [np.bincount(brng.integers(0, len(codes), len(codes)),
-                           minlength=len(codes))[inv].astype(float) for _ in range(n_boot)]
-    base_auc = roc_auc_score(y, base)
-    base_boot = np.array([roc_auc_score(y, base, sample_weight=w) for w in weights])
+
+    # bootstrap weights of each row (the times its author is drawn), computed once
+    authors, author_of_row = np.unique(owners, return_inverse=True)
+    boot_rng = np.random.default_rng(seed + 1)
+    weights = [np.bincount(boot_rng.integers(0, len(authors), len(authors)),
+                           minlength=len(authors))[author_of_row].astype(float)
+               for _ in range(n_boot)]
+    auc_base = roc_auc_score(y, p_base)
+    auc_base_boot = np.array([roc_auc_score(y, p_base, sample_weight=w) for w in weights])
+
     rows = []
     for name, group in targets.items():
         group = [c for c in group if c in cols]
         if not group:
             continue
-        drops, boots = [], []
+        drops, boot_drops = [], []
         for _ in range(N_PERM):
-            xp = x[cols].copy()
-            # The same permutation moves all columns of the group together.
-            xp[group] = xp[group].iloc[rng.permutation(len(xp))].to_numpy()
-            pp = pipe.predict_proba(xp)[:, 1]
-            drops.append(base_auc - roc_auc_score(y, pp))
-            boots.append(base_boot - np.array([roc_auc_score(y, pp, sample_weight=w)
-                                               for w in weights]))
-        b = np.mean(boots, axis=0)
+            shuffled = x[cols].copy()
+            # the same permutation moves all columns of the group together
+            shuffled[group] = shuffled[group].iloc[rng.permutation(len(shuffled))].to_numpy()
+            p = model.predict_proba(shuffled)[:, 1]
+            drops.append(auc_base - roc_auc_score(y, p))
+            boot_drops.append(auc_base_boot - np.array([roc_auc_score(y, p, sample_weight=w)
+                                                        for w in weights]))
+        mean_boot_drop = np.mean(boot_drops, axis=0)
         rows.append({"feature": name, "auc_drop": float(np.mean(drops)),
-                     "ci95_low": float(np.percentile(b, 2.5)),
-                     "ci95_high": float(np.percentile(b, 97.5))})
+                     "ci95_low": float(np.percentile(mean_boot_drop, 2.5)),
+                     "ci95_high": float(np.percentile(mean_boot_drop, 97.5))})
     return pd.DataFrame(rows).sort_values("auc_drop", ascending=False)
 
 
 def run_interpret() -> None:
     """Interpret the text model (command ``skillreuse interpret``), answering RQ2.
 
-    Only runs if H1 was confirmed; otherwise it records that RQ2 was not answered. Computes
-    the permutation importance of families and attributes on the interpretation sample of
-    the holdout (``permutation_holdout.csv``), then checks that the ranking of the families
-    is stable by repeating the computation on the validation part of each of the 9
-    development folds (``family_stability.csv``). The SHAP values are computed in
-    ``report.py``. The status is written to ``interpretation_status.json``; its "rq2"
-    values are in Portuguese because they are stored in the file.
+    Runs only if H1 was confirmed. Computes the permutation importance of families and
+    attributes on the interpretation sample of the holdout, and checks that the ranking of
+    the families is stable by repeating it on the validation part of each of the 9
+    development folds. The SHAP values are computed in ``report.py``. The "rq2" values of
+    ``interpretation_status.json`` are stored in Portuguese.
     """
     out = OUT / "phase7"
     out.mkdir(parents=True, exist_ok=True)
-    res = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
-    if not res["H1"]["success"]:
+    holdout_results = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
+    if not holdout_results["H1"]["success"]:
         write_json(out / "interpretation_status.json", {"rq2": "nao respondida"})
         return
-    fz = frozen()
-    m = joblib.load(fz["models"]["text"]["file"])
-    pipe, cols = m["pipeline"], m["columns"]
+    saved = joblib.load(frozen()["models"]["text"]["file"])
+    model, cols = saved["pipeline"], saved["columns"]
     hold = interp_sample(load_frame("holdout"))
     y, owners = hold["replicated"].to_numpy(), hold["owner"].astype(str).to_numpy()
-    perm = permutation_table(pipe, cols, hold, y, owners, SEED, N_BOOT_PERM)
-    perm.to_csv(out / "permutation_holdout.csv", index=False)
-    top5 = [f for f in perm["feature"] if not f.startswith("family:")][:5]
+    importance = permutation_table(model, cols, hold, y, owners, SEED, N_BOOT_PERM)
+    importance.to_csv(out / "permutation_holdout.csv", index=False)
+    top5 = [f for f in importance["feature"] if not f.startswith("family:")][:5]
+
     dev, rules = load_frame("dev"), load_rules()
-    fp = json.loads((OUT / "phase5" / "final_params.json").read_text())
-    yd, ranks = dev["replicated"].to_numpy(), []
-    for r, f, tr, va in folds(dev):
-        p, c = pipeline(fp["algo"], "text", rules, fp["views"]["text"])
-        p.fit(dev.iloc[tr][c], yd[tr])
-        t = permutation_table(p, c, dev.iloc[va].reset_index(drop=True), yd[va],
-                              dev.iloc[va]["owner"].astype(str).to_numpy(), SEED + 10 * r + f,
-                              n_boot=1, families_only=True)
-        ranks.append(t.set_index("feature")["auc_drop"].rename(f"r{r}f{f}"))
-        print(f"[interp] stability r{r} f{f}", flush=True)
-    fam = pd.concat(ranks, axis=1)
-    fam["holdout"] = perm.set_index("feature").loc[fam.index, "auc_drop"]
-    fam.to_csv(out / "family_stability.csv")
+    final = json.loads((OUT / "phase5" / "final_params.json").read_text())
+    y_dev, by_fold = dev["replicated"].to_numpy(), []
+    for repetition, fold, train_idx, valid_idx in folds(dev):
+        fold_model, fold_cols = pipeline(final["algo"], "text", rules, final["views"]["text"])
+        fold_model.fit(dev.iloc[train_idx][fold_cols], y_dev[train_idx])
+        valid = dev.iloc[valid_idx].reset_index(drop=True)
+        drops = permutation_table(fold_model, fold_cols, valid, y_dev[valid_idx],
+                                  valid["owner"].astype(str).to_numpy(),
+                                  SEED + 10 * repetition + fold, n_boot=1, families_only=True)
+        by_fold.append(drops.set_index("feature")["auc_drop"].rename(f"r{repetition}f{fold}"))
+        print(f"[interp] stability r{repetition} f{fold}", flush=True)
+    stability = pd.concat(by_fold, axis=1)
+    stability["holdout"] = importance.set_index("feature").loc[stability.index, "auc_drop"]
+    stability.to_csv(out / "family_stability.csv")
     write_json(out / "interpretation_status.json", {
         "rq2": "respondida", "rows": len(hold), "authors": int(len(set(owners))),
         "top5": top5, "family_rank_spearman_vs_holdout":
-        fam.rank().corr("spearman")["holdout"].drop("holdout").to_dict()})
+        stability.rank().corr("spearman")["holdout"].drop("holdout").to_dict()})
+
 
 # ---------------------------------------------------------------------------
 # Reproduction and command line
@@ -1058,15 +1073,15 @@ def run_reproduce(out: Path = OUT / "reproduce") -> dict[str, object]:
     """Quick check (command ``skillreuse reproduce``): apply the frozen models to the
     holdout and compare each AUC with the one saved by the single evaluation (tolerance
     1e-9). This is what ``make verify`` runs first; no model is trained."""
-    fz = frozen()
+    frozen_info = frozen()
     saved = json.loads((OUT / "phase6" / "holdout_results.json").read_text())
     hold = load_frame("holdout")
     y = hold["replicated"].to_numpy()
     res: dict[str, object] = {"rows": len(hold), "point": {}, "matches": {}}
-    for view in fz["models"]:
-        m = clf_metrics(y, predict(fz, view, hold))
-        res["point"][view] = m
-        res["matches"][view] = abs(m["roc_auc"] - saved["point"][view]["roc_auc"]) < 1e-9
+    for view in frozen_info["models"]:
+        metrics = clf_metrics(y, predict(frozen_info, view, hold))
+        res["point"][view] = metrics
+        res["matches"][view] = abs(metrics["roc_auc"] - saved["point"][view]["roc_auc"]) < 1e-9
     write_json(out / "holdout_check.json", res)
     print(json.dumps(res["matches"]))
     return res

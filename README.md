@@ -31,7 +31,8 @@ Os níveis 2 a 4 sobrescrevem `results/` e `models/`; depois, `make verify` conf
 
 | Pasta | Conteúdo |
 |---|---|
-| `src/skillreuse/` | `download` (download verificado), `collect` (fase 1: amostra e datas das cópias), `cohort` (fase 2: T0, autor, alvo, atributos e divisão), `features` (atributos do `SKILL.md`), `study` (fases 3-7), `stats` (Holm, Nadeau–Bengio, bootstrap por autor), `report` (figuras), `cli` |
+| `config/` | `config.yaml`: todas as configurações do estudo (sementes, tamanhos, datas, caminhos, expressões regulares, atributos, algoritmos e espaços de busca), lidas por cada módulo de `src/skillreuse` |
+| `src/skillreuse/` | `download` (download verificado), `collect` (fase 1: amostra e datas das cópias), `cohort` (fase 2: T0, autor, alvo, atributos e divisão), `features` (atributos do `SKILL.md`), `study` (fases 3-7), `stats` (Holm, Nadeau–Bengio, bootstrap por autor), `report` (figuras), `config` (lê o `config.yaml`), `cli` |
 | `data/derived/` | `collection/` (amostra, datas das cópias e estrelas), `study_table.parquet` (tabela do estudo), `origin_popularity.parquet` (controle) e `aggregator_variants.parquet` (sensibilidade) |
 | `models/` | modelos congelados (`joblib`), com hashes em `results/phase5/freeze.json` e `freeze_control.json` |
 | `results/` | uma pasta por fase do protocolo (`phase0` a `phase7`), `figures/` e `logs/` (execução final) |
