@@ -42,6 +42,7 @@ test:           ## invariantes do estudo e conferencia dos numeros do artigo
 	uv run pytest
 
 tables:         ## fase 2: T0, autor, alvo, atributos e divisao; popularidade (controle); variantes (sensibilidade)
+	uv run skillreuse cohort --gitskills
 	uv run skillreuse cohort
 	uv run skillreuse cohort --popularity
 	uv run skillreuse cohort --variants

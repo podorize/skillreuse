@@ -45,6 +45,8 @@ CAP_PER_AUTHOR = CONFIG["cohort"]["cap_per_author"]
 # 500 skills and "_aggnone" does not exclude any aggregator (None = no limit).
 VARIANTS = CONFIG["cohort"]["aggregator_variants"]
 
+TEXT_ATTRIBUTES = Path(CONFIG["paths"]["text_attributes"])
+REPOSITORIES = Path(CONFIG["paths"]["repositories"])
 TABLE = Path(CONFIG["paths"]["study_table"])
 VARIANTS_TABLE = Path(CONFIG["paths"]["aggregator_variants"])
 POPULARITY_TABLE = Path(CONFIG["paths"]["origin_popularity"])
@@ -120,6 +122,23 @@ def text_features(hashes: pd.Series) -> pd.DataFrame:
     return pd.concat(parts, ignore_index=True)
 
 
+def export_gitskills() -> None:
+    """Save what the study table needs from GitSkills (command ``skillreuse cohort --gitskills``).
+
+    For the sampled skills only: the text attributes of each skill (``TEXT_ATTRIBUTES``) and
+    the language, license, fork flag, stars and forks of each repository (``REPOSITORIES``).
+    These two small files are published, so the table can be built without GitSkills.
+    """
+    occ = pd.read_parquet(OCCURRENCES, columns=["content_hash", "repo_full_name"])
+    attributes = text_features(occ["content_hash"].drop_duplicates())
+    attributes.sort_values("content_hash").to_parquet(TEXT_ATTRIBUTES, index=False)
+    repos = duckdb.sql(f"""select full_name as repo_full_name, language, license, is_fork,
+                           stars, forks from read_parquet('{sql_path(DEFAULT_REPOS)}')""").df()
+    repos = repos[repos["repo_full_name"].isin(occ["repo_full_name"])]
+    repos.sort_values("repo_full_name").to_parquet(REPOSITORIES, index=False)
+    print(f"{len(attributes):,} skills and {len(repos):,} repositories saved")
+
+
 def origin_features(t: pd.DataFrame) -> pd.DataFrame:
     """Attributes of the origin repository (section 3), used only by the control model.
 
@@ -127,9 +146,9 @@ def origin_features(t: pd.DataFrame) -> pd.DataFrame:
     language, license, fork flag, stars at T0 (log scale) and the position of the file
     (depth, file at the root and the seven folder kinds of ``PATH_PATTERNS``).
     """
-    repos = duckdb.sql(f"""select full_name as origin_repo, language as repo_language,
-                           license as repo_license, is_fork as repo_is_fork
-                           from read_parquet('{sql_path(DEFAULT_REPOS)}')""").df()
+    repos = pd.read_parquet(REPOSITORIES, columns=["repo_full_name", "language", "license",
+                                                    "is_fork"])
+    repos.columns = ["origin_repo", "repo_language", "repo_license", "repo_is_fork"]
     out = t[["content_hash", "origin_repo", "origin_path", "t0",
              "origin_repo_created_at"]].merge(repos, on="origin_repo", how="left")
     # Negative when T0 is before the creation of the repository (inherited history).
@@ -201,7 +220,8 @@ def build() -> None:
     main = main[main.groupby("author").cumcount() < CAP_PER_AUTHOR].copy()
     holdout = split_authors(main)
     main["split"] = np.where(main["author"].map(holdout), "holdout", "dev")
-    feats = text_features(main["content_hash"])
+    feats = pd.read_parquet(TEXT_ATTRIBUTES)
+    feats = feats[feats["content_hash"].isin(main["content_hash"])]
     table = main.merge(feats, on="content_hash", validate="1:1") \
         .merge(origin_features(main), on="content_hash", validate="1:1")
     table = table.rename(columns={"author": "owner"}).sort_values("content_hash")
@@ -271,8 +291,8 @@ def build_popularity() -> None:
     even be partly caused by the copies. See protocol, section 13, deviation 3.
     """
     t = pd.read_parquet(TABLE, columns=["content_hash", "origin_repo"])
-    repos = duckdb.sql(f"""select full_name as origin_repo, stars, forks
-                           from read_parquet('{sql_path(DEFAULT_REPOS)}')""").df()
+    repos = pd.read_parquet(REPOSITORIES, columns=["repo_full_name", "stars", "forks"])
+    repos = repos.rename(columns={"repo_full_name": "origin_repo"})
     out = t.merge(repos, on="origin_repo", how="left")
     out["log_stars_snapshot"] = np.log1p(out["stars"].astype(float))
     out["log_forks_snapshot"] = np.log1p(out["forks"].astype(float))
@@ -282,14 +302,17 @@ def build_popularity() -> None:
 
 
 def cohort_main() -> None:
-    """Command ``skillreuse cohort [--popularity | --variants]``.
+    """Command ``skillreuse cohort [--gitskills | --popularity | --variants]``.
 
-    Without options it builds the table of the study; the options build the two extra
-    tables used by the control model and by the robustness analysis.
+    Without options it builds the table of the study. ``--gitskills`` first saves what the
+    table needs from GitSkills; the other two options build the extra tables used by the
+    control model and by the robustness analysis.
     """
     import sys  # noqa: PLC0415
 
-    if "--variants" in sys.argv:
+    if "--gitskills" in sys.argv:
+        export_gitskills()
+    elif "--variants" in sys.argv:
         build_variants()
     elif "--popularity" in sys.argv:
         build_popularity()

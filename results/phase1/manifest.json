@@ -5,6 +5,12 @@
   "seed": "20261121",
   "aggregator_min_skills": 100,
   "counts": {
+    "gitskills_files": 3797117,
+    "gitskills_repositories": 282200,
+    "gitskills_contents": 1877981,
+    "aggregators": 2867,
+    "largest_repository_skills": 89908,
+    "population_occurrences": 2395296,
     "population_contents": 1163728,
     "sample_contents": 150000,
     "occurrences": 308256,

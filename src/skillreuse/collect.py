@@ -106,8 +106,19 @@ def build_sample() -> tuple[pd.DataFrame, dict[str, int]]:
         where c.h in (select h from sample)
         order by c.h, c.r, c.path
     """).df()
+    def number(query: str) -> int:
+        return int(con.sql(query).fetchone()[0])
+
     counts = {
-        "population_contents": int(con.sql("select count(*) from population").fetchone()[0]),
+        "gitskills_files": number("select count(*) from copies"),
+        "gitskills_repositories": number("select count(*) from repo_sizes"),
+        "gitskills_contents": number("select count(distinct h) from copies"),
+        "aggregators": number(f"select count(*) from repo_sizes "
+                              f"where repo_skills >= {AGGREGATOR_MIN_SKILLS}"),
+        "largest_repository_skills": number("select max(repo_skills) from repo_sizes"),
+        "population_occurrences": number("select count(*) from copies "
+                                         "where h in (select h from population)"),
+        "population_contents": number("select count(*) from population"),
         "sample_contents": int(sample_copies["content_hash"].nunique()),
         "occurrences": len(sample_copies),
         "occurrences_outside_aggregators": int((~sample_copies["aggregator"]).sum()),

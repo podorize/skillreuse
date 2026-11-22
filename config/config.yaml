@@ -45,6 +45,11 @@ paths:
   dates_parts: data/derived/collection/dates_parts
   dates: data/derived/collection/dates.parquet
   stars: data/derived/collection/origin_stars.parquet
+  # What the study table needs from GitSkills, for the sampled skills only: the text
+  # attributes of each skill and the metadata of each repository. With these files and the
+  # dates, the table is built without the 6 GB of GitSkills (as the notebook does).
+  text_attributes: data/derived/collection/text_attributes.parquet
+  repositories: data/derived/collection/repositories.parquet
   collection_manifest: results/phase1/manifest.json
   study_table: data/derived/study_table.parquet
   aggregator_variants: data/derived/aggregator_variants.parquet
