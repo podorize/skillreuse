@@ -173,17 +173,18 @@ def fig_eda_univariate() -> None:
     uni = pd.read_csv(OUT / "phase3" / "univariate_rates.csv").set_index("feature")
     uni = uni.loc[[c for c in TEXT if c in uni.index]]
     base = json.loads((OUT / "phase3" / "eda_summary.json").read_text())["replicated_rate"]
-    fig, ax = plt.subplots(figsize=(6.2, 6.6))
-    im = ax.imshow(uni.values, cmap="RdBu_r", vmin=base - 0.05, vmax=base + 0.05, aspect="auto")
+    fig, ax = plt.subplots(figsize=(13, 4.8))
+    im = ax.imshow(uni.values.T, cmap="RdBu_r", vmin=base - 0.05, vmax=base + 0.05, aspect="auto")
     n = uni.shape[1]
-    ax.set_xticks(range(n), [f"Q{k + 1}" + (" (low)" if k == 0 else " (high)" if k == n - 1 else "")
+    ax.set_xticks(range(len(uni)), [LABEL.get(c, c) for c in uni.index], rotation=55, ha="right", fontsize=8)
+    ax.set_yticks(range(n), [f"Q{k + 1}" + (" (low)" if k == 0 else " (high)" if k == n - 1 else "")
                              for k in range(n)])
-    ax.set_yticks(range(len(uni)), [LABEL.get(c, c) for c in uni.index], fontsize=8)
-    for i in range(uni.shape[0]):
-        for k in range(n):
-            ax.text(k, i, f"{uni.values[i, k]:.1%}", ha="center", va="center", fontsize=7)
+    for i in range(n):
+        for k in range(len(uni)):
+            ax.text(k, i, f"{uni.values[k, i]:.1%}", ha="center", va="center", fontsize=7)
     fig.colorbar(im, ax=ax, shrink=0.6, label=f"share copied (overall {base:.1%})")
     ax.set_title("Share of copied skills by quartile of each text attribute")
+    fig.tight_layout()
     _save(fig, "eda_univariate.png")
 
 
