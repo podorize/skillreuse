@@ -2,9 +2,8 @@
 
 O texto de uma **agent skill** (o arquivo `SKILL.md`) prediz se outros desenvolvedores vão copiá-la? Estudo preditivo sobre o corpus [GitSkills](https://huggingface.co/datasets/mvaccargiu/gitskills) (revisão `ebab17454a7c236f8f26b183567f1a126f42e3f8`). Trabalho prático da disciplina CMP263 — Aprendizagem de Máquina (UFRGS), de Pedro de Paula Odorize e Rafael Borges Allgayer.
 
-- **Artigo:** PDF em [`paper/latex/main.pdf`](paper/latex/main.pdf); fonte em Markdown (inglês) em [`paper/draft/`](paper/draft/README.md).
-- **Protocolo:** [`paper/protocol.md`](paper/protocol.md) (em inglês), escrito antes de treinar qualquer modelo; desvios na seção 13.
-- **Uso de IA:** [`paper/supplement/ai_usage_supplement.md`](paper/supplement/ai_usage_supplement.md).
+- **Artigo:** PDF em [`paper/latex/main.pdf`](paper/latex/main.pdf);
+- **Protocolo:** [`paper/protocol.md`](paper/protocol.md), escrito antes de treinar qualquer modelo.
 
 ## Resultado em uma linha
 
@@ -12,9 +11,9 @@ Datamos pela API do GitHub as cópias de 150.000 skills e marcamos como copiada 
 
 ## Como reproduzir
 
-**Comece pelo Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab/badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb). Abra o notebook e execute as células enquanto lê o artigo. Ele acompanha as seções do texto, mostra o código da análise e recalcula os resultados a partir dos dados derivados publicados, incluindo o treino e a avaliação no conjunto de teste. A coleta original pela API do GitHub está documentada separadamente. As etapas de seleção e interpretação dos modelos podem levar vários minutos; o tempo total depende do ambiente do Colab.
+**Comece pelo Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb). Abra o notebook e execute as células enquanto lê o artigo. Ele acompanha as seções do texto, mostra o código da análise e recalcula os resultados a partir dos dados derivados publicados, incluindo o treino e a avaliação no conjunto de teste. A coleta original pela API do GitHub está documentada separadamente.
 
-Para reproduzir no seu computador (Python 3.12 e [uv](https://docs.astral.sh/uv/)), clone o repositório, rode `uv sync` e escolha um dos quatro níveis. Cada nível é um único comando; os tempos foram medidos num notebook com 8 GB de memória.
+Para reproduzir no seu computador (Python 3.12 e [uv](https://docs.astral.sh/uv/)), clone o repositório, rode `uv sync` e escolha um dos quatro níveis. Cada nível é um único comando; os tempos são estimativas.
 
 | Nível | Comando | O que refaz | Precisa de | Tempo | Resultado |
 |---|---|---|---|---|---|
