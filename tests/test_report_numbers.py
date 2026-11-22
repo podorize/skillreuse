@@ -77,7 +77,7 @@ def test_holdout_numbers() -> None:
 
 def test_robustness_numbers() -> None:
     s = load("phase7/sensitivity.json")
-    for k in ("window_30", "window_90", "all_copies_dated", "temporal", "name_unseen"):
+    for k in ("window_30", "window_90", "temporal"):
         check([f"{s[k]['auc']:.3f}", ci(s[k]["ci95"]), f"{s[k]['rows']:,}"])
     for k in ("aggregators_agg500", "aggregators_aggnone"):
         if isinstance(s[k], dict):

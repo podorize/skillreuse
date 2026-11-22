@@ -3,16 +3,16 @@
 This study draws on three lines of work: software reuse, agent skills,
 and good practices for machine learning on mined data.
 
-\textbf{Software reuse and cloning.} Reuse has long been studied as the
-adoption of components and the spread of solutions across open-source
-projects \cite{mockus2002two,haefliger2008code}. Large analyses of
-GitHub showed that duplicated files are everywhere
-\cite{lopes2017dejavu}, and that code is reused through dependencies,
-copy-and-paste and templates \cite{heinemann2011extents}. Like these
-studies, we find copies by comparing the exact content of files. Unlike
-them, the copied artifact is natural language, and we follow each copy
-in time and by account, to tell real adoption by other developers apart
-from self-copying and bulk collection.
+Software reuse has long been studied as the adoption of components and
+the spread of solutions across open-source projects
+\cite{mockus2002two,haefliger2008code}. Large analyses of GitHub showed
+that duplicated files are everywhere \cite{lopes2017dejavu}, and that
+code is reused through dependencies, copy-and-paste and templates
+\cite{heinemann2011extents}. Like these studies, we find copies by
+comparing the exact content of files. Unlike them, the copied artifact
+is natural language, and we follow each copy in time and by account, to
+tell real adoption by other developers apart from self-copying and bulk
+collection.
 
 Research on language models using tools has focused on how a model
 selects and invokes those tools
@@ -26,12 +26,12 @@ track prompt evolution within software projects
 \cite{tafreshipour2025prompting}. To our knowledge, however, no study
 has examined whether skill text predicts adoption by other developers.
 
-\textbf{Machine learning on mined data.} When related examples, such as
-files from the same account, appear in both the training and the test
-data, a model can memorize the group instead of learning a general
-relation \cite{kaufman2012leakage}. The usual remedy is to split the
-data by group \cite{saeb2017need,roberts2017cross}. Models can also
-exploit accidental patterns that happen to correlate with the target
+With mined data, when related examples, such as files from the same
+account, appear in both the training and the test data, a model can
+memorize the group instead of learning a general relation
+\cite{kaufman2012leakage}. The usual remedy is to split the data by
+group \cite{saeb2017need,roberts2017cross}. Models can also exploit
+accidental patterns that happen to correlate with the target
 \cite{geirhos2020shortcut,lapuschkin2019unmasking}; in mined datasets,
 such patterns can come from the way the data were collected. Comparing
 models over repeated cross-validation needs a correction for the overlap

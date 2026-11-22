@@ -1,10 +1,9 @@
 \section{Reproducibility}\label{reproducibility}
 
-\textbf{Code, data and models.} All code, the dates collected through
-the GitHub API (already processed), the study table, the trained models
-and the result files are available at
-\url{https://github.com/podorize/skillreuse}. The data come from a fixed
-revision of GitSkills
+All code, the dates collected through the GitHub API (already
+processed), the study table, the trained models and the result files are
+available at \url{https://github.com/podorize/skillreuse}. The data come
+from a fixed revision of GitSkills
 (\texttt{ebab17454a7c236f8f26b183567f1a126f42e3f8}), verified by
 SHA-256. The environment is Python 3.12 with every dependency pinned in
 \texttt{uv.lock}. All random choices use fixed seeds: \texttt{20261121}
@@ -12,12 +11,12 @@ for the sample, \texttt{20261122} for the split, 2027--2029 for the
 cross-validation folds, 2027 for models, searches and bootstrap, and
 \texttt{20261123} for the interpretation sample.
 
-\textbf{How to reproduce.} Start with the Colab notebook
+Start with the Colab notebook
 (\url{https://colab.research.google.com/github/podorize/skillreuse/blob/main/notebooks/reproduce.ipynb}):
-with no installation and in a few minutes, it follows this paper section
-by section and compares every number with the result files. Locally,
-after \texttt{uv\ sync}, there are four levels, one command each (times
-on a laptop with 8 GB of memory):
+it follows this paper section by section, shows the code of each step
+and runs it on the published data. Locally, after \texttt{uv\ sync},
+there are four levels, one command each (times on a laptop with 8 GB of
+memory):
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -39,28 +38,3 @@ on a laptop with 8 GB of memory):
   also dates the copies again through the GitHub API; the result is
   close but not identical, as repositories have changed.
 \end{enumerate}
-
-\textbf{Additional robustness checks.} Two further checks, both on the
-holdout with the frozen text model. Restricting the holdout to the
-19,862 skills whose copies could all be dated, since an undated copy
-could hide the true origin or a copy within the window, gives an AUC of
-0.626 (95\% CI {[}0.600; 0.649{]}); these skills are copied less often
-(5.5\%), since skills with more copies more often lost one to a deleted
-repository. Restricting it to the 15,154 skills (73.7\%) whose
-front-matter name never appears in the development set, to rule out the
-recognition of variants of known skills, gives 0.622 (95\% CI {[}0.593;
-0.651{]}).
-
-\textbf{Safeguards.} The analysis plan was written down before any model
-was trained (\texttt{paper/protocol.md}). The final models were saved
-with their hashes before the holdout was read, and the holdout
-evaluation is locked after its single run. Four deviations were recorded
-in the plan: copies with an arrival after the snapshot are treated as
-undated; the copies in aggregators were collected later, in smaller
-batches, because large batches stalled; because the GitHub API no longer
-lists stargazers with their dates, the popularity of the origin
-repository at T0 was replaced, after the single evaluation, by its
-popularity at the snapshot (the original control is kept in
-\texttt{results/phase6/holdout\_results.json}); and the planned ALE
-plots were not reported, since for a linear model they repeat the SHAP
-dependence plots.

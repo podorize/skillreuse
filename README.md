@@ -1,6 +1,6 @@
 # SkillReuse
 
-O texto de uma **agent skill** (o arquivo `SKILL.md`) prediz se outros desenvolvedores vão copiá-la? Estudo preditivo sobre o corpus [GitSkills](https://huggingface.co/datasets/mvaccargiu/gitskills) (revisão `ebab17454a7c236f8f26b183567f1a126f42e3f8`). Trabalho prático da disciplina CMP263 — Aprendizagem de Máquina (UFRGS), de Pedro Odorize e Rafael Allgayer.
+O texto de uma **agent skill** (o arquivo `SKILL.md`) prediz se outros desenvolvedores vão copiá-la? Estudo preditivo sobre o corpus [GitSkills](https://huggingface.co/datasets/mvaccargiu/gitskills) (revisão `ebab17454a7c236f8f26b183567f1a126f42e3f8`). Trabalho prático da disciplina CMP263 — Aprendizagem de Máquina (UFRGS), de Pedro de Paula Odorize e Rafael Borges Allgayer.
 
 - **Artigo:** PDF em [`paper/latex/main.pdf`](paper/latex/main.pdf); fonte em Markdown (inglês) em [`paper/draft/`](paper/draft/README.md).
 - **Protocolo:** [`paper/protocol.md`](paper/protocol.md) (em inglês), escrito antes de treinar qualquer modelo; desvios na seção 13.

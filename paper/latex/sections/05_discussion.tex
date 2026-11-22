@@ -40,54 +40,51 @@ language models, and GitSkills does not record who wrote a skill.
 
 \subsection{Implications}\label{implications}
 
-\textbf{For researchers} using GitSkills or similar snapshots, our
-measurement suggests three precautions. Count only copies by other
-accounts, so that people copying their own skills are not mistaken for
-adoption. Treat repositories that collect skills in bulk separately: in
-GitSkills, 38\% of the distinct skills exist only in such repositories,
-and they would otherwise dominate any count of copies. And date the
-copies, so that every skill has the same time to be copied. \textbf{For
-skill authors and curators}, the results suggest --- as hypotheses to
-test, not as recipes --- that explanatory instructions with valid
-metadata travel further than terse notes tied to one project.
-\textbf{For tool builders}, a model like ours can help rank new skills
-for review or recommendation, but its precision is far too low for
-automatic decisions.
+For researchers using GitSkills or similar snapshots, our measurement
+suggests three precautions. Count only copies by other accounts, so that
+people copying their own skills are not mistaken for adoption. Treat
+repositories that collect skills in bulk separately: in GitSkills, 38\%
+of the distinct skills exist only in such repositories, and they would
+otherwise dominate any count of copies. And date the copies, so that
+every skill has the same time to be copied. For skill authors and
+curators, the results suggest --- as hypotheses to test, not as recipes
+--- that explanatory instructions with valid metadata travel further
+than terse notes tied to one project. For tool builders, a model like
+ours can help rank new skills for review or recommendation, but its
+precision is far too low for automatic decisions.
 
 \subsection{Limitations}\label{limitations}
 
-\textbf{What we measure.} A copy by another account is only an
-approximation of adoption. Several accounts of the same person or
-organization count as different developers. Installers copy skills on
-request; we count these copies as adoption, since someone chose to
-install the skill, but a skill listed in an installer's catalog has an
-advantage that its text does not explain. A copy is not proof of use,
-nor of quality. Because we compare exact contents, a skill that another
-developer edits becomes a new skill. Finally, the limit of 100 skills
-separates bulk collection from individual choice only roughly, although
-the result does not depend on it (Section 4.4).
+A copy by another account is only an approximation of adoption. Several
+accounts of the same person or organization count as different
+developers. Installers copy skills on request; we count these copies as
+adoption, since someone chose to install the skill, but a skill listed
+in an installer's catalog has an advantage that its text does not
+explain. A copy is not proof of use, nor of quality. Because we compare
+exact contents, a skill that another developer edits becomes a new
+skill. Finally, the limit of 100 skills separates bulk collection from
+individual choice only roughly, although the result does not depend on
+it (Section 4.4).
 
-\textbf{How we measure it.} We only see copies that still existed in
-July 2026. Copies deleted earlier are invisible, and 9.4\% of the copies
-we tried to date had disappeared since. T0 is therefore the first
-appearance we can observe, which may come after the true one, and the
-number of copied skills is a lower bound. Histories rewritten with tools
-such as force-push are not detected. The popularity of the origin
-repository could only be measured in July 2026. The sample covers
-150,000 of the 1.16 million skills, and only skills that appeared at
-least 60 days before the snapshot could be used, so the youngest skills
-are not represented.
+We only see copies that still existed in July 2026. Copies deleted
+earlier are invisible, and 9.4\% of the copies we tried to date had
+disappeared since. T0 is therefore the first appearance we can observe,
+which may come after the true one, and the number of copied skills is a
+lower bound. Histories rewritten with tools such as force-push are not
+detected. The popularity of the origin repository could only be measured
+in July 2026. The sample covers 150,000 of the 1.16 million skills, and
+only skills that appeared at least 60 days before the snapshot could be
+used, so the youngest skills are not represented.
 
-\textbf{How we model it.} The spot-check compares algorithms only with
-their default hyperparameters, which can penalize those whose defaults
-suit the problem poorly, such as k-nearest neighbors and the decision
-tree (Section 4.2). With other settings, their ranking, and therefore
-the choice of finalists, could change.
+The spot-check compares algorithms only with their default
+hyperparameters, which can penalize those whose defaults suit the
+problem poorly, such as k-nearest neighbors and the decision tree
+(Section 4.2). With other settings, their ranking, and therefore the
+choice of finalists, could change.
 
-\textbf{What it allows us to say.} The study follows the order of
-events, but it is observational: the models describe associations
-between the text and later copying, not causes. Permutation importance
-and SHAP describe the model, not the world, and correlated attributes
-share their importance. We therefore draw conclusions only from what was
-stable: the first place of writing style and the direction of the
-leading attributes.
+The study follows the order of events, but it is observational: the
+models describe associations between the text and later copying, not
+causes. Permutation importance and SHAP describe the model, not the
+world, and correlated attributes share their importance. We therefore
+draw conclusions only from what was stable: the first place of writing
+style and the direction of the leading attributes.

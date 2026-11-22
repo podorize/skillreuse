@@ -11,17 +11,16 @@ GitSkills \cite{gitskills2027} lists 3,797,117 \texttt{SKILL.md} files
 found in 282,200 public GitHub repositories. Many of these files are
 identical copies of each other. Grouping identical files by their
 content leaves 1,877,981 distinct texts, and each distinct text is one
-\textbf{skill}.
+skill.
 
 Some repositories do not choose the skills they host. Registries,
 mirrors and marketplaces collect skills in bulk; the largest one holds
 89,908 different skills. We call a repository with 100 or more different
-skills an \textbf{aggregator} (there are 2,867). A copy in an aggregator
-shows that a skill was collected, not that a developer decided to use
-it, so copies in aggregators are ignored in the main analysis, and
-skills that exist only in aggregators are left out. This leaves
-1,163,728 skills that exist in at least one repository outside
-aggregators.
+skills an aggregator (there are 2,867). A copy in an aggregator shows
+that a skill was collected, not that a developer decided to use it, so
+copies in aggregators are ignored in the main analysis, and skills that
+exist only in aggregators are left out. This leaves 1,163,728 skills
+that exist in at least one repository outside aggregators.
 
 To tell the original skill from its copies, and to know when each copy
 was made, we must date the copies (Section 3.2). Dating a copy means
@@ -29,10 +28,9 @@ querying the history of its file through the GitHub API, which limits
 how many queries an account can make per hour. The 1,163,728 skills have
 2,395,296 copies in total, and dating all of them would take more than
 two days of uninterrupted queries. We therefore drew a random sample of
-\textbf{150,000 skills}, which is enough to answer our question. The
-sample has 308,256 copies, 223,261 in ordinary repositories and 84,995
-in aggregators, and dating them took about seven hours at the API's
-limit.
+150,000 skills, which is enough to answer our question. The sample has
+308,256 copies, 223,261 in ordinary repositories and 84,995 in
+aggregators, and dating them took about seven hours at the API's limit.
 
 \subsection{Measuring whether a skill was
 copied}\label{measuring-whether-a-skill-was-copied}
@@ -51,20 +49,19 @@ outside aggregators (the 84,995 copies in aggregators were dated only
 for a robustness analysis, Section 3.7). For each copy, we asked the
 GitHub API for the history of the file and recorded the first commit in
 which the file had exactly the skill's text. We call this date the
-\textbf{arrival} of the copy. When a repository is created by cloning
-another one, it inherits the old history and its first commit is older
-than the repository itself; in that case the arrival is the date the
-repository was created. Copies that could not be dated, mostly because
-their repository was deleted after July 2026, were ignored.
+arrival of the copy. When a repository is created by cloning another
+one, it inherits the old history and its first commit is older than the
+repository itself; in that case the arrival is the date the repository
+was created. Copies that could not be dated, mostly because their
+repository was deleted after July 2026, were ignored.
 
 With these dates we can follow each skill from the moment it first
-appeared. The earliest arrival is the skill's first appearance, or
-\textbf{T0}; the copy that arrived first is the \textbf{origin}; and the
-owner of the origin repository is the skill's \textbf{author}. A skill
-is \textbf{copied} --- the target of our models, and the form of
-replication we study --- if another developer's copy, outside
-aggregators, arrived within \textbf{W days after T0}. Copies by the
-author's own account do not count.
+appeared. The earliest arrival is the skill's first appearance, or T0;
+the copy that arrived first is the origin; and the owner of the origin
+repository is the skill's author. A skill is copied --- the target of
+our models, and the form of replication we study --- if another
+developer's copy, outside aggregators, arrived within W days after T0.
+Copies by the author's own account do not count.
 
 \emph{Example.} A skill first appears in Ana's repository on 2 March
 2026, so T0 is 2 March and Ana is the author. Bruno copies it on 12
@@ -78,7 +75,7 @@ exploratory analysis by a rule written in advance: the shortest of 30,
 60 or 90 days that captures at least 80\% of first copies, measured only
 on skills that had been visible for at least 90 days. A skill can only
 be used if its whole window ends before the snapshot of 9 July 2026; we
-call these skills \textbf{eligible}.
+call these skills eligible.
 
 \subsection{Attributes}\label{attributes}
 
@@ -139,8 +136,8 @@ folders), stars and forks \\
 
 A natural objection is that skills from popular repositories may be
 copied simply because of where they are. To test it, a second group of
-attributes describes the \textbf{origin repository} (Table 1, last row).
-We planned to measure its popularity by the stars it had at T0, but the
+attributes describes the origin repository (Table 1, last row). We
+planned to measure its popularity by the stars it had at T0, but the
 GitHub API no longer reports when each star was given. We used instead
 the stars and forks of the repository in July 2026. This popularity was
 measured after T0 and may even be partly caused by the copies, so it
@@ -152,13 +149,13 @@ this comparison, the conclusion only becomes stronger.
 The models must work for developers they have never seen. Skills by the
 same author tend to look alike, so if one author's skills appeared in
 both training and test data, a model could simply recognize the author.
-We therefore split the data \textbf{by author}, before any analysis.
-Each author contributes at most 50 skills, so that a few prolific
-accounts cannot dominate. A random 30\% of the authors form the
-\textbf{holdout}, the test set used only once at the end; the other 70\%
-form the \textbf{development set}, used for everything else. The draw is
-made separately for authors with 1, 2--3, 4--10 and 11--50 skills, so
-both sets have the same mix of small and large accounts.
+We therefore split the data by author, before any analysis. Each author
+contributes at most 50 skills, so that a few prolific accounts cannot
+dominate. A random 30\% of the authors form the holdout, the test set
+used only once at the end; the other 70\% form the development set, used
+for everything else. The draw is made separately for authors with 1,
+2--3, 4--10 and 11--50 skills, so both sets have the same mix of small
+and large accounts.
 
 \subsection{Exploratory analysis and
 preprocessing}\label{exploratory-analysis-and-preprocessing}
@@ -288,16 +285,16 @@ penalty \(10^{-5}\)--\(10^{-2}\) (log); initial learning rate
 \(10^{-4}\)--\(10^{-2}\) (log); early stopping \\
 \end{longtable}
 
-\textbf{Final models.} The selected configuration was trained on the
-whole development set with the text attributes. This \textbf{text model}
-answers RQ1 and is the one we interpret for RQ2. For comparison, the
-same configuration was trained with three other sets of attributes:
-\textbf{size only}, to see whether the text says more than its length;
-the \textbf{origin repository}; and the \textbf{origin repository plus
-the text}. We also fixed a decision threshold, needed only for metrics
-such as precision and recall, as the one that maximizes balanced
-accuracy on the development set. All models and the threshold were
-saved, with a fingerprint of each file, before the test set was opened.
+The selected configuration was trained on the whole development set with
+the text attributes. This text model answers RQ1 and is the one we
+interpret for RQ2. For comparison, the same configuration was trained
+with three other sets of attributes: size only, to see whether the text
+says more than its length; the origin repository; and the origin
+repository plus the text. We also fixed a decision threshold, needed
+only for metrics such as precision and recall, as the one that maximizes
+balanced accuracy on the development set. All models and the threshold
+were saved, with a fingerprint of each file, before the test set was
+opened.
 
 \subsection{Evaluation}\label{evaluation}
 
@@ -333,13 +330,13 @@ prediction.
 \subsection{Interpretation}\label{interpretation}
 
 To answer RQ2 we interpret one model, the text model, on 20,000 skills
-of the test set. We use two complementary methods. \textbf{Permutation
-importance} shuffles the values of an attribute and measures how much
-the AUC drops: the larger the drop, the more the model relies on that
+of the test set. We use two complementary methods. Permutation
+importance shuffles the values of an attribute and measures how much the
+AUC drops: the larger the drop, the more the model relies on that
 attribute \cite{breiman2001statistical,molnar2020interpretable}. Because
 many attributes are correlated, we also shuffle whole families of Table
-1 at once and read importance mainly at that level. \textbf{SHAP values}
-split each prediction into the contribution of each attribute
+1 at once and read importance mainly at that level. SHAP values split
+each prediction into the contribution of each attribute
 \cite{lundberg2017unified}: they show in which direction an attribute
 pushes the prediction and how that effect changes with the attribute's
 value. For a logistic regression, the SHAP value of an attribute is
