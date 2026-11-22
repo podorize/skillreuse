@@ -1,8 +1,4 @@
-# Research protocol (APPROVED)
-
-**Status:** approved by the authors on 17/11/2026; no collection data had been obtained and no model had been trained with this design. It meets the requirements of the CMP263 practical assignment (Machine Learning, UFRGS) and was designed for submission to the MSR Mining Challenge, which uses GitSkills. The registration (phase 0) is in `results/phase0/registration.json`, with the SHA-256 hash of this file. The protocol is executed in phases (Section 12). Any later change is a declared deviation (Section 13).
-
-**Translation:** the protocol was approved and executed in Portuguese and translated into English on 18/11/2026, with no change of content. The SHA-256 hashes recorded in `results/phase0/registration.json` and `results/phase5/freeze.json` refer to the original Portuguese text.
+# Research protocol
 
 ---
 
@@ -32,8 +28,8 @@ RQ2 is answered only if H1 is confirmed.
 - **Snapshot:** S = 09/07/2026, start of the GitSkills crawl.
 
 ### 2.2 Collection through the GitHub API
-Done once, through the GraphQL API, reading public repositories only, with up to 4 parallel queries and progress saved in parts so it can be resumed. Network or rate-limit failures are retried up to 3 times, with increasing waits; if they persist, the occurrence receives the status "collection failure". The resulting tables are published with the code.
-- **Arrival of each copy** (including those in aggregators, used only in the sensitivity analysis of Section 8) = the later of (a) the first commit, in the history of the path on the default branch (up to 500 commits), in which the file has exactly the content hash and (b) the creation of the repository, which corrects histories inherited from clones.
+Done once, through the GraphQL API, reading public repositories only, with progress saved in parts so it can be resumed. Network or rate-limit failures are retried up to 3 times, with increasing waits; if they persist, the occurrence receives the status "collection failure". The resulting tables are published with the code.
+- **Arrival of each copy** is the later of two dates: (a) the date of the earliest commit, among the 500 most recent commits that touched the file’s path on the default branch, at which the file’s content is exactly the skill’s content hash; and (b) the date the repository was created, which corrects for history inherited from cloned repositories. Arrival is computed for copies in aggregators too, but those are used only in the sensitivity analysis.
 - **Status of each occurrence:** dated, repository inaccessible, file missing, hash not found or collection failure.
 - **Stars of the origin repository at T0:** count of the stars dated before T0, read in chronological order until passing T0 or reaching 10,000 (recorded as ≥ 10,000; the attribute enters on a log scale).
 
