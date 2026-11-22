@@ -2,7 +2,7 @@
 
 This section follows the order of the work: we first built the data (3.1–3.4), then explored and prepared it (3.5), developed the models (3.6), evaluated them (3.7) and interpreted the final one (3.8). Figure \ref{fig:diagram_drawio} summarizes the methodological workflow.
 
-![Methodology Workflow](../../results/figures/diagram_drawio.png)
+![Methodology Workflow](../supplement/diagram_drawio.png)
 
 The analysis plan was established before model training began. The following subsections describe each stage of the workflow in detail.
 
