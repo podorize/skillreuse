@@ -97,12 +97,14 @@ representative copy of each skill, but that copy is chosen by a rule
 that depends on how many copies exist, so its attributes would reveal
 the answer; we do not use them.
 
-\begin{longtable}[]{@{}
+\begin{table}[!tbp]
+\centering
+\caption{Attributes. The 27 text attributes form the main model; the
+origin repository is used only as a control.}
+\begin{tabular}{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2178}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.1188}}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.6634}}@{}}
-\caption{Attributes. The 27 text attributes form the main model; the
-origin repository is used only as a control.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Group
@@ -112,19 +114,6 @@ Columns
 What they describe
 \end{minipage} \\
 \midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Group
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Columns
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-What they describe
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
 Size & 7 & Characters, lines, non-empty lines, words, unique words,
 sentences, body length \\
 Text style & 3 & Lexical diversity (unique words over all words),
@@ -139,7 +128,9 @@ Origin repository (control only) & 15 & Age of the repository at T0,
 language, license, fork flag, folder of the file (depth, root, template,
 plugin, vendor, documentation, package, other-tool and \texttt{.claude}
 folders), stars and forks \\
-\end{longtable}
+\bottomrule\noalign{}
+\end{tabular}
+\end{table}
 
 A natural objection is that skills from popular repositories may be
 copied simply because of where they are. To test it, a second group of
@@ -192,11 +183,13 @@ were tuned as a hyperparameter. All steps are fitted inside each
 training fold, in scikit-learn pipelines \cite{pedregosa2011scikit}, so
 that no information from the validation data leaks into training.
 
-\begin{longtable}[]{@{}
+\begin{table}[!tbp]
+\centering
+\caption{Preprocessing decisions and the findings that motivated them.
+\label{tab:preprocessing_steps}}
+\begin{tabular}{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.2444}}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.7556}}@{}}
-\caption{Preprocessing decisions and the findings that motivated them.
-\label{tab:preprocessing_steps}}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Step
@@ -204,17 +197,6 @@ Step
 Decision (and the finding that motivated it)
 \end{minipage} \\
 \midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Step
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Decision (and the finding that motivated it)
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
 Missing values & Median imputation with indicator (numeric), constant
 category (categorical); only 0.02\% missing \\
 Categorical encoding & One-hot, categories with fewer than ten
@@ -230,7 +212,9 @@ metric; 7.7\% of skills copied \\
 Dimensionality & One column of each near-duplicate pair removed for
 scale-sensitive models; eight pairs above 0.95 (Figure
 \ref{fig:eda_attributes}b) \\
-\end{longtable}
+\bottomrule\noalign{}
+\end{tabular}
+\end{table}
 
 \subsection{Model development}\label{model-development}
 
@@ -259,11 +243,13 @@ algorithm was also evaluated using its default settings. We selected the
 configuration with the highest mean AUC; when differences were not
 statistically significant, we preferred the fastest configuration.
 
-\begin{longtable}[]{@{}
+\begin{table}[!tbp]
+\centering
+\caption{Search spaces of the three algorithms selected by the
+spot-check. \label{tab:random_search}}
+\begin{tabular}{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.3409}}
   >{\raggedright\arraybackslash}p{(\linewidth - 2\tabcolsep) * \real{0.6591}}@{}}
-\caption{Search spaces of the three algorithms selected by the
-spot-check. \label{tab:random_search}}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Algorithm
@@ -271,17 +257,6 @@ Algorithm
 Hyperparameters searched (10 random configurations)
 \end{minipage} \\
 \midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Algorithm
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Hyperparameters searched (10 random configurations)
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
 HistGradientBoosting & learning rate 0.02--0.2 (log); 100--500
 iterations; 8--64 leaves; 5--100 samples per leaf; L2 penalty 0.001--10
 (log); class weight none or balanced \\
@@ -290,7 +265,9 @@ weight none or balanced \\
 Multilayer perceptron & hidden layers (64), (128) or (64, 32); L2
 penalty \(10^{-5}\)--\(10^{-2}\) (log); initial learning rate
 \(10^{-4}\)--\(10^{-2}\) (log); early stopping \\
-\end{longtable}
+\bottomrule\noalign{}
+\end{tabular}
+\end{table}
 
 The selected configuration was trained on the whole development set with
 the text attributes. This text model answers RQ1 and is the one we

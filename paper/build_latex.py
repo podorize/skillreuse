@@ -82,7 +82,32 @@ def convert(markdown: str) -> str:
         check=True,
         capture_output=True,
     )
-    return ascii_symbols(result.stdout)
+    return float_tables(ascii_symbols(result.stdout))
+
+
+LONGTABLE = re.compile(
+    r"\\begin\{longtable\}\[\]\{(?P<spec>.*?)\}\n\\caption\{(?P<caption>.*?)\}\\tabularnewline\n"
+    r"(?P<head>.*?)\\endfirsthead\n.*?\\endlastfoot\n(?P<rows>.*?)\\end\{longtable\}",
+    re.DOTALL,
+)
+
+
+def float_tables(latex: str) -> str:
+    """Turn pandoc's longtables into floating tables, placed like the figures.
+
+    A longtable that starts on a page with floats at the top can run past the bottom margin and
+    lose its last rows; our tables are short, so they never need to break across pages.
+    """
+    def table(match: re.Match[str]) -> str:
+        return (
+            "\\begin{table}[!tbp]\n\\centering\n"
+            f"\\caption{{{match['caption']}}}\n"
+            f"\\begin{{tabular}}{{{match['spec']}}}\n"
+            f"{match['head']}{match['rows']}\\bottomrule\\noalign{{}}\n"
+            "\\end{tabular}\n\\end{table}"
+        )
+
+    return LONGTABLE.sub(table, latex)
 
 
 SYMBOLS = {

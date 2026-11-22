@@ -105,21 +105,16 @@ generalize. The results varied little from fold to fold (standard
 deviations of 0.005 to 0.015), so the ranking of the default settings is
 clear.
 
-\begin{longtable}[]{@{}lrrr@{}}
+\begin{table}[!tbp]
+\centering
 \caption{Model selection on the text attributes: spot-check (mean \ensuremath{\pm}
 standard deviation over 9 folds) and nested tuning of the three best
 algorithms (mean over 6 outer folds). The selected configuration is in
-bold. \label{tab:model_choose}}\tabularnewline
+bold. \label{tab:model_choose}}
+\begin{tabular}{@{}lrrr@{}}
 \toprule\noalign{}
 Algorithm & Spot-check AUC & Nested, default & Nested, tuned \\
 \midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-Algorithm & Spot-check AUC & Nested, default & Nested, tuned \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
 HistGradientBoosting & 0.652 \ensuremath{\pm} 0.011 & 0.653 & 0.657 \\
 \textbf{Logistic regression} & \textbf{0.642 \ensuremath{\pm} 0.014} & \textbf{0.645} &
 0.646 \\
@@ -128,7 +123,9 @@ Naive Bayes & 0.619 \ensuremath{\pm} 0.014 & & \\
 Random Forest & 0.614 \ensuremath{\pm} 0.009 & & \\
 k-NN & 0.574 \ensuremath{\pm} 0.010 & & \\
 Decision tree & 0.531 \ensuremath{\pm} 0.005 & & \\
-\end{longtable}
+\bottomrule\noalign{}
+\end{tabular}
+\end{table}
 
 \begin{figure}[!tbp]
 \centering
@@ -176,15 +173,17 @@ information about whether other developers will copy it (Holm-adjusted p
 holdout result is close to the development one (0.642 \ensuremath{\pm} 0.014), so the
 model did not overfit.
 
-\begin{longtable}[]{@{}
+\begin{table}[!tbp]
+\centering
+\caption{Final models (logistic regression) on the development set (mean
+\ensuremath{\pm} standard deviation over 9 author-grouped folds) and on the holdout
+(20,564 skills from 10,386 authors; 7.8\% copied; 95\% CIs from author
+bootstrap). \label{tab:final_models}}
+\begin{tabular}{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3200}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2200}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3400}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1200}}@{}}
-\caption{Final models (logistic regression) on the development set (mean
-\ensuremath{\pm} standard deviation over 9 author-grouped folds) and on the holdout
-(20,564 skills from 10,386 authors; 7.8\% copied; 95\% CIs from author
-bootstrap). \label{tab:final_models}}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Model
@@ -196,21 +195,6 @@ Holdout AUC {[}95\% CI{]}
 PR AUC
 \end{minipage} \\
 \midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Model
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Development AUC
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Holdout AUC {[}95\% CI{]}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-PR AUC
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
 \textbf{Text} & 0.642 \ensuremath{\pm} 0.014 & \textbf{0.645} {[}0.624; 0.666{]} &
 0.130 \\
 Size only (reference) & 0.596 \ensuremath{\pm} 0.018 & 0.595 {[}0.573; 0.615{]} &
@@ -218,7 +202,9 @@ Size only (reference) & 0.596 \ensuremath{\pm} 0.018 & 0.595 {[}0.573; 0.615{]} 
 Origin repository & 0.676 \ensuremath{\pm} 0.016 & 0.685 {[}0.664; 0.704{]} & 0.199 \\
 Origin repository + text & 0.725 \ensuremath{\pm} 0.012 & 0.734 {[}0.714; 0.753{]} &
 0.224 \\
-\end{longtable}
+\bottomrule\noalign{}
+\end{tabular}
+\end{table}
 
 \begin{figure}[!tbp]
 \centering
@@ -260,15 +246,17 @@ definition of aggregator, and a split by author that mixes old and new
 skills. Table \ref{tab:robustness_analysis} shows the text model when
 each of them changes. None changes the conclusion.
 
-\begin{longtable}[]{@{}
+\begin{table}[!tbp]
+\centering
+\caption{Text model under the robustness analyses (holdout; CIs from 500
+author-bootstrap samples, 2,000 for the main analysis). Each analysis
+retrains the model on the development set with the selected
+configuration. \label{tab:robustness_analysis}}
+\begin{tabular}{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.5349}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1163}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.0930}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2558}}@{}}
-\caption{Text model under the robustness analyses (holdout; CIs from 500
-author-bootstrap samples, 2,000 for the main analysis). Each analysis
-retrains the model on the development set with the selected
-configuration. \label{tab:robustness_analysis}}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Analysis
@@ -280,21 +268,6 @@ Copied
 AUC {[}95\% CI{]}
 \end{minipage} \\
 \midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Analysis
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Skills
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Copied
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-AUC {[}95\% CI{]}
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
 Main analysis (W = 60, aggregators \ensuremath{\geq} 100) & 20,564 & 7.8\% & 0.645
 {[}0.624; 0.666{]} \\
 Window W = 30 days & 28,464 & 5.7\% & 0.648 {[}0.628; 0.666{]} \\
@@ -305,7 +278,9 @@ Aggregators: no exclusion & 20,694 & 12.5\% & 0.653 {[}0.635;
 0.671{]} \\
 Temporal split (T0 after 14 April 2026) & 6,031 & 6.7\% & 0.634
 {[}0.589; 0.681{]} \\
-\end{longtable}
+\bottomrule\noalign{}
+\end{tabular}
+\end{table}
 
 With a window of 30 or 90 days, the share of copied skills ranges from
 5.7\% to 9.4\%, but the AUC stays within 0.012 of the main result.
