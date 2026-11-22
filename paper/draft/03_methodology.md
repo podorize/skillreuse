@@ -1,6 +1,6 @@
 # 3. Materials and methods
 
-This section follows the order of the work: we first built the data (3.1–3.4), then explored and prepared it (3.5), developed the models (3.6), evaluated them (3.7) and interpreted the final one (3.8). The whole analysis plan was written down before any model was trained.
+This section follows the study workflow: we first built the dataset (3.1–3.4), then explored and prepared it (3.5), developed the models (3.6), evaluated their performance (3.7), and interpreted the final model (3.8). The analysis plan was established before model training.
 
 ## 3.1 Data
 
@@ -32,23 +32,27 @@ The window W makes the comparison fair: every skill gets the same amount of time
 
 ## 3.3 Attributes
 
-From the content of a skill’s Markdown file, we extracted the 27 attributes, listed in Table 1: measures of size, writing style, structure, code, links and front matter (the header with the skill's name and description).
-Because all copies of a skill share identical text, these attributes represent the information available to other developers when deciding whether to copy it and do not incorporate future information.
+From each skill's Markdown file, we extracted 27 attributes describing its size, writing style, structure, code, links, and front matter (the header containing the skill's name and description):
+
+- Size (7): character count, line count, non-empty line count, word count, unique word count, sentence count, and body length.
+
+- Text style (3): lexical diversity (unique words over all words), average word length, and average words per sentence.
+
+- Markdown structure (7): headings and their depth, bulleted and numbered items, table rows, quotes, and checkboxes.
+
+- Code (3): code blocks, inline code, and shell prompts.
+
+- Links (2): links and URLs.
+
+- Front matter (5): validity, length, and absence of the name and of the description.
+
+Because all copies of a skill share identical text, these attributes represent the information available to other developers when deciding whether to copy it, without incorporating future information.
 GitSkills also describes the folder and companion files of one representative copy of each skill, but that copy is chosen by a rule that depends on how many copies exist, so its attributes would reveal the answer; we do not use them.
 
-| Group | Columns | Description |
-|----------------------|-----------:|-------------------------------------------------------------------|
-| Size | 7 | Characters, lines, non-empty lines, words, unique words, sentences, body length |
-| Text style | 3 | Lexical diversity (unique words over all words), average word length, average words per sentence |
-| Markdown structure | 7 | Headings and their depth, bulleted and numbered items, table rows, quotes, checkboxes |
-| Code | 3 | Code blocks, inline code, shell prompts |
-| Links | 2 | Links and URLs |
-| Front matter | 5 | Whether it is valid; length and absence of the name and of the description |
-| Origin repository (control only) | 14 | Age of the repository at T0, language, license, fork flag, folder of the file (depth, root, template, plugin, vendor, documentation, package, other-tool and `.claude` folders), stars and forks |
-
-: Overview of the extracted attributes. The 27 text attributes constitute the main feature set, while origin-repository attributes are used only as controls
-
-A natural objection is that skills from popular repositories may be copied simply because of where they are. To test it, a second group of attributes describes the **origin repository** (Table 1, last row). We planned to measure its popularity by the stars it had at T0, but the GitHub API no longer reports when each star was given. We used instead the stars and forks of the repository in July 2026. This popularity was measured after T0 and may even be partly caused by the copies, so it gives the repository an advantage: if the text still adds information in this comparison, the conclusion only becomes stronger.
+We also extracted repository-level attributes as controls to account for the possibility that copying is driven by repository visibility rather than skill content.
+These 14 attributes cover repository age at T0, language, license, fork flag, folder of the file (depth, root, template, plugin, vendor, documentation, package, other-tool and `.claude` folders), stars and forks.
+We initially intended to measure popularity at T0, but the GitHub API no longer provides the dates on which stars were given.
+We therefore used star and fork counts from July 2026. Although measured after T0, these counts may partly reflect copying activity, making this a conservative comparison: if skill-text attributes still provide additional predictive information, this supports their contribution beyond repository characteristics.
 
 ## 3.4 Training and test data
 
@@ -74,11 +78,17 @@ Four rules, written in advance, turned these findings into preprocessing steps (
 
 ## 3.6 Model development
 
-**Validation.** Every algorithm was trained and validated on exactly the same partitions of the development set: 3-fold cross-validation, repeated three times with different seeds. The folds are grouped by author, for the same reason as the split, and stratified so that each fold has about the same share of copied skills. Each configuration therefore gets nine estimates, which averages out the luck of a single partition.
+All algorithms were trained and evaluated on the same development-set partitions using 3-fold cross-validation repeated three times with different seeds.
+Folds are grouped by author to prevent author overlap and stratified to preserve the proportion of copied skills across folds.
+Each configuration therefore yields nine estimates, reducing dependence on any single partition.
 
-**Spot-check.** We first compared seven algorithms with their default settings, chosen to represent different ways of learning: a linear model (logistic regression), a probabilistic model that treats attributes as independent (Gaussian Naive Bayes), a model based on similar examples (k-nearest neighbors), a single tree of rules (decision tree), two ensembles of trees — one that averages independent trees (random forest) and one that adds trees that correct each other (HistGradientBoosting) — and a neural network (multilayer perceptron). This quick comparison shows which kinds of models suit the problem before any effort goes into tuning.
+As an initial spot-check, we compared seven algorithms with default settings, covering linear (logistic regression), probabilistic (Gaussian Naive Bayes), instance-based (k-nearest neighbors), tree-based (decision tree), ensemble (random forest and HistGradientBoosting), and neural network (multilayer perceptron) approaches. This comparison identified promising algorithms for subsequent hyperparameter tuning.
 
-**Tuning and selection.** The three best algorithms were then tuned with nested cross-validation. In each of six outer folds (the first two repetitions of the partitions above), a random search drew ten hyperparameter configurations (Table 3), scored each on three inner folds of the training part, and kept the best. That configuration was then measured on the outer fold, which the search had never seen, so the estimate is not inflated by the choice. Each algorithm was also evaluated with its default settings. The highest mean AUC wins; if it is not significantly better than the others, the fastest of the tied configurations wins, so that we accept extra complexity only when it pays off.
+The three best-performing algorithms were then tuned using nested cross-validation.
+In each of six outer folds (the first two repetitions of the partitions above), random search sampled ten hyperparameter configurations (Table 3), evaluated each across three inner folds of the training data, and selected the best.
+That configuration was then measured on the outer fold, which the search had never seen, so the estimate is not inflated by the choice.
+Each algorithm was also evaluated using its default settings.
+We selected the configuration with the highest mean AUC; when differences were not statistically significant, we preferred the fastest configuration.
 
 | Algorithm | Hyperparameters searched (10 random configurations) |
 |------------------------------|----------------------------------------------------------|
@@ -92,12 +102,22 @@ Four rules, written in advance, turned these findings into preprocessing steps (
 
 ## 3.7 Evaluation
 
-**Metrics.** Our main metric is the area under the ROC curve (AUC). It is the probability that the model gives a higher score to a randomly chosen copied skill than to a randomly chosen skill that was not copied. It matches our question — whether the text *ranks* skills by their chances of being copied — and it does not depend on a threshold or on how rare copied skills are. Because copied skills are rare, we also report the area under the precision–recall curve (PR AUC), which must be compared with the share of copied skills (what a random model would get); the Brier score, which measures whether predicted probabilities are realistic; and, at the chosen threshold, precision, recall, balanced accuracy and the confusion matrix.
+Our primary metric is the area under the ROC curve (AUC), which measures how well the model ranks copied skills above non-copied ones. This metric captures whether text ranks skills by their likelihood of being copied, independently of the classification threshold or class prevalence. Given the rarity of copied skills, we also report PR AUC (relative to the proportion of copied skills), the Brier score (probability calibration), and, at the selected threshold, precision, recall, balanced accuracy, and the confusion matrix.
 
-**Statistics.** On the development set, two models are compared fold by fold. Because the training sets of the folds overlap, the nine results are not independent and an ordinary paired test would be too optimistic; the Nadeau–Bengio correction accounts for this overlap \cite{nadeau2003inference}, and Holm's method adjusts for several comparisons made at once \cite{holm1979simple}. The test set was evaluated **once**. Its 95% confidence intervals come from 2,000 bootstrap samples drawn by author, since skills of the same author are not independent. RQ1 is answered positively if the interval of the text model's AUC lies above 0.5, the value of a random guess. The control is passed if the interval of the gain from adding the text to the origin repository lies above zero.
+We assess statistical significance using fold-level comparisons on the development set.
+Since fold training sets overlap, the nine results are not independent and an ordinary paired test would be too optimistic; the Nadeau–Bengio correction accounts for this overlap \cite{nadeau2003inference}, and Holm's method adjusts for several comparisons made at once \cite{holm1979simple}.
+The test set is evaluated only once, with 95% confidence intervals estimated from 2,000 bootstrap samples drawn by author, since skills of the same author are not independent. 
+RQ1 is supported if the text model's AUC confidence interval lies above 0.5 (random guess).
+The control is passed if the interval of the gain from adding the text to the origin repository lies above zero.
 
-**Robustness.** Three further analyses, also planned in advance, check whether the result depends on our own choices: a different window (30 or 90 days), a different definition of aggregator (500 skills instead of 100, or no exclusion at all, which required dating the 84,995 copies in aggregators too), and a **split in time**, in which the model learns from skills that appeared earlier and is tested on skills that appeared later. The last one is the closest test of predicting the future.
+Finally, we test robustness through three prespecified analyses: alternative time windows (30 or 90 days), aggregator definitions (500 skills instead of 100, or no exclusion, requiring dates for the 84,995 aggregator copies), and a temporal split (training on earlier skills and testing on later ones). The latter most closely approximates future prediction.
 
 ## 3.8 Interpretation
 
-To answer RQ2 we interpret one model, the text model, on 20,000 skills of the test set. We use two complementary methods. **Permutation importance** shuffles the values of an attribute and measures how much the AUC drops: the larger the drop, the more the model relies on that attribute \cite{breiman2001statistical,molnar2020interpretable}. Because many attributes are correlated, we also shuffle whole families of Table 1 at once and read importance mainly at that level. **SHAP values** split each prediction into the contribution of each attribute \cite{lundberg2017unified}: they show in which direction an attribute pushes the prediction and how that effect changes with the attribute's value. For a logistic regression, the SHAP value of an attribute is simply its coefficient times how far the skill is from the average on that attribute, so SHAP turns the coefficients into effects on individual skills. Finally, we repeat the permutation on the nine development folds to check that the ranking is stable.
+To answer RQ2, we interpret the text model on 20,000 test-set skills using two complementary methods:
+
+- **Permutation importance** measures the AUC decrease after shuffling an attribute, indicating its contribution to model performance \cite{breiman2001statistical,molnar2020interpretable}. We also permute entire Table 1 attribute families to account for correlations.
+
+- **SHAP values** quantify each attribute's contribution to individual predictions and how it varies with attribute values \cite{lundberg2017unified}. In logistic regression, these contributions correspond to the coefficient multiplied by the attribute's deviation from its mean.
+
+Finally, we repeat permutation importance across the nine development folds to assess ranking stability.

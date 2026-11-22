@@ -1,16 +1,20 @@
 # 4. Results
 
-We present the results in the order of the method: what the data look like (4.1), which model we chose (4.2), how well it predicts (4.3, RQ1), whether this depends on our choices (4.4), and what the model learned (4.5, RQ2).
+We present the results in five stages: exploratory analysis (Section 4.1), model selection (Section 4.2), predictive performance (Section 4.3, RQ1), robustness analyses (Section 4.4), and model interpretation (Section 4.5, RQ2).
 
 ## 4.1 Exploratory analysis
 
-**The data.** We dated 198,579 of the 223,261 copies outside aggregators (88.9%). Most of the others were in repositories deleted or made private after July 2026 (Figure 1c). In the end, 135,670 of the 150,000 skills had at least one dated copy, and 135,332 remained after limiting each author to 50 skills: 94,683 in the development set, from 42,872 authors, and 40,649 in the holdout, from 18,373 authors.
+**The data.** We established dated 198,579 of the 223,261 copies outside aggregators (88.9%). Most of the others were in repositories deleted or made private after July 2026 (Figure 1c).
+Overall, 135,670 of the 150,000 skills had at least one dated copy.
+After limiting each author to 50 skills, 135,332 remained: 94,683 in the development set (42,872 authors) and 40,649 in the holdout (18,373 authors).
 
 ![Development set: (a) cumulative share of copied skills by days from first appearance to first copy by another developer, among skills with 90 days of observation; (b) first appearance (T0) by month, with the eligibility limit for W = 60 days; (c) outcome of the dating of copies outside aggregators](../../results/figures/eda.png)
 
 ![Development set: (a) skewness of the text attributes before and after the log transform; (b) Spearman correlation between the 27 text attributes](../../results/figures/eda_attributes.png)
 
-**The target.** When a skill is copied, it is copied fast. Among development skills observed for at least 90 days, the first copy by another developer arrived after a median of 10.5 days, and a quarter arrived within 2.6 days (Figure 1a). A 30-day window would capture 73.5% of these first copies and a 60-day window 89.7%, so the rule of Section 3.2 set **W = 60 days**. The ecosystem is also young: almost all skills appeared after October 2025, when the format was introduced, and more new skills appeared every month (Figure 1b). With W = 60, only skills that appeared until 10 May 2026 are eligible: **48,299 in the development set and 20,564 in the holdout**. Copied skills are a minority: **7.7%** of the eligible skills were copied by another developer within the window.
+**The target.**
+Skills are typically copied soon after their first appearance.
+Among development skills observed for at least 90 days, the first copy by another developer arrived after a median of 10.5 days, and a quarter arrived within 2.6 days (Figure 1a). A 30-day window would capture 73.5% of these first copies and a 60-day window 89.7%, so the rule of Section 3.2 set **W = 60 days**. The ecosystem is also young: almost all skills appeared after October 2025, when the format was introduced, and more new skills appeared every month (Figure 1b). With W = 60, only skills that appeared until 10 May 2026 are eligible: **48,299 in the development set and 20,564 in the holdout**. Copied skills are a minority: **7.7%** of the eligible skills were copied by another developer within the window.
 
 **The attributes.** All 27 text attributes are numbers; three of them (a valid front matter, a missing name, a missing description) are yes-or-no. They have no missing values, and the origin attributes almost none (0.02%, in language and license). The real problem is their distribution (Figure 2a). Most counts are zero for many skills and very large for a few — the typical skill has no links and no inline code, while some have thousands — and 21 of the text columns have skewness above 2. The extreme case is the average word length (skewness 218), caused by a few files that are not prose at all, such as long encoded strings. We kept them, since they are real skills, and the log transform reduces their weight. We found no impossible values. The only inconsistency, 684 copies dated after the snapshot, had already been handled during the collection. Two origin attributes were constant and were removed: the fork flag and the stars at T0, which the API could not provide (Section 3.3).
 

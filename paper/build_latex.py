@@ -52,7 +52,7 @@ def preprocess(markdown: str) -> str:
         width = FIGURE_WIDTH.get(source.name, 1.0)
         shutil.copy2(source, FIGURE_DIR / output_name)
         return (
-            "\n\\begin{figure}[!tbp]\n\\centering\n"
+            "\n\\begin{figure}[H]\n\\centering\n"
             f"\\includegraphics[width={width}\\linewidth]{{figures/{output_name}}}\n"
             f"\\caption{{{caption}}}\n"
             f"\\label{{fig:report-{figure_number}}}\n"
