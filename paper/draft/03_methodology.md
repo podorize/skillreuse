@@ -34,7 +34,7 @@ The model reads only the `SKILL.md` itself. From its Markdown we extracted the 2
 | Code | 3 | Code blocks, inline code, shell prompts |
 | Links | 2 | Links and URLs |
 | Front matter | 5 | Whether it is valid; length and absence of the name and of the description |
-| Origin repository (control only) | 14 | Age of the repository at T0, language, license, fork flag, folder of the file (depth, root, template, plugin, vendor, documentation, package, other-tool and `.claude` folders), stars and forks |
+| Origin repository (control only) | 15 | Age of the repository at T0, language, license, fork flag, folder of the file (depth, root, template, plugin, vendor, documentation, package, other-tool and `.claude` folders), stars and forks |
 
 : Attributes. The 27 text attributes form the main model; the origin repository is used only as a control.
 
