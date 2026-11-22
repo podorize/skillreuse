@@ -29,7 +29,7 @@ FIGURE_DIR = PAPER / "figures"
 FIGURE_WIDTH: dict[str, float] = {"eda_univariate.png": 0.62, "eda_attributes.png": 0.95,
                                    "shap.png": 0.9, "importance.png": 0.85,
                                    "eda.png": 0.95, "model_selection.png": 0.85,
-                                   "results.png": 0.95}
+                                   "results.png": 0.95, "workflow.png": 0.8}
 
 
 def preprocess(markdown: str) -> str:
